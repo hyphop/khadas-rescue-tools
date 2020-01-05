@@ -1,0 +1,623 @@
+#!/bin/bash
+
+## hyphop ##
+
+#= krescue image parser
+
+#    __ _____                      
+#   / //_/ _ \___ ___ ______ _____ 
+#  / ,< / , _/ -_|_-</ __/ // / -_)
+# /_/|_/_/|_|\__/___/\__/\_,_/\__/ 
+#                                  
+# krescue advanced install system  
+
+## advanced
+
+# META TAIL
+#tail -c4096 VIMx.OpenWrt.servers.test.emmc.kresq
+# IMAGE FILE NAME
+#tail -c4096 VIMx.OpenWrt.servers.test.emmc.kresq | head -1
+# 
+
+USAGE(){
+    echo "make_image - make installation images for krescue
+
+USAGE
+
+    make_image [KRESCUE_CONFIG_FILE]
+
+NOTE
+
+    make_image - must run is same project dir if KRESCUE_CONFIG_FILE 
+    not defined
+"
+exit 1
+}
+
+CONFIG=
+NOCLEANUP=
+NOMT=1
+
+FAIL(){
+    echo "[e] FAIL: $@"
+    exit 1
+}
+
+#[ "$1" ] || USAGE
+
+for i in $@; do
+    case $i in
+    -Z)
+    # not clean up
+    NOCLEANUP=1
+    ;;
+    -m)
+    # display final meta
+    NOMT=
+    ;;
+    *)
+    [ -f "$i" ] && {
+	CONFIG="$i"
+	continue
+    }
+    USAGE
+    ;;
+    esac
+done
+
+MARK=krescue
+MARK=
+
+CMD(){
+    echo "# $@"
+    $@
+}
+
+file_header(){
+    dd count=1 if=$1 bs=$2 count=1 2>/dev/null|hexdump -v -e '1/1 "%02X"'
+}
+
+
+[ "$CONFIG" ] || CONFIG=$(ls .*.image.conf)
+
+[ -f "$CONFIG" ] || {
+    FAIL "krescue image config not found"
+}
+
+OUT=/tmp
+IMAGE=
+OUT_IMAGE=
+IMAGE_SUBS=
+
+vars=
+
+qq="unset DSC sub args desc block image part date back \
+    builder source match overlay label fstype size disabled \
+    start type data default tag ask desc format uuid link duration"
+    # vars
+
+eval $qq
+
+
+sub_idx=
+SUBS=
+SFS_ARGS=
+SFS_ARGS2=
+
+progress(){
+    printf "[pack] "
+    while [ "1" ] ; do
+    sleep 1
+    printf .
+    done
+}
+
+pack(){
+    
+    [ -f $OUT_IMAGE.sub ] || touch $OUT_IMAGE.sub
+
+    [ "$data" ] && {
+
+	[ -d "$data" ] && FAIL "sub data is dir $data"
+	[ -f "$data" ] || FAIL "sub data file not found $data"
+
+	check=$(file -L -N $data)
+	size=$(stat -L -c%s $data)
+
+	case "$check" in
+	    *Squashfs*)
+	    b=${check%% bytes*}
+	    b=${b##* }
+	    b2=$(((b/4096)*4096))
+	    s2=$(((size/4096)*4096))
+	    [ "$b2" -lt "$size" ] && b2=$((b2+4096))
+	    [ "$s2" = "$size" ] || \
+		FAIL "[i] sfs not padded by 4096 $s != $s2 or $b2"
+	    ;;
+	    *)
+	    FAIL "sub data not recognized"
+	esac
+
+	echo "++ sub $data >> $OUT_IMAGE" 
+	echo "++ sub $data >> $OUT_IMAGE" \
+	>> $OUT_IMAGE.log
+	CMD ln -s "$PWD/$data" $OUT_IMAGE$sub_idx
+	echo "./$data" >> $OUT_IMAGE.sub
+
+	
+#	[ "$back" ] && {
+#	echo "[i] add back $sub $back $data">&2
+#	echo "/$data	s 666 root root $OUT_IMAGE.$sub.loop" >> $OUT_IMAGE.back.$back
+#	}
+
+	return 0
+    }
+
+    ## source
+    SOURCE=
+    for s in $source; do
+	LINK=
+	# force LINK transform
+	[ "${s:0:1}" = "!" ] && {
+	    LINK=1
+	    s=${s#!}
+	}
+	[ -s $s ] || {
+	    FAIL "[e] SOURCE file not found $s">&2
+	}
+	[ -L $s ] && {
+	    [ "$LINK" ] && {
+	    S=$(readlink $s)
+	    echo "[i] root symlink $s -> $S">&2
+	    SOURCE="$SOURCE $S"
+	    continue
+	    }
+	}
+	SOURCE="$SOURCE $s"
+
+    done
+
+    ADD=
+
+#    [ -f $OUT_IMAGE.back.$sub_idx ] && {
+#	ADD="$ADD -pf $OUT_IMAGE.back.$sub_idx"
+#    }
+
+    [ -f $OUT_IMAGE.sub ] && {
+    ADD="$ADD -ef $OUT_IMAGE.sub"
+    }
+
+    [ -f $OUT_IMAGE.pf ] && {
+    ADD="$ADD -pf $OUT_IMAGE.pf"
+    }
+
+    args_=$args
+    [ "$args_" ] || args_=$SFS_ARGS
+    [ "$args_" ] || args_=$SFS_ARGS2
+
+    SFS="$SOURCE $OUT_IMAGE$sub_idx $args_ \
+    -keep-as-directory $ADD"
+
+    [ "$1" = "post" ] && {
+	echo "$SFS" > $OUT_IMAGE.post
+	return 1
+    }
+
+    progress&
+    prg=$!
+
+    export SUB=$sub_idx
+    CMD mksquashfs $SFS 1>>$OUT_IMAGE$sub_idx.log
+
+    kill $prg
+    echo
+
+#    CMD unsquashfs -ll $OUT_IMAGE$sub_idx
+
+    [ "$sub_idx" ] && {
+    echo "++ sub $OUT_IMAGE$sub_idx >> $OUT_IMAGE" 
+    echo "++ sub $OUT_IMAGE$sub_idx >> $OUT_IMAGE" \
+    >> $OUT_IMAGE.log
+#    cat $OUT_IMAGE$sub_idx >> $OUT_IMAGE
+
+
+    }
+
+}
+
+V=/tmp/make_image_vars
+
+vars_parse(){
+	    echo "$1" | egrep -o %%[[:alnum:]]+%% > $V || return 1
+	    while read v ; do
+		v=${v##??}
+		v=${v%%??}
+		vv=$(echo "$vars" | grep $v=)
+		[ "$vv" ] || FAIL "undef var $v"
+		vvv=${vv##*=}
+#		echo "[VAR] $v = $vvv"
+		for n in $vvv; do
+		    # ONLY ONE VAR IN STRINGS !!!
+		    echo "$1" | sed "s/%%$v%%/$n/g"
+		done
+	    done < $V
+}
+
+while read r; do
+
+    case $r in
+    sub:*)
+    IMAGE_SUBS="$(echo ${r#*:})"
+    ;;
+    esac
+
+done < $CONFIG
+
+
+while read r; do
+
+
+    case $r in
+    \#\#END\#\#)
+    echo "[i] END block found">&2
+    break
+    ;;
+    \#*)
+    continue
+    ;;
+    esac
+    
+
+    case $r in
+    type:*)
+    IMAGE_TYPE="$(echo ${r#*:})"
+    ;;
+    format:*)
+    IMAGE_FORMAT="$(echo ${r#*:})"
+    ;;
+    image:*)
+    image=1
+    IMAGE_NAME="$(echo ${r#*:})"
+    ;;
+    part:*)
+    part="$(echo ${r#*:})"
+    ;;
+    sub:*)
+    sub="$(echo ${r#*:})"
+    ;;
+    args:*)
+    args="$(echo ${r#*:})"
+    ;;
+    disabled:*1)
+    disabled=1
+    ;;
+    disabled:*true)
+    disabled=1
+    ;;
+    disabled:*yes)
+    disabled=1
+    ;;
+    disabled:*YES)
+    disabled=1
+    ;;
+    label:*)
+    label="$(echo ${r#*:})"
+    ;;
+    duration:*)
+    duration="$(echo ${r#*:})"
+    ;;
+    date:*)
+    date="$(echo ${r#*:})"
+    ;;
+    default:*)
+    default="$(echo ${r#*:})"
+    ;;
+    builder:*)
+    builder="$(echo ${r#*:})"
+    ;;
+    link:*)
+    link="$(echo ${r#*:})"
+    ;;
+    fstype:*)
+    fstype="$(echo ${r#*:})"
+    ;;
+    size:*)
+    size="$(echo ${r#*:})"
+    ;;
+    back:*)
+    back="$(echo ${r#*:})"
+    ;;
+    type:*)
+    type="$(echo ${r#*:})"
+    ;;
+    uuid:*)
+    uuid="$(echo ${r#*:})"
+    ;;
+#    data:*)
+#    data="$(echo ${r#*:})"
+#    ;;
+    data:*)
+    [ "$data" ] || {
+    data="$(echo ${r#*:})"
+    continue
+    }
+    data="$data $(echo ${r#*:})"
+    ;;
+    start:*)
+    start="$(echo ${r#*:})"
+    ;;
+    source:*)
+    [ "$source" ] || {
+    source="$(echo ${r#*:})"
+    continue
+    }
+    source="$source $(echo ${r#*:})"
+    ;;
+    vars:*)
+    [ "$vars" ] || {
+    vars="$(echo ${r#*:})"
+    continue
+    }
+    source="$vars $(echo ${r#*:})"
+    ;;
+    match:*)
+    [ "$match" ] || {
+    match="$(echo ${r#*:})"
+    continue
+    }
+    match="$match $(echo ${r#*:})"
+    ;;
+    overlay:*)
+    overlay="$(echo ${r#*:})"
+    ;;
+    ask:*)
+    ask="$(echo ${r#*:})"
+    ;;
+    tag:*)
+    tag="$(echo ${r#*:})"
+    ;;
+    block:*)
+    block="$(echo ${r#*:})"
+    ;;
+    desc:*)
+    desc="$(echo ${r#*:})"
+    DSC=1
+    ;;
+
+
+    "")
+
+	[ "$disabled" ] && {
+	    eval $qq
+	    continue
+	}
+
+	[ "$image" ] && {
+	    source="$CONFIG $source"
+	    echo "=IMAGE: $IMAGE_NAME $IMAGE_TYPE MATCH: $match ($builder $date) SUBS: $IMAGE_SUBS"
+
+	    [ "$IMAGE_NAME" ] || FAIL "wrong order"
+
+	    echo "< $source"
+	    echo "+ $desc"
+	    IMAGE="$IMAGE_NAME.$IMAGE_TYPE.$IMAGE_FORMAT"
+#	    IMAGE="$IMAGE_NAME.$IMAGE_TYPE.$MARK.$IMAGE_FORMAT"
+	    OUT_IMAGE="$OUT/$IMAGE"
+	    echo "-> $OUT_IMAGE ($args)"
+	    SFS_ARGS=$args
+
+	    for f in $OUT_IMAGE*; do
+		[ -s $f ] && {
+		    echo "[i] remove prev $data"
+		    CMD rm -rf $OUT_IMAGE*
+		    break
+		}
+	    done
+
+	    echo "image: $IMAGE_NAME
+type: $IMAGE_TYPE
+label: $label
+match: $match
+builder: $builder
+date: $date
+link: $link
+duration: $duration
+desc: $desc
+" > $OUT_IMAGE.mt
+
+	    echo ".sub f 666 root root echo \$SUB" > $OUT_IMAGE.pf
+
+	    pack post
+	    eval $qq
+	    continue
+	}
+
+	[ "$sub" ] && {
+	    [ "$IMAGE_NAME" ] || FAIL "wrong order"
+	    [ "$block" ] || {
+	    [ "$part" ] || {
+	    [ "$overlay" ] || {
+	    echo "=SUB $sub DATA: $data SOURCE: $source"
+	    SUBS="$SUBS $sub"
+	    sub_idx=$sub
+	    pack
+	    eval $qq
+	    continue
+	    } } }
+	}
+
+	[ "$ask" ] && {
+	    [ "$IMAGE_NAME" ] || FAIL "wrong order"
+	    echo "=ASK ($type[$default]:$tag) $ask"
+	    echo "+ $desc"
+	    eval $qq
+	    continue
+	}
+
+	[ "$block" ] && {
+	    [ "$IMAGE_NAME" ] || FAIL "wrong order"
+	    echo "=BLOCK start: $start data: $data ($vars)"
+
+	    data=${data#\+} # remove inc
+	    data=${data#?:} # remove sub
+
+	    case "$data" in
+		@zero*|@null*)
+		echo " DEV: $data"
+		;;
+		\#*)
+		echo " SUB: $data"
+		;;
+		*)
+		# check files
+#		echo " CHECK FILE: $data"
+	    for t in $(vars_parse $data); do
+#		echo "%% FILE $data => $t"
+		[ -d "$t" ] && FAIL "sub data is dir $t"
+		[ -f "$t" ] || FAIL "sub data file not found $t"
+	    done
+
+	    [ -s "$V" ] || {
+	    [ -d "$data" ] && FAIL "sub data is dir $data"
+	    [ -f "$data" ] || FAIL "sub data file not found $data"
+	    }
+		;;
+	    esac
+
+	    eval $qq
+	    continue
+	}
+
+	[ "$part" -a ! "$overlay" ] && {
+	    [ "$IMAGE_NAME" ] || FAIL "wrong order"
+	    [ "$label" = "-" ] && label=
+	    [ "$label" ] || label=$source
+	    echo "=PART part: $part start: $start size: $size source: '$source' fstype: $fstype label: '$label' uuid: $uuid"
+	    [ "$data" ] && \
+	    echo "	DATA: $data"
+	    eval $qq
+	    continue
+	}
+
+	[ "$overlay" ] && {
+	    [ "$IMAGE_NAME" ] || FAIL "wrong order"
+	    echo "=OVERLAY $overlay part: $part source: $source MATCH: $match"
+	    eval $qq
+	    continue
+	}
+
+    ;;
+
+    *)
+
+    [ "$DSC" ] && {
+	desc="$desc $r"
+	continue
+    }
+    echo "* $r"
+    continue
+    ;;
+    esac
+
+
+done < $CONFIG
+
+echo "[i] post build"
+
+MM=$OUT_IMAGE.meta/.subs
+mkdir -p $MM
+subs_size=0
+
+for i in $SUBS; do
+    s="$OUT_IMAGE$i"
+    [ -s $s ] || FAIL "sub $i not found $s"
+    size=$(stat -L -c%s $s)
+    echo "+++ $i => $s size: $size"
+    echo "$size" > $MM/sub.$i.size
+    subs_size=$((subs_size+$size))
+done
+
+echo "$subs_size" > $MM/subs.size
+
+#    progress&
+#    prg=$!
+
+    export SUB=0
+
+    CMD mksquashfs $MM $(cat $OUT_IMAGE.post) 1>$OUT_IMAGE$SUB.log || FAIL "sub 0 error pack"
+
+#	 \\
+
+#    kill $prg
+#    echo
+
+#exit 0
+
+for i in $SUBS; do
+    s="$OUT_IMAGE$i"
+    [ -s $s ] || FAIL "sub $i not found $s"
+    echo "+++ $i => $s"
+    cat $s >> $OUT_IMAGE
+#    rm $s
+done
+
+SIZE="$(stat -L -c%s $OUT_IMAGE)"
+MD5="$(md5sum $OUT_IMAGE | head -c32)"
+N="$(basename $OUT_IMAGE)"
+## TAIL
+T=$OUT_IMAGE.tail
+B=4096
+dd if=/dev/zero bs=$B count=1 > $T 2>/dev/null
+
+(
+    echo $N
+    printf "\n##KRESCUE_IMAGE##\n"
+    echo "FILE: $N"
+    echo "MD5: $MD5"
+    echo "SIZE: $SIZE"
+    printf "\n##KRESCUE-IMAGE##\n"
+
+    printf "\n##KRESCUE_META##\n"
+    head -c2048 $OUT_IMAGE.mt
+    echo
+    printf "\n##KRESCUE-META##\n"
+
+) | dd conv=notrunc of=$T 2>/dev/null
+
+#1234567890123456
+
+printf "\n##KRESCUE##END\n" | \
+    dd seek=$((B/16-1)) bs=16 count=1 conv=notrunc of=$T 2>/dev/null
+
+## TAIL END
+
+[ "$(stat -L -c%s $T)" = "$B" ] || {
+    FAIL "tail size not $B"
+}
+
+cat $T >> $OUT_IMAGE
+
+echo "[i] IMAGE DONE ($SIZE bytes) MD5: $MD5
+$OUT_IMAGE"
+
+[ "$NOMT" ] || \
+cat $OUT_IMAGE.mt
+
+## CLEANUP
+[ "$NOCLEANUP" ] || {
+[ "$OUT_IMAGE" ] && {
+rm -rf $OUT_IMAGE.meta
+rm $OUT_IMAGE.*
+rm $OUT_IMAGE?
+rm $OUT_IMAGE?.log
+}
+}
+
+#ls -l1 $OUT_IMAGE
+
+## END ##
+
+# part download
+# curl -r 0-4095 -O  -jkL -f
+
+# 

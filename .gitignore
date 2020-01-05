@@ -1,0 +1,13 @@
+!.gitignore
+work
+share/*
+bin/*
+scripts/bin/*
+
+*.vpn
+*.ovpn
+
+!README.md
+!README.txt
+
+
