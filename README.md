@@ -9,11 +9,12 @@
   krescue advanced install system  
 ```
 
-+ [](image)			- generate | parse OS installation image (*.kresq)
-+ [](mega)			- mega installation system
++ [image]()			- generate | parse OS installation image (*.kresq)
++ [mega]()			- mega installation system
 
 # LINKS
 
 + https://github.com/hyphop/khadas-rescue
 + https://github.com/hyphop/khadas-rescue/tree/master/docs
 + https://dl.khadas.com/Firmware/Krescue/
+
