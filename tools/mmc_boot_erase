@@ -1,0 +1,13 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= fast clear amlogic boot areas
+
+echo "fast clear amlogic boot areas">&2
+echo 0 | tee /sys/block/mmcblk?/mmcblk?boot?/force_ro > /dev/null
+C="dd if=/dev/zero bs=4096 count=1"
+for d in /dev/mmcblk?boot?;do
+$C of=$d >/dev/null
+done
+$C of=${d%boot*} >/dev/null
