@@ -1,0 +1,34 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= sparseimg2img
+
+simg2img=$(which simg2img)
+
+[ "$simg2img" ] || {
+    echo "[e] need install simg2img
+    apt-get install simg2img
+">&2
+    exit 1
+}
+
+p=${1:-../.boot/}
+
+cd $p || exit 1
+
+for i in *.PARTITION *.UBOOT; do
+    echo "$i"
+    file "$i"
+    file "$i" | grep sparse && {
+    echo "[i] convert $i ">&2
+    I=$i.raw
+    [ -f $I ] || \
+	$simg2img $i $I
+    file $I
+    rm $i
+    i=$I
+    }
+
+done
+

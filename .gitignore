@@ -9,5 +9,5 @@ scripts/bin/*
 !README.md
 !README.txt
 
-img/*
+#img/*
 !scripts
