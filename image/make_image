@@ -132,8 +132,15 @@ pack(){
 	    s2=$(((size/4096)*4096))
 	    [ "$b2" -lt "$size" ] && b2=$((b2+4096))
 	    [ "$s2" = "$size" ] || \
-		FAIL "[i] sfs not padded by 4096 $s != $s2 or $b2"
+		FAIL "[i] sfs not padded by 4096 $size != $s2 or $b2"
 	    ;;
+
+	    *Zstandard*)
+	    s2=$((size/4096*4096))
+	    [ "$s2" = "$size" ] || \
+		FAIL "[i] zstd not padded by 4096 $s2 != $size"
+	    ;;
+
 	    *)
 	    FAIL "sub data not recognized"
 	esac
@@ -467,6 +474,9 @@ desc: $desc
 		;;
 		\#*)
 		echo " SUB: $data"
+		;;
+		%*)
+		echo " CMP: $data - $sub"
 		;;
 		*)
 		# check files
