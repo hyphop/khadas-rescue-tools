@@ -13,11 +13,12 @@ simg2img=$(which simg2img)
     exit 1
 }
 
-p=${1:-../.boot/}
+p=${1:-}
 
 cd $p || exit 1
 
 for i in *.PARTITION *.UBOOT; do
+    [ -f $i ] || continue
     echo "$i"
     file "$i"
     file "$i" | grep sparse && {

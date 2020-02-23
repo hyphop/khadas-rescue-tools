@@ -6,23 +6,34 @@
 
 DIR="$(dirname $0)"
 DP="$(realpath $DIR)"
-N=${DP%/*}
+#N=${DP%/*}
+N=${DP}
 N=${N##*/}
+M=${N%.krescue}
+M="../../img/$M"
+MP="$(realpath $M)"
 
-echo "[i] started $N">&2
+echo "[i] started $N -> $M">&2
+mkdir -p "$M"
 
-cd $DIR
+cd $M
 
 IMG=SC_VIM1_DEBUG_ATV-v2.0-20200130.7z
 LINK='https://mega.nz/#!ItRCgIjS!G6NgnVhAcGj-5DY_RrDmSf92lkXjLhLbyPD4UnsGcCg'
 #LINK='https://mega.nz/#!Wo8jhILB!WJAoj87K3hvpmVafUUgvMr7kDZRoSMdXllB-AMjixDc'
 
-DL="../dl"
+DL="dl"
 TPL=boot.atv.v2.tar.gz
 CNF_=krescue.image.conf
-R=../README.txt
-CNF=../.$CNF_
-META="../.meta"
+CNF=.$CNF_
+R=README.txt
+META=".meta"
+OUT=".boot"
+
+CMD(){
+    echo "# $@">&2
+    $@
+}
 
 [ -f $R ] || {
     echo "[i] create README: $R">&2
@@ -31,14 +42,10 @@ $LINK
 " > $R
 }
 
-CMD(){
-    echo "# $@">&2
-    $@
-}
 
 [ -f "../$CNF" ] || {
     echo "[i] copy kresq config from template"
-    CMD cp $CNF_ $CNF
+    CMD cp $DP/$CNF_ $CNF
 }
 
 [ -d $META ] || mkdir -p $META
@@ -52,15 +59,15 @@ DIE(){
 GET(){
     O_=$2
     D_=$3
-
     echo "[i] DOWNLOAD $1 => $O_ DIR $D_">&2
+
     T_=/tmp/dl.head
     P_=$(pwd)
 
     cd $D_
 
     [ -f "$O_.md5sum" ] && {
-	echo "[e] already downloaded">&2
+	echo "[w] already downloaded">&2
 	cd $P_
 	return 0
     }
@@ -99,24 +106,27 @@ echo "[i] $IMG2"
     7zr -so e "$IMG_" > $IMG2 || DIE
 }
 
-OUT="../.boot"
-
 [ -d "$OUT" ] || {
-    CMD tar -xf $TPL -C ../ || DIE
-    CMD mv ../boot $OUT
+    CMD tar -xf $DP/$TPL || DIE
+    CMD mv boot $OUT
 }
 
-[ -f $OUT/aml_sdc_burn.ini ] || {
-CMD aml_image_v2_packer -d $IMG2 "$OUT"
+[ -f $OUT/aml_sdc_burn.ini -a -f $OUT/unpacked ] || {
+CMD aml_image_v2_packer -d $IMG2 "$OUT" || DIE
+
+date > $OUT/unpacked
+
+[ -s $IMG2 ] && printf "" > $IMG2
 
 for R in aml_sdc_burn.ini  DDR.USB  image.cfg  platform.conf  UBOOT.USB; do
     CMD rm "$OUT/$R"
 done
 
-./sparseimg2img $OUT
+../../scripts/sparseimg2img $OUT
 
 }
 
-cd ..
+echo "[i] project is ready: $MP">&2
 
-make_image
+CMD make_image
+
