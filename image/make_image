@@ -38,10 +38,14 @@ CONFIG=
 NOCLEANUP=
 NOMT=1
 
+
 FAIL(){
     echo "[e] FAIL: $@"
     exit 1
 }
+
+mksquashfs=$(which mksquashfs)
+[ "$?" = 0 ] || FAIL need install squashfs-tools
 
 #[ "$1" ] || USAGE
 
@@ -214,7 +218,7 @@ pack(){
     prg=$!
 
     export SUB=$sub_idx
-    CMD mksquashfs $SFS 1>>$OUT_IMAGE$sub_idx.log
+    CMD $mksquashfs $SFS 1>>$OUT_IMAGE$sub_idx.log
 
     kill $prg
     echo
@@ -478,6 +482,9 @@ desc: $desc
 		%*)
 		echo " CMP: $data - $sub"
 		;;
+		\&*)
+		echo " CMP: $data - $sub"
+		;;
 		*)
 		# check files
 #		echo " CHECK FILE: $data"
@@ -554,7 +561,7 @@ echo "$subs_size" > $MM/subs.size
 
     export SUB=0
 
-    CMD mksquashfs $MM $(cat $OUT_IMAGE.post) 1>$OUT_IMAGE$SUB.log || FAIL "sub 0 error pack"
+    CMD $mksquashfs $MM $(cat $OUT_IMAGE.post) 1>$OUT_IMAGE$SUB.log || FAIL "sub 0 error pack"
 
 #	 \\
 

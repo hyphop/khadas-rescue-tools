@@ -1,0 +1,196 @@
+#!/bin/bash
+
+## hyphop ##
+
+#= ZSTDE - is zstd extension
+
+ZSTDE="
+ _________ _____ ____    _____
+|__  / ___|_   _|  _ \  / ___/
+  / /\___ \ | | | | | |/ ___  
+ / /_ ___) || | | |_| / ___   
+/____|____/ |_| |____/____/   
+"
+
+#+ zstd image header
+#+ 4096 block size padding
+#+ zstd image tail
+
+chksum="xxhsum -H2"
+chkname="xxh128sum"
+
+[ "$zstd" ] || \
+zstd=$(which zstd)
+[ "$?" = 0 ] || {
+    echo "[e] zstd not found! plz install it">&2
+    exit 1
+}
+
+[ "$xxhsum" ] || \
+xxhsum=$(which xxhsum)
+[ "$?" = 0 ] || {
+chksum=md5sum
+chkname=md5sum
+}
+
+EXT=zstd
+
+FOOTER=1
+
+CMP_OPTS_="-c"
+#CMP_OPTS="-c -T0"
+
+IN=
+OUT=
+
+for a in $@; do
+
+    case $a in
+    "-22"|--max|--ultra)
+	CMP_OPTS="$CMP_OPTS --ultra -22"
+	a=
+	continue
+    ;;
+    -*)
+	CMP_OPTS="$CMP_OPTS $a"
+	a=
+	continue
+    ;;
+    *)
+    [ -f "$a" ] && {
+	IN="$a"
+	a=
+    }
+    ;;
+    esac
+
+
+done
+
+[ "$IN" ] && {
+[ "$a" ] && {
+    OUT="$a"
+}
+}
+
+ZSTD_HDR(){
+hdr_sz=$1
+#echo "[i] zstd header $1">&2
+hdr_sx=$(printf "%08x" $1)
+
+#########
+#01234567
+#########
+
+h1=${hdr_sx:6:2}
+h2=${hdr_sx:4:2}
+h3=${hdr_sx:2:2}
+h4=${hdr_sx:0:2}
+
+printf "%b" '\x50\x2A\x4D\x18'
+printf "%b" "\x$h1\x$h2\x$h3\x$h4"
+
+}
+
+MARK_INFO_BEGIN="##ZSTD_INFO"
+MARK_INFO_END="##ZSTD-INFO"
+MARK_FILE_END="
+##ZSTD#END
+"
+BS=4096
+ZSTD_HDR_SIZE=8
+
+[ "$IN" ] || {
+    echo "[w] undef input file">&2
+    exit 1
+}
+
+[ "$OUT" ] || OUT="$IN.$EXT"
+
+OUT2=$OUT.footer
+
+SIZE_=
+chk_size(){
+SIZE_=$(stat -c%s $OUT)
+SIZE_CHK=$((SIZE_/BS*BS))
+[ $SIZE_ = $SIZE_CHK ] || {
+    echo "[e] wrong output size not div by $SIZE_ != $SIZE_CHK /// $BS">&2
+    return 1
+}
+}
+
+SM=${#MARK_FILE_END}	# 
+
+BH=$((BS-ZSTD_HDR_SIZE))
+ZSTD_HDR $BH > $OUT
+printf "%${BH}s" " " >> $OUT
+
+HS=$BS # HEADER SIZE = BS 
+
+#ZSTD_HDR 0 >> $OUT
+#exit 0
+
+OPTS_=$(echo $CMP_OPTS_ $CMP_OPTS)
+echo "# zstd $OPTS_ $IN >> $OUT">&2
+$zstd $OPTS_ $IN >> $OUT
+
+S=$(stat -L -c%s $IN)      # INPUT SIZE
+S0=$(stat -L -c%s $OUT)    # PACKER_SIZE + BS HEADER
+S0=$((S0-HS))              # PACKED_SIZE
+S1=$((S0+ZSTD_HDR_SIZE))
+S2=$((S1/BS*BS))
+
+[ $S2 = $S1 ] || S2=$((S2+BS))
+S21=$((S2-S1))             # PAD SIZE - HDR
+
+ZSTD_HDR $S21 >> $OUT
+[ $S21 -gt 0 ] && printf "%${S21}s" " " >> $OUT
+
+S22=$((S21+ZSTD_HDR_SIZE)) # PAD SIZE
+S23=$((S0+S22))            # PACKED_ROUNDED_SIZE
+
+chk_size || exit 1
+
+for IN_CHKSUM in $(dd if=$IN bs=$BS  2>/dev/null | $chksum); do
+break
+done
+
+for OUT_CHKSUM in $(dd if=$OUT bs=$BS skip=1 2>/dev/null | $chksum); do
+break
+done
+
+[ "$FOOTER" ] && {
+ZSTD_HDR $BH >> $OUT
+printf "%${BH}s" "$MARK_FILE_END" >> $OUT
+FOOTER=$BS
+}
+
+chk_size || exit 1
+
+HDR_="
+$IN
+$MARK_INFO_BEGIN
+FILE_NAME: $IN
+FILE_SIZE: $SIZE_
+FMT: zstde
+CMP_OPTS: $CMP_OPTS
+HEADER_SIZE: $HS
+UNPACK_SIZE: $S
+PACKED_SIZE: $S0
+DATA_SIZE: $S23
+PAD_SIZE: $S22
+FOOTER: $FOOTER
+CRC_OUT-$chkname: $OUT_CHKSUM
+CRC_IN-$chkname: $IN_CHKSUM
+$MARK_INFO_END
+"
+
+(
+ZSTD_HDR $BH
+echo "$HDR_"
+) | dd of=$OUT conv=notrunc 2>/dev/null
+
+file $OUT && zstd -l $OUT
+
+echo "$HDR_"
+

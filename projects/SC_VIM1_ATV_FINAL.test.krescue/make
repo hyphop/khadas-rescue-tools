@@ -31,7 +31,7 @@ META=".meta"
 OUT=".boot"
 
 
-[ "$7zr" ] || \
+[ "$z7r" ] || \
 z7r="$(which 7zr)"
 [ $? = 0 ] || {
     echo "[e] 7zr not found! plz install it">&2
@@ -106,6 +106,11 @@ done
 ../../scripts/sparseimg2img $OUT
 
 }
+
+for p in $OUT/*.raw; do
+CMD ../../scripts/zstde --max $p ${p%.*}.zstd || DIE
+CMD rm $p
+done
 
 echo "[i] project is ready: $MP">&2
 

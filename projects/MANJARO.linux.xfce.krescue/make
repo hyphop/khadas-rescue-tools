@@ -1,0 +1,203 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= make kresq 
+
+DIR="$(dirname $0)"
+DP="$(realpath $DIR)"
+#N=${DP%/*}
+N=${DP}
+N=${N##*/}
+M=${N%.krescue}
+M="../../img/$M"
+MP="$(realpath $M)"
+
+CMP_LEVEL="-22 -T2"
+
+LABEL=MANJARO
+
+echo "[i] started $N -> $M">&2
+mkdir -p "$M"
+
+cd $M
+
+#https://yadi.sk/d/rYzimbOHPxI36w
+
+IMG=Manjaro-ARM-kde-plasma-vim3-20.02.img.xz
+IMG=Manjaro-ARM-xfce-vim3-20.02.img.xz
+IMG=Manjaro-ARM-xfce-vim1-20.02.img.xz
+
+LINK='https://s188i.storage.yandex.net/rdisk/fecf491df6e81a0a9580135e66b760cac99bd8eb2af690142fb81d6b74193820/5e53d5a9/y4OIVLHNyzX0NTbW48Ex-mLTMVIRI6ujcnPbusQ35eFKOHKKHXuPmIRlOQwsZs_FcDVZzPCnCE_FO1zFy6lutg==?uid=0&filename=Manjaro-ARM-xfce-vim1-20.02.img.xz&disposition=attachment&hash=s4mEUmIHnbxnMx3oC6FLm4maWvgchiyxuKEc3pRfqkeuo0s%2BYS5/OZYmApTHorD2q/J6bpmRyOJonT3VoXnDag%3D%3D%3A/Manjaro-ARM-xfce-vim1-20.02.img.xz&limit=0&content_type=application%2Fx-xz&owner_uid=925285346&fsize=759766116&hid=44d3b09d7714fbc5cc080a0e633cbee5&media_type=unknown&tknv=v2&rtoken=jl3v8Qpl5r1j&force_default=no&ycrid=na-0c5e1dd26cdd8b00376d816118f079c3-downloader12f&ts=59f52b6f1fc40&s=8975eb46b343f5b7217c858e2dee127d222d139d5d2b55ca4f968fd90a890763&pb=U2FsdGVkX19DdXDYQjFEgVzkApztIxt9UfSkJcDSffjbRh-g2MXmFfhO_4Dc9ujsiqHxPyt0fybiFMjggm7cDXnW03NrQmeg9CtubUxhY0Y'
+
+DL="dl"
+CNF_=krescue.image.conf
+CNF=.$CNF_
+R=README.txt
+META=".meta"
+BOOT="BOOT"
+ROOT=.
+ROOT=ROOT
+ROOTFS=$ROOT/rootfs.img
+
+CMD(){
+    echo "# $@">&2
+    $@
+}
+
+FAIL(){
+    echo "[e] $@">&2
+    exit 1
+}
+
+[ "$z7r" ] || \
+z7r="$(which 7zr)"
+[ $? = 0 ] || FAIL 7zr not found! plz install it
+
+[ "$mcopy" ] || \
+mcopy="$(which mcopy)"
+[ $? = 0 ] || FAIL mcopy not found ! plz install mtools
+
+[ "$sfdisk" ] || \
+sfdisk="$(which sfdisk)"
+[ $? = 0 ] || FAIL sfdisk not found ! plz install it
+
+[ "$xz" ] || \
+xz="$(which pixz)"
+[ $? = 0 ] || \
+xz="$(which xz)"
+[ $? = 0 ] || FAIL xz not found ! plz install xz or pixz
+
+[ -f $R ] || {
+    echo "[i] create README: $R">&2
+    echo "$IMG
+$LINK
+" > $R
+}
+
+#[ -f "../$CNF" ] || {
+    echo "[i] copy kresq config from template"
+    CMD cp $DP/$CNF_ $CNF
+    CMD rsync -av --inplace  $DP/$CNF_ $CNF
+#}
+
+[ -d $META ] || mkdir -p $META
+[ -d $DL ] || mkdir -p $DL
+
+../../scripts/download "$LINK" "$IMG" $DL || FAIL download
+
+IMG_="$DL/$IMG"
+IMG2="$DL/${IMG%.*}"
+
+[ -f "$IMG2" ] || {
+    echo "[i] unpack $IMG_">&2
+#    echo "[i] 7zr -so e $IMG_ > $IMG2">&2
+#    $z7r -so e "$IMG_" > $IMG2 || DIE
+    echo "[i] xz -dc $IMG_ > $IMG2">&2
+    $xz -dc < "$IMG_" > $IMG2 || FAIL extract
+}
+
+
+[ -s "$IMG2" ] && {
+
+echo "[i] extract $IMG2">&2
+
+file $IMG2 | grep partition || {
+    echo "[e] wrong disk image IMG$">&2
+    exit 1 
+}
+
+$sfdisk $IMG2 --dump
+
+S1="$($sfdisk $IMG2 --dump | grep type=c)"
+S1=${S1#*start=}
+S1=${S1%%,*}
+S1=$(echo $S1)
+
+echo mtools_skip_check=1 > ~/.mtoolsrc
+
+[ -d  $BOOT.org ] || {
+echo "[i] copy boot partition">&2
+$mcopy -sbpmi $IMG2@@$((512*S1)) :: $BOOT.org || FAIL extract boot partition to $BOOT.org
+}
+
+S2="$($sfdisk $IMG2 --dump | grep type=83)"
+S2=${S2#*start=}
+S2=${S2%%,*}
+S2=$(echo $S2)
+
+[ -d "$ROOT" ] || mkdir -p $ROOT
+
+[ -f $ROOTFS ] || {
+echo "[i] extract rootfs => $ROOTFS">&2
+dd if=$IMG2 skip=$((S2)) of=$ROOTFS
+fsck.ext4 -f $ROOTFS || FAIL rootfs image check
+#resize2fs -M $ROOTFS
+}
+
+ls -l1
+
+truncate -s0 $IMG2
+
+}
+
+for p in $ROOTFS; do
+[ -s $p ] || continue
+[ -f $p ] || continue
+[ -f $p.zstd ] && {
+[ -f $p.packed ] || FAIL broken $p.zstd
+continue
+}
+echo "[i] rootfs image compress">&2
+
+CMD ../../scripts/zstde $CMP_LEVEL $p $p.zstd || FAIL compress
+echo $p.zstd > $p.packed
+CMD truncate -s0 $p
+done
+
+
+echo "[i] prepare bootloaders">&2
+
+BASE=https://github.com/hyphop/khadas-uboot-spi/releases/download/mainline-test/
+
+for VIM in VIM1 VIM2 VIM3 VIM3L; do
+    D=$BOOT.$VIM
+    [ -d $D ] || mkdir -p $D
+    UBOOT=u-boot.$VIM.sd.bin
+    ../../scripts/download $BASE$UBOOT $UBOOT $D
+done
+
+[ -d "$BOOT.org" ] && {
+
+echo "[i] prepare boot">&2
+
+CMD cp -a $DP/$BOOT .
+
+. $BOOT/boot.cfg
+
+CMD mkdir -p $BOOT/$UBOOT_DTB_DIR
+
+cp $BOOT.org/$UBOOT_KERNEL    $BOOT
+cp $BOOT.org/$UBOOT_UINITRD   $BOOT
+
+cp $BOOT.org/$UBOOT_DTB_VIM1  $BOOT/$UBOOT_DTB_VIM1
+cp $BOOT.org/$UBOOT_DTB_VIM2  $BOOT/$UBOOT_DTB_VIM2
+cp $BOOT.org/$UBOOT_DTB_VIM3  $BOOT/$UBOOT_DTB_VIM3
+cp $BOOT.org/$UBOOT_DTB_VIM3L $BOOT/$UBOOT_DTB_VIM3L
+
+echo $LABEL > $BOOT/LABEL
+echo $LABEL > $BOOT/$LABEL.label
+
+rm -rf $BOOT.org
+
+ls -l1 $BOOT
+
+}
+
+[ -d "$BOOT" ] || FAIL $BOOT dir was removed
+
+echo "[i] project is ready: $MP">&2
+
+echo "[i] make image">&2
+CMD ../../image/make_image
+

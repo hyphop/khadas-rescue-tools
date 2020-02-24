@@ -1,0 +1,56 @@
+#!/bin/sh
+
+## hyphop ##
+
+#GET(){
+
+    [ "$1" ] || { 
+	echo "[w] undef src">&2
+	return 1
+    }
+
+    O_="$2"
+    D_="$3"
+    echo "[i] DOWNLOAD $1 => $O_ DIR $D_">&2
+
+    T_=/tmp/dl.head
+    P_=$(pwd)
+
+    cd $D_
+
+    [ -f "$O_.md5sum" ] && {
+	echo "[w] already downloaded">&2
+	cd $P_
+	return 0
+    }
+
+    case "$1" in
+	*//mega*)
+	[ "$megadl" ] || \
+	megadl=$(which megadl)
+	[ "$?" = 0 ] || {
+	    echo "[e] megadl not found">&2
+	    return 1
+	}
+	$megadl --print-names "$1" | tee $T_
+	o_=$(tail -1 "$T_")
+	[ "$o_" = "$O_" ] || \
+	CMD mv "$o_" "$O_"
+	;;
+	*//*)
+	curl -jkL -C- "$1" -o "$O_"
+	;;
+    esac
+
+    [ "$?" = "0" ] && {
+	md5sum "$O_" > "$O_.md5sum"
+	cd $P_
+	return 0
+    }
+
+    cd $P_
+
+#}
+#
+#GET "$LINK" "$IMG" $DL || DIE
+
