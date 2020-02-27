@@ -23,12 +23,16 @@ CONF=$0.conf
 COND=$0.conf
 COND=${COND#./}
 VARIANT=
-[ "$1" ] && VARIANT="$1"
-[ -L $CONF ] && VARIANT=$(readlink $CONF)
+[ "$1" ] && {
+[  -f "$1" ] || VARIANT=".$1"
+}
+[ -f "$1" ] && VARIANT="$1"
+[ "${VARIANT##*/}" = "${CONF##*/}" ] && VARIANT=
+[ "$VARIANT" ] || {
+    [ -L $CONF ] && VARIANT=$(readlink $CONF)
+}
 VARIANT=${VARIANT#$COND}
-
 echo "[i] VARIANT: $VARIANT">&2
-
 CONF=$CONF$VARIANT
 [ -f $CONF ] || {
     echo "[e] config $CONF missed">&2
@@ -41,6 +45,9 @@ echo "[i] CONFIG $CONF">&2
 . $CONF # config include
 
 echo "[i] started $N -> $M">&2
+
+exit 0
+
 mkdir -p "$M"
 
 cd $M
