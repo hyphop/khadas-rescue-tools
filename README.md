@@ -9,8 +9,9 @@
   krescue advanced install system  
 ```
 
-+ [image](image)			- generate | parse OS installation image (*.kresq)
-+ [mega](mega)			- mega installation system
++ [image](image)        - generate | parse OS installation image (*.kresq)
++ [mega](mega)          - mega installation system
++ [projects](projects)  - kresq projects
 
 # LINKS
 
