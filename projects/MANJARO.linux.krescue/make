@@ -178,7 +178,8 @@ S2=$(echo $S2)
 [ -f $ROOTFS ] || {
 echo "[i] extract rootfs => $ROOTFS">&2
 dd if=$IMG2 skip=$((S2)) of=$ROOTFS
-fsck.ext4 -f $ROOTFS || FAIL rootfs image check
+file $ROOTFS | grep ext4 || FAIL not rootfs
+fsck.ext4 -f $ROOTFS || echo "[w] rootfs image check oops"
 #resize2fs -M $ROOTFS
 }
 
