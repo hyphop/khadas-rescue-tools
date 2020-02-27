@@ -1,0 +1,21 @@
+#!/bin/sh
+
+## hyphop ##
+D=$(dirname $0)
+cd $D
+
+DL=../../dl
+
+PKG=xz-5.2.4.tar.gz
+
+echo "[i] make $PKG">&2
+
+#../download https://tukaani.org/xz/$PKG $PKG $DL
+
+cd $DL
+
+tar -xf $PKG
+D=${PKG%.tar.*}
+cd $D
+./configure && make
+cp src/xz/.libs/xz ../../bin

@@ -22,9 +22,11 @@ OK(){
 
     T_=/tmp/dl.head
     P_=$(pwd)
-
-    cd $D_
-
+    [ $D_ ] && {
+	cd $D_ || { echo "[e] change dir to $D_">&2
+	exit 1
+        }
+    }
     [ -f "$O_.md5sum" ] && {
 	echo "[w] already downloaded">&2
 	cd $P_
