@@ -162,6 +162,7 @@ echo mtools_skip_check=1 > ~/.mtoolsrc
 
 [ -d  $BOOT.org ] || {
 echo "[i] copy boot partition">&2
+echo "#$mcopy -sbpmi $IMG2@@$((512*S1)) :: $BOOT.org"
 $mcopy -sbpmi $IMG2@@$((512*S1)) :: $BOOT.org || FAIL extract boot partition to $BOOT.org
 }
 
