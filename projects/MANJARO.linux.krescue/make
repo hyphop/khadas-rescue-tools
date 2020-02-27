@@ -153,7 +153,8 @@ file $IMG2 | grep partition || {
 
 $sfdisk $IMG2 --dump
 
-S1="$($sfdisk $IMG2 --dump | grep type=c)"
+S1="$($sfdisk $IMG2 --dump | grep img1)"
+[ "$S1" ] || FAIL wrong partitions
 S1=${S1#*start=}
 S1=${S1%%,*}
 S1=$(echo $S1)
@@ -166,7 +167,8 @@ echo "#$mcopy -sbpmi $IMG2@@$((512*S1)) :: $BOOT.org"
 $mcopy -sbpmi $IMG2@@$((512*S1)) :: $BOOT.org || FAIL extract boot partition to $BOOT.org
 }
 
-S2="$($sfdisk $IMG2 --dump | grep type=83)"
+S2="$($sfdisk $IMG2 --dump | grep img2)"
+[ "$S2" ] || FAIL wrong partitions
 S2=${S2#*start=}
 S2=${S2%%,*}
 S2=$(echo $S2)
