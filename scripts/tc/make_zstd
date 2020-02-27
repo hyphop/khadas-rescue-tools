@@ -1,0 +1,28 @@
+#!/bin/sh
+
+## hyphop ##
+D=$(dirname $0)
+cd $D
+
+DL=../../dl
+
+[ -d "$DL" ] || mkdir -p $DL
+
+VER=1.4.4
+NAME=zstd
+PKG=$NAME-$VER.tar.gz
+
+echo "[i] make $PKG">&2
+
+../download https://github.com/facebook/zstd/releases/download/v$VER/$NAME-$VER.tar.gz $PKG $DL
+
+cd $DL
+
+D=${PKG%.tar.*}
+
+[ -d $D ] || \
+tar -xf $PKG
+
+cd $D
+
+make 
