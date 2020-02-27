@@ -1,0 +1,29 @@
+#!/bin/sh
+
+## hyphop ##
+D=$(dirname $0)
+cd $D
+
+DL=../../dl
+
+[ -d "$DL" ] || mkdir -p $DL
+
+VER=4.4
+NAME=squashfs-tools
+PKG=$NAME-$VER.tar.gz
+
+echo "[i] make $PKG">&2
+
+#../download https://github.com/plougher/squashfs-tools/archive/$VER.tar.gz $PKG $DL
+
+cd $DL
+
+#tar -xf $PKG
+D=${PKG%.tar.*}
+cd $D
+cd $NAME
+
+make XZ_SUPPORT=1 ZSTD_SUPPORT=1
+
+#./configure && make
+#cp src/xz/.libs/xz ../../bin
