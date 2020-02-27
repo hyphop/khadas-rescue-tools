@@ -1,0 +1,35 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= print squashfs size / rounded by 4096 bytes blocks
+
+# examples
+
+# squashfs_size /dev/mmcblk2p2
+# 29573120
+#
+
+    FILE=$1
+    OFFSET=$2
+
+    [ "$OFFSET" ] || OFFSET=0
+
+    OFF4=$((OFFSET/4096))
+    [ "$((OFF4*4096))" = "$OFFSET" ] || {
+	echo "[i] offset not div by 4096">&2
+	return 1
+    }
+
+    sk="dd count=1 if=$FILE bs=4096 skip=$OFF4"
+    
+    magic="$( $sk 2>/dev/null | dd bs=1 count=4 skip=1 2>/dev/null)"
+
+    [ "$magic" = "7zXZ" ] || {
+	echo "[w] its not squash $magic">&2
+	return 1
+    }
+
+    #xz -l $
+    #echo "$sizer"
+

@@ -2,7 +2,7 @@
 
 ## hyphop ##
 
-#= make kresq 
+#= MANJARO LINK kresq project generator
 
 DIR="$(dirname $0)"
 DP="$(realpath $DIR)"
@@ -17,17 +17,33 @@ CMP_LEVEL="-22 -T2"
 
 LABEL=MANJARO
 
+DATE=$(date)
+
+CONF=$0.conf
+COND=$0.conf
+COND=${COND#./}
+VARIANT=
+[ "$1" ] && VARIANT="$1"
+[ -L $CONF ] && VARIANT=$(readlink $CONF)
+VARIANT=${VARIANT#$COND}
+
+echo "[i] VARIANT: $VARIANT">&2
+
+CONF=$CONF$VARIANT
+[ -f $CONF ] || {
+    echo "[e] config $CONF missed">&2
+    exit 1
+}
+
+M=$M$VARIANT
+
+echo "[i] CONFIG $CONF">&2
+. $CONF # config include
+
 echo "[i] started $N -> $M">&2
 mkdir -p "$M"
 
 cd $M
-
-#https://yadi.sk/d/rYzimbOHPxI36w
-
-IMG=Manjaro-ARM-kde-plasma-vim3-20.02.img.xz
-IMG=Manjaro-ARM-xfce-vim3-20.02.img.xz
-LINK='https://s356myt.storage.yandex.net/rdisk/57b25ccd3db39f6eda51f01c5e2770a8910dc22a5536a70abc314efdc010be3c/5e50c9ca/y4OIVLHNyzX0NTbW48Ex-u_ma7OnnhDBz1f4lTRP0MhnaOv_GE-eoy_1_-pGqyuvTTiMbDKRUBTo6R-Y0EpCHQ==?uid=0&filename=Manjaro-ARM-kde-plasma-vim3-20.02.img.xz&disposition=attachment&hash=f5TMIKGbxCKM0b3V81UrhMpLEPU23uB4vZZzcoARbnLGX/qr8onHljlUzP/N%2BHUVq/J6bpmRyOJonT3VoXnDag%3D%3D&limit=0&content_type=application%2Fx-xz&owner_uid=925285346&fsize=968259664&hid=097bee90e5362cff6ad12a92352ad14f&media_type=unknown&tknv=v2&rtoken=8ba5oEQ0o4KS&force_default=no&ycrid=na-4259c5c771b37ddead77fa9a1d3c5480-downloader11e&ts=59f243b0e8680&s=c052489ace1740882748dabafc4427deab259cc6fa862fb5dac938357f016e3e&pb=U2FsdGVkX18vWcJXZxvyk00Uil7PSp7YOSA9LZCaCNbDSqwj8lCLl2wV9ct6uF6hupR3aw7ux1UDfPLP_O6roUlUS-ADf4yV6Of0KxQuyEs'
-LINK='https://s53iva.storage.yandex.net/rdisk/28a34cbddb86b7f704e39dc611caab8b3b99332b51d48c2a91b60455b07bf1b4/5e534dc6/y4OIVLHNyzX0NTbW48Ex-llZELz9YBNkLZHhbvGvfluHMFe-xKVGF2GEjD4BT7gwFvOb7hXdV8w9URa43_KioQ==?uid=0&filename=Manjaro-ARM-xfce-vim3-20.02.img.xz&disposition=attachment&hash=s4mEUmIHnbxnMx3oC6FLm4maWvgchiyxuKEc3pRfqkeuo0s%2BYS5/OZYmApTHorD2q/J6bpmRyOJonT3VoXnDag%3D%3D%3A/Manjaro-ARM-xfce-vim3-20.02.img.xz&limit=0&content_type=application%2Fx-xz&owner_uid=925285346&fsize=758090256&hid=da24284422039af31d54e08cb9177d90&media_type=unknown&tknv=v2&rtoken=7Bqdx0ZtUHyz&force_default=no&ycrid=na-714bcc7b365eabcc7eae120af7d59e93-downloader23h&ts=59f4a9d7a7d80&s=e6f4a44bb77d46fe7d858f6a37970d8ed67f50469e23aced5d5f5705ff3695c0&pb=U2FsdGVkX1_rbOTnPRgC4K7SkwCLSLtFroqVhtOU1N4Qds0MLs2zHHobf4edCIJh1OknlA577RX69LJ0UlABHXFQgyiCA4sFQCazuyaBseA'
 
 DL="dl"
 CNF_=krescue.image.conf
@@ -63,27 +79,49 @@ sfdisk="$(which sfdisk)"
 
 [ "$xz" ] || \
 xz="$(which pixz)"
-[ $? = 0 ] || \
+[ $? = 0 ] || {
+echo "[w] plz install pixz"
 xz="$(which xz)"
 [ $? = 0 ] || FAIL xz not found ! plz install xz or pixz
+}
 
 [ -f $R ] || {
     echo "[i] create README: $R">&2
-    echo "$IMG
-$LINK
+    echo "# SOURCES
+NAME:      $IMG
+SOURCE:    $LINK0
+
+IMAGE_URL: $LINK
+
+## BUILD IMAGE
+
+./make
+
+
 " > $R
 }
 
+[ -f make ] || {
+    ln -s ../../image/make_image make
+}
+
 #[ -f "../$CNF" ] || {
-    echo "[i] copy kresq config from template"
-    CMD cp $DP/$CNF_ $CNF
-    CMD rsync -av --inplace  $DP/$CNF_ $CNF
-#}
+    echo "[i] copy kresq config from template $CNF_.tpl ($NAME $DATE)"
+#    CMD cp $DP/$CNF_ $CNF
+#    CMD rsync -av --inplace  $DP/$CNF_ $CNF
+    . $DP/$CNF_.tpl > $CNF
+#
 
 [ -d $META ] || mkdir -p $META
 [ -d $DL ] || mkdir -p $DL
 
-../../scripts/download "$LINK" "$IMG" $DL || FAIL download
+../../scripts/download "$LINK" "$IMG" $DL || FAIL "download sd image check 
+$LINK0
+$IMG
+!!! may be need update yandex link for curl !!!
+or just put $IMG and *.md5sum to 
+$DL => $(realpath $DL)
+"
 
 IMG_="$DL/$IMG"
 IMG2="$DL/${IMG%.*}"
@@ -142,16 +180,22 @@ truncate -s0 $IMG2
 
 for p in $ROOTFS; do
 [ -s $p ] || continue
+[ -L $p ] && continue
 [ -f $p ] || continue
-[ -f $p.zstd ] && {
-[ -f $p.packed ] || FAIL broken $p.zstd
-continue
-}
+#[ -f $p.zstd ] && {
+[ -f $p.packed ] && continue
+#FAIL broken $p.zstd
+#continue
+#}
 echo "[i] rootfs image compress">&2
+#CMD ../../scripts/zstde $CMP_LEVEL $p $p.zstd || FAIL compress
+#echo $p.zstd > $p.packed
 
-CMD ../../scripts/zstde $CMP_LEVEL $p $p.zstd || FAIL compress
-echo $p.zstd > $p.packed
+CMD ../../scripts/xze -e -T4 -9 $p || FAIL compress
+echo $p.xz > $p.packed
+
 CMD truncate -s0 $p
+
 done
 
 
@@ -163,7 +207,7 @@ for VIM in VIM1 VIM2 VIM3 VIM3L; do
     D=$BOOT.$VIM
     [ -d $D ] || mkdir -p $D
     UBOOT=u-boot.$VIM.sd.bin
-    ../../scripts/download $BASE$UBOOT $UBOOT $D
+    ../../scripts/download $BASE$UBOOT $UBOOT $D || FAIL download uboot
 done
 
 [ -d "$BOOT.org" ] && {

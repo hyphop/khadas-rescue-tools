@@ -1,0 +1,55 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= sfs simple wrap
+
+USAGE() { echo "
+    sfs - squashfs compress wrapper
+
+USAGE
+
+    sfs [ARGS]
+"
+exit 
+}
+
+[ "$mksquashfs" ] || xz=$(which mksquashfs)
+[ $? = 0 ] || {
+    echo "[e] plz install xz">&2
+    echo " sudo apt-get install squashfs-tools">&2
+    echo " or build from last sources if u need zstd compression">&2
+    exit 1
+}
+
+IN=
+OPTS=
+
+[ $# = 0 ] && USAGE
+
+for a in $@; do
+    case $a in
+    *)
+    [ -f "$a" ] && {
+        [ "$IN" ] || IN=$a
+        continue
+    }
+    OPTS="$OPTS $a"
+    ;;
+    esac
+done
+
+[ "$IN" ] || USAGE
+
+OUT="$IN.sfs"
+BS=4096
+ARGS="-comp zstd -Xcompression-level 3"
+
+[ -f "$OUT" ] && rm $OUT
+
+echo "# mksquashfs $IN $OUT $ARGS"
+
+$mksquashfs $IN $OUT $ARGS
+S1=$(stat -c%s $IN)
+S2=$(stat -c%s $OUT)
+echo "[i] compressed $S2 < $S1">&2

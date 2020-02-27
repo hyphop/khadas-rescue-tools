@@ -109,5 +109,5 @@ done
 
 echo "[i] project is ready: $MP">&2
 
-CMD make_image
+CMD ../../image/make_image
 

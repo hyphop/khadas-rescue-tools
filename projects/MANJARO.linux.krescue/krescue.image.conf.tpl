@@ -1,3 +1,4 @@
+cat <<end # krescie image script config template
 # krescue image script config
 
 #    __ _____                      
@@ -7,14 +8,18 @@
 #                                  
 # krescue advanced install system  
 
+#
+# INFO:  https://github.com/hyphop/khadas-rescue-tools/tree/master/image
+#
+
 ## header block
-image:		VIMx.Manjaro.linux.xfce.v1.test
+image:		$NAME
 type:		emmc
 format:		kresq
 args:		-comp zstd -Xcompression-level 22 -b 1M
 #args:		-comp xz -Xdict-size 100% -b 1M -Xbcj arm
 builder:	hyphop
-date:		Sat Feb 22 11:53:04 +09 2020
+date:		$DATE
 link:		http://dl.khadas.com/Firmware
 label:		MANJARO
 match:		BOARD=VIM3L
@@ -24,7 +29,7 @@ match:		BOARD=VIM1
 vars:		BOARD=VIM1 VIM2 VIM3 VIM3L
 source:		.meta
 source:		README*
-duration:	130
+duration:	70
 
 desc:		Manjaro is a free and open-source Linux distribution based on the Arch Linux operating system.
     Manjaro has a focus on user friendliness and accessibility, and the system itself is designed 
@@ -65,14 +70,15 @@ size:	-
 
 # sub 2
 sub:	2
-#source: ROOT*
-data:	ROOT/rootfs.img.zstd
+args:	-comp zstd -Xcompression-level 1 -b 1M
+#data: 	ROOT/rootfs.img.xz.sfs
+source: ROOT
 
 block:  1
 start:  500000B
-sub:	2
-data:   %
-#data:   %ROOT/rootfs.img.zstd
+sub:    2
+#data:  &rootfs.img.xz
+data:   &ROOT/rootfs.img.xz
 
 ## overlay
 overlay: 1
@@ -80,36 +86,6 @@ part:	1
 #match:	BOARD=VIM2
 #match:	BOARD=VIM1
 sub:	1
-source:	BOOT.%%BOARD%%
+source: BOOT.%%BOARD%%
 
 ##END##
-
-CONFIG FILE
-
-    .krescue.image.conf - this config file must stay in root dir or .meta/
-
-SYNTAX
-
-    KRescue config syntax - just a plain-text file with simple rules
-
-    #           - comment , only as first char of string
-    \n\n        - end of block
-    VAR: value  - block line, no space before VAR: ... , no need "' value wrapping
-    desc: value - multiline value only for desc which must once at the end of block
-        +value
-        +value
-
-    ##END##     - all next lines ignorred
-
-VARS
-    desc block image part date builder
-    source match overlay label fstype size
-    start type data default tag ask desc format
-
-AUTHOR
-
-    ## hyphop ##
-
-TODO
-
-    ....

@@ -1,0 +1,15 @@
+#!/bin/sh
+
+## hyphop ##
+
+#7z -m0=lzma2 -mx=9 -aoa -t7z -mmt1 -a $1.7z $1
+CMD(){
+    echo "# $@">&2
+    $@
+}
+
+#CMD 7z -m0=lzma2 -mx=9 -aoa -mmt1 a $1.7z $1
+CMD 7z -txz -m0=lzma2 -mx=9 -aoa -mmt4 a $1.7z $1
+
+
+

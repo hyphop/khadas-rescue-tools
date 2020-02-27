@@ -218,6 +218,7 @@ pack(){
     prg=$!
 
     export SUB=$sub_idx
+    echo "# $mksquashfs $SFS">&2
     CMD $mksquashfs $SFS 1>>$OUT_IMAGE$sub_idx.log
 
     kill $prg

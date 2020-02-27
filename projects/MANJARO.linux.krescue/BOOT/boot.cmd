@@ -17,12 +17,21 @@ initrd_addr=0x13000000
 
 ##CONFIG_END
 
-echo "[i] start $LABEL linux"
+echo "[i] start $LABEL linux from $devtype:$devnum:$distro_bootpart"
 
-test "X$devtype" = "X" && devtype=mmc
-test "X$devnum" = "X" && devnum=2
+test "$devtype" = ""           && devtype=mmc
+#test "$devnum"  = ""          && devnum=2
+#test "$distro_bootpart" = ""  && distro_bootpart=1
+## scan boot part by distro LABEL
+test "$devnum" = "" && for d in 2 1 0; do
+for p in 1 2 3 4 5; do
+test "$devnum" = "" && load $devtype $d:$p $loadaddr $LABEL.label && devnum=$d && distro_bootpart=$p
+done
+done
 
-LOADER="load $devtype $devnum"
+echo "[i] start $LABEL linux from $devtype:$devnum:$distro_bootpart fixed"
+
+LOADER="load $devtype $devnum:$distro_bootpart"
 
 DTB_ADDR=$dtb_mem_addr
 test "X$DTB_ADDR" = "X" && DTB_ADDR=0x1000000

@@ -1,0 +1,20 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= xz edvanced + pad 
+
+IN=$1
+
+[ -f "$IN" ] || {
+    echo "[i] file not found $IN">&2
+    exit 1
+}
+BS=4096
+
+S=$(stat -c%s $IN)
+S2=$((S/BS*BS))
+[ $S2 -lt $S ] && S2=$((S2+BS))
+SD=$((S2-S))
+dd if=/dev/zero bs=$SD count=1 2>/dev/null >> $IN
+echo "[i] pad +$SD">&2
