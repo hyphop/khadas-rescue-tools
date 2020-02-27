@@ -10,7 +10,7 @@ PKG=xz-5.2.4.tar.gz
 
 echo "[i] make $PKG">&2
 
-#../download https://tukaani.org/xz/$PKG $PKG $DL
+../download https://tukaani.org/xz/$PKG $PKG $DL
 
 cd $DL
 
