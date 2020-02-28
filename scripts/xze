@@ -24,6 +24,8 @@ exit
     exit 1
 }
 
+echo "[i] $xz">&2
+
 IN=
 OPTS=
 

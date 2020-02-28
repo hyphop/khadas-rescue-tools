@@ -24,7 +24,9 @@ cd $D
 cd $NAME
 
 export EXTRA_CFLAGS="-I$PRE2/include"
-export EXTRA_LDFLAGS="-L$PRE2/lib"
+export EXTRA_LDFLAGS="-L$PRE2/lib -Wl,-rpath=$PRE2/lib"
+
+make clean
 
 make XZ_SUPPORT=1 ZSTD_SUPPORT=1 mksquashfs unsquashfs && \
     cp mksquashfs unsquashfs $PRE2/bin

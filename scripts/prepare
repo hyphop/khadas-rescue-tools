@@ -1,0 +1,15 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= prepare tc
+
+D=$(dirname $0)
+cd tc
+
+echo "[i] prepare">&2
+
+for p in make_?*; do
+    echo "[i] $p">&2
+    ./$p
+done

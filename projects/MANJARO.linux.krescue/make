@@ -17,6 +17,18 @@ CMP_LEVEL="-22 -T2"
 
 LABEL=MANJARO
 
+case $PATH in
+    */opt/bin:*);;
+    *)PATH="$(realpath $DIR/../../opt/bin):$PATH";;
+esac
+
+echo $PATH
+
+#which xz
+#which zstd
+#which mksquashfs
+#exit 0
+
 DATE=$(date)
 
 CONF=$0.conf
