@@ -5,11 +5,15 @@
 #= MANJARO LINK kresq project generator
 
 DIR="$(dirname $0)"
+
+cd "$DIR"
+
 DP="$(realpath $DIR)"
 #N=${DP%/*}
 N=${DP}
 N=${N##*/}
 M=${N%.krescue}
+
 M="../../img/$M"
 MP="$(realpath $M)"
 

@@ -50,9 +50,9 @@ OK(){
 	*//*)
 	curl -f -jkL -C- -D "$O_.headers" "$1" -o "$O_"
 	r_=$?
-	echo "[i] curl ret code $r_">&2
 	case $r_ in
 	    22)
+	    echo "[i] curl ret code $r_">&2
 	    head -n1 "$O_.headers" | grep 416 && {
 	    echo "[i] file already downloaded">&2
 	    ##curl: (22) The requested URL returned error: 416
@@ -63,6 +63,7 @@ OK(){
 	    OK
 	    ;;
 	    *)
+	    echo "[i] curl ret code $r_">&2
 	    cat "$O_.headers">&2
 	    ;;
 	esac
