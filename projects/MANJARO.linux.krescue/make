@@ -5,10 +5,11 @@
 #= MANJARO LINK kresq project generator
 
 DIR="$(dirname $0)"
+BN=$(basename $0)
 
 cd "$DIR"
+DP="$(realpath .)"
 
-DP="$(realpath $DIR)"
 #N=${DP%/*}
 N=${DP}
 N=${N##*/}
@@ -35,8 +36,8 @@ echo $PATH
 
 DATE=$(date)
 
-CONF=$0.conf
-COND=$0.conf
+CONF=$BN.conf
+COND=$BN.conf
 COND=${COND#./}
 VARIANT=
 [ "$1" ] && {
@@ -132,7 +133,7 @@ IMAGE_URL: $LINK
     echo "[i] copy kresq config from template $CNF_.tpl ($NAME $DATE)"
 #    CMD cp $DP/$CNF_ $CNF
 #    CMD rsync -av --inplace  $DP/$CNF_ $CNF
-    . $DP/$CNF_.tpl > $CNF
+    . $DP/$CNF_.tpl > $CNF || FAIL template not found
 #
 
 [ -d $META ] || mkdir -p $META
