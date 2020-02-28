@@ -13,6 +13,15 @@
 + [mega](mega)          - mega installation system
 + [projects](projects)  - kresq projects
 
+
+```
+git clone https://github.com/hyphop/khadas-rescue-tools.git
+cd khadas-rescue-tools
+./scripts/prepare
+./projects/%%NAME%%/make
+
+```
+
 # LINKS
 
 + https://github.com/hyphop/khadas-rescue
