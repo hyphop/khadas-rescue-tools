@@ -52,6 +52,7 @@ esac
 mksquashfs=$(which mksquashfs)
 [ "$?" = 0 ] || FAIL need install squashfs-tools
 
+
 #[ "$1" ] || USAGE
 
 for i in $@; do
@@ -69,6 +70,7 @@ for i in $@; do
 	CONFIG="$i"
 	continue
     }
+    echo "[i] mksquashfs=$mksquashfs">&2
     USAGE
     ;;
     esac
