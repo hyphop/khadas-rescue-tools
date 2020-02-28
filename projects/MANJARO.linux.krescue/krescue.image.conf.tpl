@@ -38,6 +38,7 @@ desc:		Manjaro is a free and open-source Linux distribution based on the Arch Li
 # sub 1
 sub:	1
 source:	BOOT*
+source:	ROOT.overlay
 
 ## raw data block
 block:  0
@@ -81,12 +82,10 @@ sub:    2
 data:   &ROOT/rootfs.img.xz
 
 ## overlay
-overlay: 1
-part:	1
-#match:	BOARD=VIM2
-#match:	BOARD=VIM1
+overlay: 2
+part:	2
 sub:	1
-source: BOOT.%%BOARD%%
+source: ROOT.overlay
 
 ##END##
 end

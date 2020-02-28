@@ -282,6 +282,8 @@ ls -l1 $BOOT
 
 [ -d "$BOOT" ] || FAIL $BOOT dir was removed
 
+CMD rsync --delete -a --inplace $DP/ROOT.overlay . 
+
 echo "[i] project is ready: $MP">&2
 
 echo "[i] make image">&2
