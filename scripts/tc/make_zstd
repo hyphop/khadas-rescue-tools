@@ -2,11 +2,8 @@
 
 ## hyphop ##
 D=$(dirname $0)
-cd $D
 
-DL=../../dl
-
-[ -d "$DL" ] || mkdir -p $DL
+. $D/make_
 
 VER=1.4.4
 NAME=zstd
@@ -21,8 +18,9 @@ cd $DL
 D=${PKG%.tar.*}
 
 [ -d $D ] || \
-tar -xf $PKG
+    tar -xf $PKG
 
 cd $D
 
-make 
+make && \
+    make install PREFIX="$PRE2"

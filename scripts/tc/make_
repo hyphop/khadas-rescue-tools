@@ -1,0 +1,19 @@
+#!/bin/sh
+
+## hyphop ##
+
+D=$(dirname $0)
+cd $D
+
+DL=../../dl
+PREF=../../opt
+
+[ -d "$DL" ] || mkdir -p $DL
+[ -d "$PREF" ] || mkdir -p $PREF
+
+PRE2=$(realpath $PREF)
+BIN=$PRE2/bin
+
+PATH="$BIN:$PATH"
+
+export PATH=$PATH

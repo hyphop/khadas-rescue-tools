@@ -1,12 +1,12 @@
 #!/bin/sh
 
 ## hyphop ##
+
+#= make xz
+
 D=$(dirname $0)
-cd $D
 
-DL=../../dl
-
-[ -d "$DL" ] || mkdir -p $DL
+. $D/make_
 
 PKG=xz-5.2.4.tar.gz
 
@@ -16,8 +16,13 @@ echo "[i] make $PKG">&2
 
 cd $DL
 
-tar -xf $PKG
 D=${PKG%.tar.*}
+
+[ -d "$D" ] || \
+    tar -xf $PKG
+
 cd $D
-./configure && make
-cp src/xz/.libs/xz ../../bin
+
+./configure --prefix="$PRE2" && \
+    make && \
+	make install

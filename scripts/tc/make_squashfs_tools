@@ -2,11 +2,8 @@
 
 ## hyphop ##
 D=$(dirname $0)
-cd $D
 
-DL=../../dl
-
-[ -d "$DL" ] || mkdir -p $DL
+. $D/make_
 
 VER=4.4
 NAME=squashfs-tools
@@ -21,12 +18,15 @@ cd $DL
 D=${PKG%.tar.*}
 
 [ -d $D ] || \
-tar -xf $PKG
+    tar -xf $PKG
 
 cd $D
 cd $NAME
 
-make XZ_SUPPORT=1 ZSTD_SUPPORT=1
+export EXTRA_CFLAGS="-I$PRE2/include"
+export EXTRA_LDFLAGS="-L$PRE2/lib"
 
-#./configure && make
-#cp src/xz/.libs/xz ../../bin
+make XZ_SUPPORT=1 ZSTD_SUPPORT=1 mksquashfs unsquashfs && \
+    cp mksquashfs unsquashfs $PRE2/bin
+
+
