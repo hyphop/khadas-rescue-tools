@@ -23,6 +23,11 @@ D=${PKG%.tar.*}
 
 cd $D
 
-./configure --prefix="$PRE2" && \
+export LT_SYS_LIBRARY_PATH=$PRE2/lib
+export LDFLAGS="-L$PRE2/lib -Wl,-rpath=$PRE2/lib"
+
+make clean
+
+./configure --prefix="$PRE2"  && \
     make && \
 	make install
