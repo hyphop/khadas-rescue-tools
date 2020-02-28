@@ -26,6 +26,12 @@ exit
 
 echo "[i] $xz">&2
 
+$xz --help | grep -q threads= || {
+    echo "[i] plz install last xz with MT support">&2
+    exit 1
+}
+
+
 IN=
 OPTS=
 

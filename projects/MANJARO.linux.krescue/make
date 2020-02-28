@@ -24,7 +24,7 @@ LABEL=MANJARO
 
 case $PATH in
     */opt/bin:*);;
-    *)PATH="$(realpath $DIR/../../opt/bin):$PATH";;
+    *)PATH="$(realpath ../../opt/bin):$PATH";;
 esac
 
 echo $PATH
