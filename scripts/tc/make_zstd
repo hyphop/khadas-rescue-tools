@@ -22,8 +22,7 @@ D=${PKG%.tar.*}
 
 cd $D
 
-#export EXTRA_CFLAGS="-I$PRE2/include"
-#export EXTRA_LDFLAGS="-L$PRE2/lib -Wl,-rpath=$PRE2/lib"
+export LDFLAGS="-L$PRE2/lib -Wl,-rpath=$PRE2/lib"
 
 make clean && \
 make && \
