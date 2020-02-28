@@ -14,17 +14,18 @@
 + [projects](projects)  - kresq projects
 
 
-```
-git clone https://github.com/hyphop/khadas-rescue-tools.git
-cd khadas-rescue-tools
-./scripts/prepare
-./projects/%%NAME%%/make
+## Download && prepare
 
-```
+    git clone https://github.com/hyphop/khadas-rescue-tools.git
+    cd khadas-rescue-tools
+    ./scripts/prepare
+
+## Build image project
+
+    ./projects/%%NAME%%/make [args]
 
 # LINKS
 
 + https://github.com/hyphop/khadas-rescue
 + https://github.com/hyphop/khadas-rescue/tree/master/docs
 + https://dl.khadas.com/Firmware/Krescue/
-
