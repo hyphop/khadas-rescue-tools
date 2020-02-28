@@ -97,9 +97,9 @@ z7r="$(which 7zr)"
 mcopy="$(which mcopy)"
 [ $? = 0 ] || FAIL mcopy not found ! plz install mtools
 
-[ "$sfdisk" ] || \
-sfdisk="$(which sfdisk)"
-[ $? = 0 ] || FAIL sfdisk not found ! plz install it
+#[ "$sfdisk" ] || \
+#sfdisk="$(which sfdisk)"
+#[ $? = 0 ] || FAIL sfdisk not found ! plz install it
 
 [ "$xz" ] || \
 xz="$(which pixz)"
@@ -168,15 +168,30 @@ file $IMG2 | grep partition || {
     exit 1 
 }
 
-$sfdisk $IMG2 --dump
 
-S1="$($sfdisk $IMG2 --dump | grep img1)"
-[ "$S1" ] || FAIL wrong partitions
-S1=${S1#*start=}
-S1=${S1%%,*}
-S1=$(echo $S1)
+START_PARTITION="$(file "$IMG2" | grep  -e "startsector [0-9]*" -o | grep -o -e "[0-9]*")"
 
-echo mtools_skip_check=1 > ~/.mtoolsrc
+S1=
+S2=
+for S2 in $START_PARTITION; do
+    [ "$S1" ] || S1=$S2
+done
+
+[ "$S1" ] || FAIL partition1 not found $IMG2
+[ "$S1" ] || FAIL partition2 not found $IMG2
+
+echo "[i] PARTITIONS 1: $S1 2: $S2">&2
+
+#$sfdisk $IMG2 --dump
+#
+#S1="$($sfdisk $IMG2 --dump | grep img1)"
+#[ "$S1" ] || FAIL wrong partitions
+#S1=${S1#*start=}
+#S1=${S1%%,*}
+#S1=$(echo $S1)
+
+grep -q "mtools_skip_check=1" ~/.mtoolsrc || \
+    echo mtools_skip_check=1 > ~/.mtoolsrc
 
 [ -d  $BOOT.org ] || {
 echo "[i] copy boot partition">&2
@@ -184,11 +199,11 @@ echo "#$mcopy -sbpmi $IMG2@@$((512*S1)) :: $BOOT.org"
 $mcopy -sbpmi $IMG2@@$((512*S1)) :: $BOOT.org || FAIL extract boot partition to $BOOT.org
 }
 
-S2="$($sfdisk $IMG2 --dump | grep img2)"
-[ "$S2" ] || FAIL wrong partitions
-S2=${S2#*start=}
-S2=${S2%%,*}
-S2=$(echo $S2)
+#S2="$($sfdisk $IMG2 --dump | grep img2)"
+#[ "$S2" ] || FAIL wrong partitions
+#S2=${S2#*start=}
+#S2=${S2%%,*}
+#S2=$(echo $S2)
 
 [ -d "$ROOT" ] || mkdir -p $ROOT
 

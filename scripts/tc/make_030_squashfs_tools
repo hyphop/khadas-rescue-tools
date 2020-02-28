@@ -1,6 +1,9 @@
 #!/bin/sh
 
 ## hyphop ##
+
+#= make squashfs-tools
+
 D=$(dirname $0)
 
 . $D/make_
