@@ -1,0 +1,5 @@
+LABEL=LIBREELEC
+LINK0=https://test.libreelec.tv/
+NAME=VIMx.Libreelec.G12.test
+IMG=LibreELEC-AMLG12.arm-9.80-nightly-20200219-b03bf23.tar
+LINK=https://test.libreelec.tv/$IMG

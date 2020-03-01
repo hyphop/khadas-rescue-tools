@@ -35,10 +35,14 @@ desc:		Manjaro is a free and open-source Linux distribution based on the Arch Li
     Manjaro has a focus on user friendliness and accessibility, and the system itself is designed 
     to work fully "straight out of the box" with its variety of pre-installed software...
 
-# sub 1
+## sub 2
+sub:	2
+data: 	BOOT/SYSTEM
+
+## sub 1
 sub:	1
 source:	BOOT*
-source:	ROOT.overlay
+source:	STORAGE
 
 ## raw data block
 block:  0
@@ -48,45 +52,40 @@ data:   BOOT.%%BOARD%%/u-boot.%%BOARD%%.sd.bin
 
 ## partition + fs block
 part:	1
+#type:	e
 type:	-
-start:	62500B
-size:	437500B
+start:	100M
+size:	200M
 fstype:	vfat
-label:	
+label:	LE_BOOT
 source:	BOOT
+uuid:	-
 
 ## overlay
 overlay: 1
 part:	1
-#match:	BOARD=VIM2
-#match:	BOARD=VIM1
-LABEL:  MANJARO
 sub:	1
 source:	BOOT.%%BOARD%%
+
+## overlay
+overlay: 2
+part:  1
+sub:   2
+data:  /SYSTEM
 
 ## partition + fs block
 part:	2
 type:	-
-start:  500000B
+start:  100M
+fstype:	ext4
+label:	LE_STORAGE
 size:	-
 
-# sub 2
-sub:	2
-args:	-comp zstd -Xcompression-level 1 -b 1M
-#data: 	ROOT/rootfs.img.xz.sfs
-source: ROOT
-
-block:  1
-start:  500000B
-sub:    2
-#data:  &rootfs.img.xz
-data:   &ROOT/rootfs.img.xz
-
 ## overlay
-overlay: 2
-part:	2
-sub:	1
-source: ROOT.overlay
+overlay: 3
+part:  2
+sub:   1
+source:  STORAGE
 
 ##END##
 end
