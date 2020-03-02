@@ -21,7 +21,7 @@ args:		-comp zstd -Xcompression-level 22 -b 1M
 builder:	hyphop
 date:		$DATE
 link:		http://dl.khadas.com/Firmware
-label:		MANJARO
+label:		$LABEL
 match:		BOARD=VIM3L
 match:		BOARD=VIM3
 match:		BOARD=VIM2
@@ -30,42 +30,42 @@ vars:		BOARD=VIM1 VIM2 VIM3 VIM3L
 source:		.meta
 source:		README*
 duration:	70
-desc:		Manjaro is a free and open-source Linux distribution based on the Arch Linux operating system.
-    Manjaro has a focus on user friendliness and accessibility, and the system itself is designed 
-    to work fully "straight out of the box" with its variety of pre-installed software...
+desc:		$LABEL $IMG converted from $LINK0
 
-# sub 1
-sub:	1
-source:	BOOT*
-source:	ROOT.*
+## sub 1
+sub:    1
+source: BOOT*
+source: ROOT.*
 
 ## raw data block
 block:  0
 start:  0
-sub:	1
+sub:    1
 data:   BOOT.%%BOARD%%/u-boot.%%BOARD%%.sd.bin
 
 ## partition + fs block
-part:	1
-type:	-
-start:	62500B
-size:	437500B
-fstype:	vfat
-label:	BOOT
-source:	BOOT
+part:    1
+type:    -
+start:   100M
+size:    300M
+fstype:  vfat
+#label:  BOOT
+label:   $LABEL1
+uuid:    $UUID1
+source:  BOOT.org
 
 ## overlay
 overlay: 1
-part:	1
-#match:	BOARD=VIM2
-#match:	BOARD=VIM1
-sub:	1
-source:	BOOT.%%BOARD%%
+part:    1
+#match:  BOARD=VIM2
+#match:  BOARD=VIM1
+sub:     1
+source:  BOOT.%%BOARD%%
 
 ## partition + fs block
 part:	2
 type:	-
-start:  500000B
+start:  400M
 size:	-
 
 # sub 2
@@ -75,7 +75,7 @@ args:	-comp zstd -Xcompression-level 1 -b 1M
 source: ROOT
 
 block:  1
-start:  500000B
+start:  400M
 sub:    2
 #data:  &rootfs.img.xz
 data:   &ROOT/rootfs.img.xz

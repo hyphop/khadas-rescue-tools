@@ -32,9 +32,9 @@ export PKG_CONFIG_LIBDIR=$PRE2
 
 make clean
 
+#    --disable-bsdtar \
 ./configure --prefix="$PRE2" \
     --disable-bsdcpio \
-    --disable-bsdtar \
     --disable-bsdcat \
     --disable-rpath \
     --disable-acl \

@@ -1,0 +1,5 @@
+LABEL=UBUNTU
+LINK0=https://dl.khadas.com/Firmware/VIM3/Ubuntu/SD_USB/
+NAME=VIMx.Ubuntu.mainline.5.5.xfce.bionic.test
+IMG=VIM3_Ubuntu-xfce-bionic_Linux-5.5-rc2_arm64_SD-USB_V0.8.2-20200103.7z
+LINK=$LINK0$IMG
