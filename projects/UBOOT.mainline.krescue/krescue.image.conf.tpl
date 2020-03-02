@@ -30,8 +30,8 @@ vars:		BOARD=VIM1 VIM2 VIM3 VIM3L
 source:		.meta
 source:		README*
 duration:	2
-
-desc:		mainline uboot for VIMx khadas boards
+desc:		mainline uboot for VIMx khadas boards.
+    just single uboot usefull for boot up system from sd or USB / PCIe or DHCP TFTP
 
 # sub 1
 sub:	1
