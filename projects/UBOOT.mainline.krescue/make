@@ -1,0 +1,147 @@
+#!/bin/bash
+
+## hyphop ##
+
+#= kresq project generator
+
+DIR="$(dirname $0)"
+BN=$(basename $0)
+
+cd "$DIR"
+DP="$(realpath .)"
+
+#N=${DP%/*}
+N=${DP}
+N=${N##*/}
+M=${N%.krescue}
+
+M="../../img/$M"
+MP="$(realpath $M)"
+
+CMP_LEVEL="-22 -T2"
+
+case $PATH in
+    */opt/bin:*);;
+    *)PATH="$(realpath ../../opt/bin):$PATH";;
+esac
+
+echo $PATH
+
+#which xz
+#which zstd
+#which mksquashfs
+#exit 0
+
+DATE=$(date)
+
+CONF=$BN.conf
+COND=$BN.conf
+COND=${COND#./}
+VARIANT=
+[ "$1" ] && {
+[  -f "$1" ] || VARIANT=".$1"
+}
+[ -f "$1" ] && VARIANT="$1"
+[ "${VARIANT##*/}" = "${CONF##*/}" ] && VARIANT=
+[ "$VARIANT" ] || {
+    [ -L $CONF ] && VARIANT=$(readlink $CONF)
+}
+VARIANT=${VARIANT#$COND}
+echo "[i] VARIANT: $VARIANT">&2
+CONF=$CONF$VARIANT
+[ -f $CONF ] || {
+    echo "[e] config $CONF missed">&2
+    exit 1
+}
+
+M=$M$VARIANT
+
+echo "[i] CONFIG $CONF">&2
+. $CONF # config include
+
+echo "[i] started $N -> $M">&2
+
+#exit 0
+
+mkdir -p "$M"
+
+cd $M
+
+DL="dl"
+CNF_=krescue.image.conf
+CNF=.$CNF_
+R=README.txt
+META=".meta"
+BOOT="BOOT"
+
+CMD(){
+    echo "# $@">&2
+    $@
+}
+
+FAIL(){
+    echo "[e] $@">&2
+    exit 1
+}
+
+
+[ -f $R ] || {
+    echo "[i] create README: $R">&2
+    echo "# SOURCES
+
+NAME:      ${IMG:-$NAME}
+SOURCE:    $LINK0
+
+IMAGE_URL: $LINK
+
+## BUILD IMAGE
+
+./make
+
+
+" > $R
+}
+
+[ -f make ] || {
+    ln -s ../../image/make_image make
+}
+
+#[ -f "../$CNF" ] || {
+    echo "[i] copy kresq config from template $CNF_.tpl ($NAME $DATE)"
+#    CMD cp $DP/$CNF_ $CNF
+#    CMD rsync -av --inplace  $DP/$CNF_ $CNF
+    . $DP/$CNF_.tpl > $CNF || FAIL template not found
+#
+
+[ -d $META ] || mkdir -p $META
+[ -d $DL ] || mkdir -p $DL
+
+echo "[i] prepare bootloaders">&2
+
+BASE=https://github.com/hyphop/khadas-uboot-spi/releases/download/mainline-test/
+
+for VIM in VIM1 VIM2 VIM3 VIM3L; do
+    D=$BOOT.$VIM
+    [ -d $D ] || mkdir -p $D
+    UBOOT=u-boot.$VIM.sd.bin
+    ../../scripts/download $BASE$UBOOT $UBOOT $D || FAIL download uboot
+done
+
+echo "[i] prepare boot">&2
+
+CMD rsync -av --inpalce  $DP/$BOOT .
+
+. $BOOT/boot.cfg
+
+CMD mkdir -p $BOOT/$UBOOT_DTB_DIR
+
+echo $LABEL > $BOOT/LABEL
+echo $LABEL > $BOOT/$LABEL.label
+
+[ -d "$BOOT" ] || FAIL $BOOT dir was removed
+
+echo "[i] project is ready: $MP">&2
+
+echo "[i] make image">&2
+CMD ../../image/make_image
+

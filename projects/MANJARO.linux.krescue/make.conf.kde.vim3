@@ -1,8 +1,5 @@
-
 LINK0=https://yadi.sk/d/rYzimbOHPxI36w
-
+# kde vim3
 NAME=VIMx.Manjaro.linux.kde.plasma.test
-
 IMG=Manjaro-ARM-kde-plasma-vim3-20.02.img.xz
-
 LINK='https://s97iva.storage.yandex.net/rdisk/c10ccae8ceb749bfc409ed84c4a30fee15a742c6b46924912b02ab25be061735/5e592534/y4OIVLHNyzX0NTbW48Ex-sfE_thyzn6ppIhXcRf0UeRBsMVnxeadxoLgZJAP9mvgneqaeIkHdu0u88YM5DUX-w==?uid=0&filename=Manjaro-ARM-kde-plasma-vim3-20.02.img.xz&disposition=attachment&hash=s4mEUmIHnbxnMx3oC6FLm4maWvgchiyxuKEc3pRfqkeuo0s%2BYS5/OZYmApTHorD2q/J6bpmRyOJonT3VoXnDag%3D%3D%3A/Manjaro-ARM-kde-plasma-vim3-20.02.img.xz&limit=0&content_type=application%2Fx-xz&owner_uid=925285346&fsize=969481536&hid=243f3c9d485854df6174752a7e8413e2&media_type=unknown&tknv=v2&rtoken=d5dKl4rd5muq&force_default=no&ycrid=na-437ed674551870050ee4189cff8ea1cc-downloader23h&ts=59fa3bfecb500&s=c04d6d6679abc4acaf1932ac84419ceb5adc8d3531ef46f85524a6e200be91c9&pb=U2FsdGVkX19VoSaYc3qR6-bC31_jgq9JXR0WeJgxTZBL3sQHu8YUAYOIQLFs7b7i8LK9pzOfw0PROBxHJmyry9oyehKT3kAjiQTN7dLG2K0'
