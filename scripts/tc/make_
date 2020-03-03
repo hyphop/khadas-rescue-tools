@@ -3,6 +3,7 @@
 ## hyphop ##
 
 D=$(dirname $0)
+DP=$(realpath "$D")
 cd $D
 
 DL=../../dl
