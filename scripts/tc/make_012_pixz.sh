@@ -14,7 +14,7 @@ PKG=$NAME-$VER.tar.gz
 
 echo "[i] make $PKG">&2
 
-../download https://github.com/vasi/pixz/releases/download/v$VER/$NAME-$VER.tar.gz $PKG $DL
+../download https://github.com/vasi/pixz/releases/download/v$VER/$NAME-$VER.tar.gz $PKG $DL || exit 1
 
 cd $DL
 
@@ -40,5 +40,5 @@ export LZMA_LIBS="$LDFLAGS"
 #autoreconf -B $PRE2/lib
 
 ./configure --prefix="$PRE2"  && \
-    make && \
+    make $MAKE_MT && \
 	make install

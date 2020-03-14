@@ -14,7 +14,7 @@ PKG=$NAME-$VER.tar.gz
 
 echo "[i] make $PKG">&2
 
-../download ftp://ftp.gnu.org/gnu/mtools/$PKG $PKG $DL
+../download ftp://ftp.gnu.org/gnu/mtools/$PKG $PKG $DL || exit 1
 
 cd $DL
 
@@ -32,7 +32,7 @@ cd $D
 
 #make clean
 
-make && \
+make $MAKE_MT && \
     cp mtools mcopy -a $PRE2/bin
     
 

@@ -14,7 +14,7 @@ PKG=$NAME-$VER.tar.gz
 
 echo "[i] make $PKG">&2
 
-../download https://github.com/libarchive/libarchive/releases/download/v$VER/$NAME-$VER.tar.gz $PKG $DL
+../download https://github.com/libarchive/libarchive/releases/download/v$VER/$NAME-$VER.tar.gz $PKG $DL || exit 1
 
 cd $DL
 
@@ -51,5 +51,5 @@ make clean
     --without-zstd \
     --without-openssl \
   && \
-    make && \
+    make $MAKE_MT && \
 	make install

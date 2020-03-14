@@ -17,7 +17,7 @@ PKG=$NAME-$VER.tar.gz
 
 echo "[i] make $PKG">&2
 
-../download https://github.com/facebook/zstd/releases/download/v$VER/$NAME-$VER.tar.gz $PKG $DL
+../download https://github.com/facebook/zstd/releases/download/v$VER/$NAME-$VER.tar.gz $PKG $DL || exit 1
 
 cd $DL
 
@@ -39,11 +39,11 @@ export CFLAGS="-I$PRE2/include"
 export LDFLAGS="-L$PRE2/lib -Wl,-rpath=$PRE2/lib"
 
 make clean && \
-make lib && \
+make $MAKE_MT lib && \
     make install PREFIX="$PRE2"
 
-make -C programs zstd-mini && \
-make -C contrib/pzstd pzstd || exit 1
+make $MAKE_MT -C programs zstd-mini && \
+make $MAKE_MT -C contrib/pzstd pzstd || exit 1
 
     cp programs/zstd-mini $PRE2/bin/zstd
     cp contrib/pzstd/pzstd $PRE2/bin

@@ -4,12 +4,20 @@
 
 #GET(){
 
+PP=$(dirname $0)
+PR=$(realpath $PP)
+
     [ "$1" ] || { 
 	echo "[w] undef src">&2
 	return 1
     }
 
 OK(){
+	[ -s "$O_" ] || {
+	    echo "[e] $O_ not found">&2
+	    exit 1
+	}
+
 	md5sum "$O_" > "$O_.md5sum"
 	cd $P_
 	exit 0
@@ -34,18 +42,43 @@ OK(){
     }
 
     case "$1" in
-	*//mega*)
-	[ "$megadl" ] || \
-	megadl=$(which megadl)
-	[ "$?" = 0 ] || {
-	    echo "[e] megadl not found">&2
-	    return 1
+	*//mega.nz*)
+	[ "$megadl" ] || {
+	    echo "[i] mega donwload $1">&2
+#	    megadl=$(which megadl)
+#	    use last version
+	    megadl=$(which megatools)
+	    [ "$megadl" ] || {
+		echo "[w] megatools not found!!! try use ./tc/make_070_megatools ">&2
+
+	    $PR/tc/make_070_megatools.sh
+
+	    megadl=$(which megatools)
+
+	    [ "$megadl" ] || {
+		echo "[w] megatools build fail">&2
+		exit 1
+	    }
+	    }
+	    megadl="$megadl dl"
 	}
-	r_=0
+	
+
 	$megadl --print-names "$1" | tee $T_
+
 	o_=$(tail -1 "$T_")
+
+	case "$o_" in
+	    /*)
+	    echo "[i] mega downlaoded $(basename $o_)">&2
+	    ;;
+	    *)
+	    echo "[e] mega download error">&2
+	    return 1
+	esac
+
 	[ "$o_" = "$O_" ] || \
-	CMD mv "$o_" "$O_"
+	mv "$o_" "$O_"
 	;;
 	*//*)
 	curl -f -jkL -C- -D "$O_.headers" "$1" -o "$O_"

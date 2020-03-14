@@ -12,7 +12,7 @@ PKG=xz-5.2.4.tar.gz
 
 echo "[i] make $PKG">&2
 
-../download https://tukaani.org/xz/$PKG $PKG $DL
+../download https://tukaani.org/xz/$PKG $PKG $DL || exit 1
 
 cd $DL
 
@@ -29,5 +29,5 @@ export LDFLAGS="-L$PRE2/lib -Wl,-rpath=$PRE2/lib"
 make clean
 
 ./configure --prefix="$PRE2"  && \
-    make && \
+    make $MAKE_MT && \
 	make install
