@@ -1,0 +1,10 @@
+# COREELEC nightly HOWTO
+
+## green screen FIX 9.2.1
+
+just add use_rgb_to_yuv=1 to config.ini
+
+    cd /flash
+    grep -q use_rgb_to_yuv=1 config.ini || \
+    echo use_rgb_to_yuv=1 >> config.ini
+

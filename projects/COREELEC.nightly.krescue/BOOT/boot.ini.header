@@ -1,0 +1,9 @@
+KHADAS-UBOOT-CONFIG
+
+##
+device=mmc
+devnr=1
+partnr=1
+ce_on_emmc=yes
+##
+
