@@ -1,5 +1,7 @@
 # COREELEC nightly - kresq image progect generator
 
++ https://github.com/hyphop/khadas-rescue-tools/tree/master/projects/COREELEC.nightly.krescue
+
 ## USAGE
 
     ./make       - generate default project ( make.conf -> make.conf.xfce = xfce )
@@ -22,9 +24,13 @@ after project preparation generation, we can use project standalone
     # VIM3L
     curl -sfL dl.khadas.com/.mega | sh -s - -A VIM3L VIM3x.COREELEC.9.2.nightly.emmc.kresq > /dev/mmcblk0
 
+    # VIM3
+    curl -sfL dl.khadas.com/.mega | sh -s - -A VIM3 VIM3.COREELEC.9.2.1.emmc.kresq > /dev/mmcblk0
+
 
 ## ABOUT 
 
++ https://github.com/hyphop/khadas-rescue-tools/tree/master/projects/COREELEC.nightly.krescue
 + https://github.com/hyphop/khadas-rescue-tools
 + https://github.com/hyphop/khadas-rescue-tools/tree/master/projects
 + https://dl.khadas.com/Firmware/Krescue/mega/README.megaimage_online.txt
