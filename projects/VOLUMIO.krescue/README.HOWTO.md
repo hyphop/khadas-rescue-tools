@@ -13,12 +13,12 @@ project source https://github.com/hyphop/khadas-rescue-tools/tree/master/project
     cd projects/VOLUMIO.krescue
     ./make
 
-    # generate project and output all files to ../../img/VOLUMIO.default
-    # and start kresq image build script `../../image/make_image ../../img/VOLUMIO.default`
+    # generate project and output all files to ../../img/VOLUMIO.last
+    # and start kresq image build script `../../image/make_image ../../img/VOLUMIO.last`
 
 ## FILES 
 
-+ make.conf -> make.conf.default	# project config file
++ make.conf -> make.conf.last		# project config file
 + make					# project build script
 + krescue.image.conf.tpl		# kreq image config template (shell wrapped script)
 					# (all variables starting from $ must be replace to valid values) 
@@ -43,10 +43,10 @@ project source https://github.com/hyphop/khadas-rescue-tools/tree/master/project
 
 ## OUTPUT PROJECT FILES
 
-+ ../../img/VOLUMIO.default/.krescue.image.conf	# generated krescue image config 
-+ ../../img/VOLUMIO.default/* 			# other file
++ ../../img/VOLUMIO.last/.krescue.image.conf	# generated krescue image config 
++ ../../img/VOLUMIO.last/* 			# other file
 
-NOTE: u can generate ../../img/VOLUMIO.default/ by yourself via your scripts
+NOTE: u can generate ../../img/VOLUMIO.last/ by yourself via your scripts
 and u need only one `../../image/make_image` script file for generate kresq image
 
 ## ONLINE generator
