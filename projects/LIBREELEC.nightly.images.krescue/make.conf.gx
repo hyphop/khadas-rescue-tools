@@ -1,0 +1,10 @@
+LABEL=LIBREELEC
+LINK0=https://test.libreelec.tv/
+NAME=VIMx.Libreelec.test
+IMG1=LibreELEC-AMLGX.arm-9.80-nightly-20200316-9542570-khadas-vim.img.gz
+IMG2=LibreELEC-AMLGX.arm-9.80-nightly-20200316-9542570-khadas-vim2.img.gz
+BASE=https://test.libreelec.tv/
+BASE=https://dl.khadas.com/test/LE/
+IMG=$IMG1
+LINK=$BASE$IMG
+BOARDS="VIM1 VIM2"

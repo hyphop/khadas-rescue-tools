@@ -27,11 +27,6 @@ esac
 
 echo $PATH
 
-#which xz
-#which zstd
-#which mksquashfs
-#exit 0
-
 DATE=$(date)
 
 CONF=$BN.conf
@@ -87,9 +82,9 @@ FAIL(){
     exit 1
 }
 
-#[ "$mcopy" ] || \
-#mcopy="$(which mcopy)"
-#[ $? = 0 ] || FAIL mcopy not found ! plz install mtools
+[ "$mcopy" ] || \
+mcopy="$(which mcopy)"
+[ $? = 0 ] || FAIL mcopy not found ! plz install mtools
 
 [ -f $R ] || {
     echo "[i] create README: $R">&2
@@ -132,42 +127,70 @@ $DL => $(realpath $DL)
 
 IMG_="$DL/$IMG"
 
-rsync -av --inplace $DP/$BOOT .
+[ "$gzip" ] || \
+gzip=$(which pigz)
+[ "$gzip" ] || \
+gzip=$(which gzip)
+[ "$gzip" ] || FAIL not found gzip or pigz
 
-. $BOOT/boot.cfg
+UNPACKER="$gzip -dc"
 
-B_=$BOOT/$UBOOT_DTB_DIR
-[ -d "$B_" ] || \
-    mkdir -p "$B_"
+START_PARTITION="$( $UNPACKER "$IMG_" | dd count=2 2>/dev/null | \
+    file - | grep  -e "startsector [0-9]*" -o | grep -o -e "[0-9]*" )"
 
-## KERNET SYSTEM
-tar -C$BOOT \
-    --wildcards \
-    --strip-components=2 \
-    -xf $IMG_ \
-    '*/target/*'
+S1=
+S2=
+S3=
+for S3 in $START_PARTITION; do
+    [ "$S2" != "$S1" ] || S2=$S3
+    [ "$S1"          ] || S1=$S3
+done
 
-[ "$KERNEL_UNPACK" ] && {
-dd bs=64 skip=1 if=$BOOT/$UBOOT_KERNEL | lzop -dc > $BOOT/$UBOOT_KERNEL.img
-rm $BOOT/$UBOOT_KERNEL
-}
+[ "$S1" ] || FAIL partition1 not found in $IMG
+[ "$S2" ] || FAIL partition2 not found in $IMG
 
-## INFO
-tar -C$BOOT \
-    --wildcards \
-    --strip-components=1 \
-    -xf $IMG_ \
-    \*/RE* \
-    \*/CHANGELOG \
-    \*/licenses
+echo "[i] PARTITIONS 1: $S1 2: $S2 3: $S3">&2
 
-## DTB
+PART1=$($UNPACKER "$IMG_" | dd skip=$((S1)) count=10 2>/dev/null| file -)
+#echo "[i] PART1 $PART1">&2
+UUID1=${PART1#*number}
+UUID1=${UUID1%%,*}
+UUID1=$(printf "%X" $(($UUID1)))
+UUID1="${UUID1::4}-${UUID1:4:4}"
+LABEL1=${PART1#*label:}
+LABEL1=${LABEL1#*\"}
+LABEL1=$(echo ${LABEL1%\"*})
 
-tar -C$BOOT/$UBOOT_DTB_DIR \
-    --wildcards \
-    --strip-components=4 \
-    -xf $IMG_ \
-    '*/*/*/*/*khadas*'
+echo "[i] PART1 : UUID: '$UUID1' LABEL: '$LABEL1'">&2
+
+grep -q "mtools_skip_check=1" ~/.mtoolsrc || \
+    echo mtools_skip_check=1 > ~/.mtoolsrc
+
+#[ -d $BOOT ] || {
+rm -rf $BOOT
+[ -d $BOOT ] || \
+mkdir -p $BOOT
+
+IMG_p1=/tmp/$IMG.part1
+echo "[i] unpack boot partition">&2
+$UNPACKER "$IMG_" | dd skip=$((S1)) count=$((S2-S1)) 2>/dev/null > $IMG_p1
+$mcopy -sbpmi $IMG_p1@@$((0)) :: $BOOT || FAIL extract boot partition to $BOOT
+
+#rm $IMG_p1
+
+#}
+
+
+#B_=$BOOT/$UBOOT_DTB_DIR
+#[ -d "$B_" ] || \
+#    mkdir -p "$B_"
+
+#rsync -av --inplace $DP/$BOOT .
+#. $BOOT/boot.cfg
+
+## generate kreq config
+
+exit 0
 
 echo "[i] prepare bootloaders">&2
 

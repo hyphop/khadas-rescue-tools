@@ -4,7 +4,7 @@
 
 ## USAGE
 
-    ./make       - generate default project ( make.conf -> make.conf.xfce = xfce )
+    ./make       - generate default project ( make.conf -> make.conf.* )
 
 ## PROJECT USAGE
 
