@@ -1,7 +1,9 @@
 LABEL=COREELEC
-LINK0=https://github.com/CoreELEC/CoreELEC/releases/tag/9.2.1
+LINK0=https://relkai.coreelec.org/
 NAME=VIM3x.COREELEC.9.2.nightly
 IMG=CoreELEC-Amlogic-ng.arm-9.2-nightly_20200313.tar
-LINK=https://relkai.coreelec.org/$IMG
+IMG=CoreELEC-Amlogic-ng.arm-9.2-nightly_20200317.tar
+BASE=$LINK0
+LINK=$BASE$IMG
 MATCH="BOARD=VIM3L BOARD=VIM3"
 VARS="BOARD=VIM3 VIM3L"

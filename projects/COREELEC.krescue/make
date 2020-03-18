@@ -104,6 +104,8 @@ IMAGE_URL: $LINK
     ln -s ../../image/make_image make
 }
 
+DESC_HEADER="based on ${IMG%.*} from $BASE"
+
 #[ -f "../$CNF" ] || {
     echo "[i] copy kresq config from template $CNF_.tpl ($NAME $DATE)"
 #    CMD cp $DP/$CNF_ $CNF

@@ -25,7 +25,8 @@ vars:		$VARS
 source:		README*
 source:		.meta
 duration:	17
-desc:		CoreELEC is a 'Just enough OS' Linux distribution based on Kodi
+desc:		$DESC_HEADER !
+    CoreELEC is a 'Just enough OS' Linux distribution based on Kodi...
 
 ## sub archive already packed sfs
 sub:	2
