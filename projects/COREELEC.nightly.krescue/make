@@ -176,15 +176,13 @@ CMD rsync -a --inplace $DP/BOOT/ $BOOT
 
 ## FIXUP
 CMD mv $BOOT/KERNEL $BOOT/kernel.img
-dd if=$BOOT/Khadas_VIM3_cfgload bs=72 skip=1 > $BOOT/cfgload.cmd
 CMD cp $BOOT/Khadas_VIM3_cfgload $BOOT/cfgload
 
-(
-cat $BOOT/boot.ini.0.header
-dd if=$BOOT/aml_autoscript bs=72 skip=1
-) > $BOOT/boot.ini
-
-
+#dd if=$BOOT/Khadas_VIM3_cfgload bs=72 skip=1 > $BOOT/cfgload.cmd
+#(
+#cat $BOOT/boot.ini.0.header
+#dd if=$BOOT/aml_autoscript bs=72 skip=1
+#) > $BOOT/boot.ini
 #cat $BOOT/boot.ini.header $BOOT/cfgload.cmd > $BOOT/boot.ini
 
 ##
