@@ -1,3 +1,8 @@
+echo "[i] template run args
+DATE=\"$DATE\" LABEL=$LABEL VBOOT=$VBOOT VIMAGE=$VIMAGE VDATA=$VDATA \
+LABEL1=$LABEL1 UUID1=$UUID1 LABEL2=$LABEL2 UUID2=$UUID2 LABEL3=$LABEL3 UUID3=$UUID3 \
+sh krescue.image.conf.tpl">&2
+
 cat <<end # krescue image script config template
 # krescue image script config
 

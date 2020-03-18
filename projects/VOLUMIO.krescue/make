@@ -4,6 +4,19 @@
 
 #= VOLUMIO krescue project generator
 
+
+DL="dl"
+CNF_=krescue.image.conf
+CNF=.$CNF_
+R=README.kresq.txt
+BOOT=BOOT
+VBOOT=VBOOT
+VIMAGE=VIMAGE
+VDATA=VDATA
+ROOTFS=rootfs.img
+
+### PRE
+
 DIR="$(dirname $0)"
 BN=$(basename $0)
 
@@ -14,9 +27,7 @@ DP="$(realpath .)"
 N=${DP}
 N=${N##*/}
 M=${N%.krescue}
-
 M="../../img/$M"
-MP="$(realpath $M)"
 
 CMP_LEVEL="-22 -T2"
 
@@ -25,54 +36,15 @@ case $PATH in
     *)PATH="$(realpath ../../opt/bin):$PATH";;
 esac
 
+REBUILD_ALL=
+
 DATE=$(date)
 
 CONF=$BN.conf
 COND=$BN.conf
 COND=${COND#./}
 VARIANT=
-[ "$1" ] && {
-[  -f "$1" ] || VARIANT=".$1"
-}
-[ -f "$1" ] && VARIANT="$1"
-[ "${VARIANT##*/}" = "${CONF##*/}" ] && VARIANT=
-[ "$VARIANT" ] || {
-    [ -L $CONF ] && VARIANT=$(readlink $CONF)
-}
-VARIANT=${VARIANT#$COND}
-echo "[i] VARIANT: $VARIANT">&2
-CONF=$CONF$VARIANT
-[ -f $CONF ] || {
-    echo "[e] config $CONF missed">&2
-    exit 1
-}
-
-M=$M$VARIANT
-
-echo "[i] CONFIG $CONF">&2
-. $CONF # config include
-
-echo "[i] started $N -> $M">&2
-
-#exit 0
-
-mkdir -p "$M"
-
-cd $M
-
-DL="dl"
-CNF_=krescue.image.conf
-CNF=.$CNF_
-R=README.kresq.txt
-BOOT=BOOT
-VBOOT=VBOOT
-VIMAGE=VIMAGE
-VDATA=VDATA
-
-[ -d "$VIMAGE" ] || mkdir -p $VIMAGE
-[ -d "$VDATA" ] || mkdir -p $VDATA
-
-ROOTFS=rootfs.img
+v=
 
 CMD(){
     echo "# $@">&2
@@ -84,6 +56,76 @@ FAIL(){
     exit 1
 }
 
+for v_ in $@; do
+    case $v_ in
+	-r)
+	REBUILD_ALL=1
+	;;
+	*)
+	v=$v_
+	;;
+    esac
+done
+
+[ "$v" ] && {
+[ -f "$v" ] || VARIANT=".$v"
+}
+[ -f "$v" ] && VARIANT="$v"
+[ "${VARIANT##*/}" = "${CONF##*/}" ] && VARIANT=
+[ "$VARIANT" ] || {
+    [ -L $CONF ] && VARIANT=$(readlink $CONF)
+}
+
+VARIANT=${VARIANT#$COND}
+echo "[i] VARIANT: $VARIANT">&2
+CONF=$CONF$VARIANT
+[ -f $CONF ] || {
+    echo "[e] config $CONF missed">&2
+    exit 1
+}
+
+M="$M$VARIANT"
+
+echo "[i] CONFIG $CONF">&2
+. $CONF # config include
+
+echo "[i] started $N -> $M">&2
+
+[ -d "$M" ] || \
+CMD mkdir -p "$M" || FAIL last cmd
+CMD cd $M || FAIL last cmd
+
+MP="$(realpath .)"
+M_=$(pwd)
+
+[ "$MP" = "$M_" ] || FAIL "working path $M => $MP != $M_"
+
+[ "$REBUILD_ALL" ] && {
+    
+    echo "[i] clean all and full rebuild again?">&2
+    pwd
+    ls -l1
+    echo "[i] press enter or Ctrl+C exit">&2
+    read $ASK || exit 1
+
+    for f in * .*; do
+	case $f in
+	    dl)
+	    CMD rm -rf dl/*.img dl/*.img.conf
+	    continue
+	    ;;
+	    .|..)
+	    continue
+	    ;;
+	esac
+	CMD rm -rf $f
+    done
+}
+
+echo "[i] GENERATE kresq project...">&2
+
+[ -d "$VIMAGE" ] || mkdir -p $VIMAGE
+[ -d "$VDATA" ] || mkdir -p $VDATA
 
 [ "$mcopy" ] || \
 mcopy="$(which mcopy)"
@@ -117,7 +159,7 @@ IMAGE_URL: $LINK
 " > $R
 }
 
-[ -f make ] || {
+[ -e make ] || {
     ln -s ../../image/make_image make
 }
 

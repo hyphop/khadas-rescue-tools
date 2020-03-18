@@ -66,6 +66,10 @@ for i in $@; do
     NOMT=
     ;;
     *)
+    [ -d "$i" ] && {
+	cd $i
+	continue
+    }
     [ -f "$i" ] && {
 	CONFIG="$i"
 	continue
