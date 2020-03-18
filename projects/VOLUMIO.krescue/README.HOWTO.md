@@ -50,7 +50,7 @@ project source https://github.com/hyphop/khadas-rescue-tools/tree/master/project
 + ../../img/VOLUMIO.last/* 			# other file
 ```
 
-NOTE: u can generate ../../img/VOLUMIO.last/ by yourself via your scripts
+NOTE: u can generate `../../img/VOLUMIO.last/` by yourself via your scripts
 and u need only one `../../image/make_image` script file for generate kresq image
 
 ## ONLINE generator
