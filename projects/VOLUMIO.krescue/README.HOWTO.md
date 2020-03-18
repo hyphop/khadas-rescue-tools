@@ -18,6 +18,7 @@ project source https://github.com/hyphop/khadas-rescue-tools/tree/master/project
 
 ## FILES 
 
+```
 + make.conf -> make.conf.last		# project config file
 + make					# project build script
 + krescue.image.conf.tpl		# kreq image config template (shell wrapped script)
@@ -27,6 +28,7 @@ project source https://github.com/hyphop/khadas-rescue-tools/tree/master/project
 + BOOT/env.txt				# uboot env file need define BOOT_PART IMG_PART DATA_PART vars before
 + BOOT/env.txt.header.tpl		# uboot env header template (shell wrapped script)
 					# (all variables starting from $ must be replace to valid values) 
+```
 
 ## templates usage
 
@@ -43,8 +45,10 @@ project source https://github.com/hyphop/khadas-rescue-tools/tree/master/project
 
 ## OUTPUT PROJECT FILES
 
+```
 + ../../img/VOLUMIO.last/.krescue.image.conf	# generated krescue image config 
 + ../../img/VOLUMIO.last/* 			# other file
+```
 
 NOTE: u can generate ../../img/VOLUMIO.last/ by yourself via your scripts
 and u need only one `../../image/make_image` script file for generate kresq image
