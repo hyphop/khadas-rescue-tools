@@ -80,9 +80,7 @@ FAIL(){
 }
 
 
-[ "$mcopy" ] || \
-mcopy="$(which mcopy)"
-[ $? = 0 ] || FAIL mcopy not found ! plz install mtools
+
 
 [ -f $R ] || {
     echo "[i] create README: $R">&2
@@ -161,15 +159,8 @@ tar -C$BOOT/$UBOOT_DTB_DIR \
 echo "[i] prepare bootloaders">&2
 
 [ -d .boot ] || {
-    tar -xf $DP/blobs/.boot.tar.gz
+    tar -xf $DP/blobs/.boot.$TYPE.tar.gz
 }
-
-#CMD mkdir -p $BOOT/$UBOOT_DTB_DIR
-
-#cp $BOOT.org/$UBOOT_DTB_VIM1  $BOOT/$UBOOT_DTB_VIM1
-#cp $BOOT.org/$UBOOT_DTB_VIM2  $BOOT/$UBOOT_DTB_VIM2
-#cp $BOOT.org/$UBOOT_DTB_VIM3  $BOOT/$UBOOT_DTB_VIM3
-#cp $BOOT.org/$UBOOT_DTB_VIM3L $BOOT/$UBOOT_DTB_VIM3L
 
 echo $LABEL > $BOOT/LABEL
 echo $LABEL > $BOOT/$LABEL.label
@@ -189,16 +180,52 @@ CMD cp $BOOT/Khadas_VIM3_cfgload $BOOT/cfgload
 
 ##
 
+## FIXUP missed script 
+#[ "$TYPE" = "12" ] && {
+
+[ "$mkimage" ] || \
+mkimage="$(which mkimage)"
+[ $? = 0 ] || FAIL mkimage not found ! plz install android-tools-mkbootimg
+
+#    $mkimage -C none -A arm -T script -d $DP/BOOT.2/aml_autoscript.cmd \
+#	$BOOT/aml_autoscript
+
+    [ $BOOT/cfgload ] || \
+    $mkimage -C none -A arm -T script -d $DP/BOOT.2/cfgload.cmd \
+	$BOOT/cfgload
+
+    cp $DP/BOOT.2/boot.ini $BOOT/
+
+    $mkimage -C none -A arm -T script -d $DP/BOOT.2/s905_autoscript.cmd \
+	$BOOT/s905_autoscript
+
+    [ $BOOT/config.ini ] || \
+    cp $DP/BOOT2/config.ini $BOOT
+#}
+
+rm $BOOT/Le*
+rm $BOOT/Od*
+rm $BOOT/Ge*
+
+
+[ -d OVERLAY.VIM1 ] || \
+mkdir -p OVERLAY.VIM1
+[ -d OVERLAY.VIM2 ] || \
+mkdir -p OVERLAY.VIM2
 [ -d OVERLAY.VIM3 ] || \
 mkdir -p OVERLAY.VIM3
 [ -d OVERLAY.VIM3L ] || \
 mkdir -p OVERLAY.VIM3L
 
 [ -d $BOOT/device_trees ] && {
-CMD cp $BOOT/device_trees/g12b_a311d_khadas_vim3.dtb OVERLAY.VIM3/dtb.img
-CMD cp $BOOT/device_trees/sm1_s905d3_khadas_vim3l.dtb OVERLAY.VIM3L/dtb.img
+CMD cp $BOOT/device_trees/g12b_a311d_khadas_vim3.dtb	OVERLAY.VIM3/dtb.img
+CMD cp $BOOT/device_trees/sm1_s905d3_khadas_vim3l.dtb	OVERLAY.VIM3L/dtb.img
+CMD cp $BOOT/device_trees/gxl_p212_2g_kvim.dtb		OVERLAY.VIM1/dtb.img
+CMD cp $BOOT/device_trees/gxm_kvim2.dtb			OVERLAY.VIM2/dtb.img
+
 mkdir -p $BOOT/dtb
-cp $BOOT/device_trees/*khadas*.dtb $BOOT/dtb
+#cp $BOOT/device_trees/*khadas*.dtb $BOOT/dtb
+cp $BOOT/device_trees/*vim*.dtb $BOOT/dtb
 rm -rf $BOOT/device_trees
 }
 
@@ -210,7 +237,7 @@ echo use_rgb_to_yuv=1 >> $BOOT/config.ini
 
 CMD rsync --delete -a --inplace $DP/STORAGE .
 
-cp $DP/README/. $BOOT
+CMD cp -a $DP/README/. $BOOT
 
 echo "[i] project is ready: $MP">&2
 

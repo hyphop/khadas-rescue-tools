@@ -127,7 +127,6 @@ IMAGE_URL: $LINK
     cp "$DP/work/$IMG" "$DL"
     md5sum "$DL/$IMG" > "$DL/$IMG.md5sum"
 }
-}
 
 ## download 
 ../../scripts/download "$LINK" "$IMG" $DL || FAIL "download sd image check 
@@ -276,7 +275,8 @@ LINUX=$UBOOT_KERNEL
 INITRD=$UBOOT_UINITRD
 "
 
-cat $BOOT.org/$UBOOT_ENV_INI | grep AML
+APPEND="$(cat $BOOT.org/$UBOOT_ENV_INI | grep AML)"
+echo "$APPEND $UBOOT_KERNEL_ARGS_APPEND"
 
 echo ""
 

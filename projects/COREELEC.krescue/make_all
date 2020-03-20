@@ -1,0 +1,9 @@
+#!/bin/sh
+
+## hyphop ##
+
+D=$(dirname $0)
+
+for v in 9.2.1 ng.9.2.1 ng.nightly ; do
+$D/make $v
+done

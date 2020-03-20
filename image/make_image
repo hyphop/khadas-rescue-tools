@@ -44,14 +44,23 @@ FAIL(){
     exit 1
 }
 
+
 case $PATH in
     */opt/bin:*);;
-    *)PATH="$(realpath $(dirname $0)/../opt/bin):$PATH";;
+    *)
+    BIN="$(realpath $(dirname $0)/../opt/bin 2>/dev/null)"
+    [ "$BIN" ] && {
+    PATH="$BIN:$PATH"
+    }
+;;
 esac
 
 mksquashfs=$(which mksquashfs)
 [ "$?" = 0 ] || FAIL need install squashfs-tools
 
+echo $mksquashfs
+
+exit 0
 
 #[ "$1" ] || USAGE
 

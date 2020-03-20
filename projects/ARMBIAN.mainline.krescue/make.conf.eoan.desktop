@@ -1,0 +1,9 @@
+LABEL=ARMBIAN
+
+LINK0=https://yadi.sk/d/pHxaRAs-tZiei/20.02/20200205
+LINK1=https://mega.nz/#F!j9QSDQSQ!6WpasOlbZYIInfw6yo4phQ!35ACSCjQ
+
+NAME=VIMx.Armbian-20.02.0-eoan.desktop.test
+IMG=Armbian_20.02.0-rc1.038_Aml-s9xxx_eoan_current_5.5.0-rc6_desktop_20200205.img.xz
+
+LINK=https://mega.nz/#F!j9QSDQSQ!6WpasOlbZYIInfw6yo4phQ?e04QkYKS
