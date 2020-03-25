@@ -58,10 +58,6 @@ esac
 mksquashfs=$(which mksquashfs)
 [ "$?" = 0 ] || FAIL need install squashfs-tools
 
-echo $mksquashfs
-
-exit 0
-
 #[ "$1" ] || USAGE
 
 for i in $@; do

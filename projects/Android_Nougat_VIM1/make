@@ -1,0 +1,128 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= make kresq Android project
+
+DIR="$(dirname $0)"
+DP="$(realpath $DIR)"
+#N=${DP%/*}
+N=${DP}
+N=${N##*/}
+M=${N%.krescue}
+M="../../img/$M"
+MP="$(realpath $M)"
+
+echo "[i] started $N -> $M">&2
+mkdir -p "$M"
+
+case $PATH in
+    */opt/bin:*);;
+    *)PATH="$(realpath ../../opt/bin):$PATH";;
+esac
+
+cd $M
+
+IMG=VIM1_Nougat_V180619.7z
+LINK=https://dl.khadas.com/Firmware/VIM1/Android/Nougat/$IMG
+
+DL="dl"
+#TPL=boot.atv.v2.tar.gz
+CNF_=krescue.image.conf
+CNF=.$CNF_
+R=README.txt
+META=".meta"
+OUT=".boot"
+
+DIE(){
+    echo "[e] DIE $@">&2
+    exit 1
+}
+
+
+[ "$bsdtar" ] || \
+bsdtar="$(which bsdtar)"
+[ $? = 0 ] || DIE bsdtar ! plz install bsdtar
+
+[ "$aml_image_v2_packer" ] || \
+aml_image_v2_packer=$(which aml_image_v2_packer)
+[ $? = 0 ] || DIE aml_image_v2_packer not found! plz install it
+
+##
+##
+
+CMD(){
+    echo "# $@">&2
+    $@
+}
+
+[ -f $R ] || {
+    echo "[i] create README: $R">&2
+    echo "$IMG
+$LINK
+" > $R
+}
+
+
+CMD rsync -av --inplace $DP/$CNF_ $CNF
+
+[ -d BLANK ] || \
+    mkdir BLANK
+
+[ -d $META ] || mkdir -p $META
+[ -d $DL ] || mkdir -p $DL
+
+../../scripts/download "$LINK" "$IMG" $DL || DIE
+
+IMG_="$DL/$IMG"
+IMG2="$DL/${IMG%.7z}.img"
+
+echo "[i] $IMG2"
+
+[ -s "$IMG2.md5sum" ] || {
+    echo "[i] 7zr -so e $IMG_ > $IMG2">&2
+    $bsdtar -O -xf "$IMG_" '*.img' > $IMG2 || DIE
+    md5sum $IMG2 > $IMG2.md5sum
+}
+
+[ -d "$OUT" ] || \
+    mkdir $OUT
+
+[ -f $OUT/unpacked ] || {
+CMD $aml_image_v2_packer -d $IMG2 "$OUT" || DIE
+
+date > $OUT/unpacked
+
+[ -s $IMG2 ] && truncate -s0 $IMG2
+
+
+../../scripts/sparseimg2img $OUT
+
+}
+
+cd $OUT
+for R in *.ini  *.conf *.cfg *.xml bootloader.* *.USB; do
+    CMD rm "$R"
+done
+cd ..
+
+for p in $OUT/*.raw; do
+
+[ -s $p ] || continue
+[ -L $p ] && continue
+[ -f $p ] || continue
+[ -f $p.packed ] && continue
+
+echo "[i] compress partition $p">&2
+
+CMD ../../scripts/xze -e -T4 -9 $p || FAIL compress
+echo $p.xz > $p.packed
+
+CMD truncate -s0 $p
+
+done
+
+echo "[i] project is ready: $MP">&2
+
+CMD ../../image/make_image
+

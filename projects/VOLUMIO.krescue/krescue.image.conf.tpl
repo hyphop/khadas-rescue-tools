@@ -56,50 +56,54 @@ source: $VIMAGE
 source: $VDATA
 
 ## raw data block
-block:  0
+block:  -
 start:  0
 sub:    1
+#data:   .boot/%%BOARD%%/bootloader
 data:   $VBOOT/uboot/u-boot.%%BOARD%%.sd.bin
 
 ## raw data block
-block:  0
+block:  -
 start:  0
 match:  UBOOTML=1
 sub:    1
 data:   $VBOOT/uboot-mainline/u-boot.%%BOARD%%.sd.bin
 
-## raw data block
-block:  1
+## raw data blocks
+
+block:  -
 start:  0x02400000
 size:   0x4000000
 sub:    1
-data:   @zero
+data:   @zero:8M
 
-block:  2
-start:  0x02400000
-size:   0x04000000
-sub:    1
-data:   .boot/reserved
+#block:  2
+#start:  0x02400000
+#size:   0x04000000
+#sub:    1
+#data:   .boot/reserved
 
-block:  3
+block:  -
 start:  0x02800000
 sub:    1
 data:   .boot/%%BOARD%%/dtb
 
-block:  4
+block:  -
 start:  0x02840000
 sub:    1
 data:   .boot/%%BOARD%%/dtb
 
-block:  1
+block:  -
 start:  0x06c00000
 sub:    1
-data:   .boot/%%BOARD%%/env
+data:   @zero:128B
+#data:   .boot/%%BOARD%%/env
 
-block:  5
+block:  -
 start:  0x07c00000
 sub:    1
-data:   .boot/logo
+data:   @zero:8M
+#data:   .boot/logo
 
 block:  6
 start:  0x08c00000

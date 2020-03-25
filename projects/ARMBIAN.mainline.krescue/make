@@ -84,9 +84,14 @@ FAIL(){
 mcopy="$(which mcopy)"
 [ $? = 0 ] || FAIL mcopy not found ! plz install mtools
 
-[ "$bsdtar" ] || \
-bsdtar="$(which bsdtar)"
-[ $? = 0 ] || FAIL bsdtar ! plz install bsdtar
+#[ "$bsdtar" ] || \
+#bsdtar="$(which bsdtar)"
+#[ $? = 0 ] || FAIL bsdtar ! plz install bsdtar
+
+[ "$e2label" ] || \
+e2label="$(which e2label)"
+[ $? = 0 ] || FAIL e2label ! plz install ...
+
 
 [ "$xz" ] || \
 xz="$(which pixz)"
@@ -212,6 +217,9 @@ $mcopy -sbpmi $IMG2@@$((512*S1)) :: $BOOT.org || FAIL extract boot partition to 
 echo "[i] extract rootfs => $ROOTFS">&2
 dd if=$IMG2 skip=$((S2)) of=$ROOTFS
 file $ROOTFS | grep ext4 || FAIL not rootfs
+
+$e2label $ROOTFS ROOT_EMMC
+
 #fsck.ext4 -y -f $ROOTFS || echo "[w] rootfs image check oops"
 #resize2fs -M $ROOTFS
 }
@@ -276,7 +284,7 @@ INITRD=$UBOOT_UINITRD
 "
 
 APPEND="$(cat $BOOT.org/$UBOOT_ENV_INI | grep AML)"
-echo "$APPEND $UBOOT_KERNEL_ARGS_APPEND"
+echo "${APPEND/ROOTFS/ROOT_EMMC} $UBOOT_KERNEL_ARGS_APPEND"
 
 echo ""
 
@@ -287,8 +295,24 @@ done
 ) > $BOOT.org/$UBOOT_ENV_INI.new
 
 ## not used
-[ -f "$BOOT.org/boot.cmd" ] && \
-mv  "$BOOT.org/boot.cmd" "$BOOT.org/boot.cmd.bak"
+for f in $BOOT.org/*auto* $BOOT.org/*-emmc*  $BOOT.org/boot.* $BOOT.org/u-*  ; do
+    [ -f "$f" ] && \
+	CMD rm $f
+done
+
+cp -a $DP/BOOT.2/. $BOOT.org
+
+cd $BOOT.org
+ln -sf vmlinuz* zImage
+cd ..
+
+[ -d $BOOT.org/dtb/allwinner ] && {
+rm -rf $BOOT.org/dtb/allwinner
+rm -rf $BOOT.org/dtb/rockchip
+mv $BOOT.org/dtb/amlogic/*khadas* $BOOT.org/dtb
+rm $BOOT.org/dtb/amlogic/*.dtb
+mv $BOOT.org/dtb/*.dtb $BOOT.org/dtb/amlogic
+}
 
 ## used boot.ini
 

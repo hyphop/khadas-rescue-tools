@@ -262,14 +262,17 @@ echo "[i] PART3 : UUID: '$UUID3' LABEL: '$LABEL3'">&2
 grep -q "mtools_skip_check=1" ~/.mtoolsrc || \
     echo mtools_skip_check=1 > ~/.mtoolsrc
 
-[ -d $VBOOT ] || {
+[ -d $VBOOT ] || \
+    mkdir -p $VBOOT
+
+[ -d $VBOOT.org ] || {
 echo "[i] copy boot partition">&2
-echo "#$mcopy -sbpmi $IMG2@@$((512*S1)) :: $VBOOT"
-$mcopy -sbpmi $IMG2@@$((512*S1)) :: $VBOOT || FAIL extract boot partition to $VBOOT
+echo "#$mcopy -sbpmi $IMG2@@$((512*S1)) :: $VBOOT.org"
+$mcopy -sbpmi $IMG2@@$((512*S1)) :: $VBOOT.org || FAIL extract boot partition to $VBOOT.org
+#rm $VBOOT/uboot/*.bin
 }
 
 ## generate kreq config
-
 
 [ -f $ROOTFS ] || {
 echo "[i] extract rootfs => $ROOTFS">&2
@@ -289,23 +292,29 @@ CMD truncate -s0 $ROOTFS
 }
 
 
-[ "1" ] && {
-echo "[i] prepare mainline bootloaders">&2
-
-BASE=https://github.com/hyphop/khadas-uboot-spi/releases/download/mainline-test/
-
-D=$VBOOT/uboot-mainline
+UBOOT_DL(){
 
 for VIM in VIM1 VIM2 VIM3 VIM3L; do
     #D=$BOOT.$VIM
     [ -d $D ] || mkdir -p $D
     UBOOT=u-boot.$VIM.sd.bin
     ../../scripts/download $BASE$UBOOT $UBOOT $D || FAIL download uboot
-
     rm $D/*.headers
-
 done
 
+}
+
+[ "1" ] && {
+
+echo "[i] prepare mainline bootloaders">&2
+BASE=https://github.com/hyphop/khadas-uboot-spi/releases/download/mainline-test/
+D=$VBOOT/uboot-mainline
+UBOOT_DL
+
+echo "[i] prepare legacy bootloaders">&2
+BASE=https://github.com/hyphop/khadas-uboot-spi/releases/download/vim_legacy/
+D=$VBOOT/uboot
+UBOOT_DL
 
 }
 
@@ -321,27 +330,41 @@ echo "[i] copy kresq config from template $CNF_.tpl ($NAME $DATE)"
 
 #CMD rsync -a --inplace $DP/$BOOT/. $BOOT.org
 
+
 echo "[i] project is ready: $MP">&2
 
+[ "$SPEEDUP" ] && {
+echo "[i] speed up bootup"
 ## speed up boot
 touch $VIMAGE/kernel_current.tar
 touch $VIMAGE/kernel_factory.tar
 [ -L $VIMAGE/volumio_factory.sqsh ] || \
 ln -s volumio_current.sqsh $VIMAGE/volumio_factory.sqsh
 ################
-
-[ -d .boot ] || {
-    tar -xf $DP/blobs/.boot.tar.gz
 }
+
+#[ -d .boot ] || {
+#    tar -xf $DP/blobs/.boot.tar.gz
+#}
+
+mkdir -p .boot/VIM1 .boot/VIM2 .boot/VIM3 .boot/VIM3L 2>/dev/null
+ln -sf ../../$VBOOT/dtb/kvim_linux.dtb .boot/VIM1/dtb 2>/dev/null
+ln -sf ../../$VBOOT/dtb/kvim2_linux.dtb .boot/VIM2/dtb 2>/dev/null
+ln -sf ../../$VBOOT/dtb/kvim3_linux.dtb .boot/VIM3/dtb 2>/dev/null
+ln -sf ../../$VBOOT/dtb/kvim3l_linux.dtb .boot/VIM3L/dtb 2>/dev/null
+
+CMD rsync -a --inplace $VBOOT.org/Image $VBOOT
+CMD rsync -a --inplace $VBOOT.org/uInitrd $VBOOT
+CMD rsync -a --inplace $VBOOT.org/dtb $VBOOT
 
 CMD rsync -a --inplace $DP/.meta .
 CMD rsync -a --inplace $DP/README/. $VBOOT
-CMD rsync -a --inplace $DP/BOOT/boot.ini $VBOOT
+CMD rsync -a --inplace $DP/BOOT/. $VBOOT
 
-(
-. $DP/BOOT/env.txt.header.tpl
-cat $DP/BOOT/env.txt
-) > $VBOOT/env.txt || FAIL template not found
+. $DP/env.system.txt.tpl > $VBOOT/env.system.txt
+
+CMD rsync -a --inplace $DP/env.txt $VBOOT
+CMD rsync -a --inplace $DP/env.user.txt $VBOOT
 
 echo "[i] make image">&2
 

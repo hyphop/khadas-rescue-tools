@@ -4,5 +4,12 @@ LINK0=http://updates.volumio.org/kvim3l/volumio/2.718/
 LINK0=http://updates.volumio.org/kvim3l/volumio/2.728/
 NAME=VIMx.Volumio.last
 IMG=volumio-2.718-2020-03-11-kvim3l.img.zip
-IMG=volumio-2.728-2020-03-17-kvim3l.img.zip
+IMG=Volumio0.003-2020-03-19-kvim3l.img.zip
+IMG=volumio-2.736-2020-03-23-kvim3l.img.zip
+IMG=volumio-2.736-2020-03-23-kvim3l.img.zip
+#IMG=volumio-2.737-2020-03-24-kvim3.img.zip
+
 LINK=$LINK0$IMG
+
+#
+SPEEDUP=

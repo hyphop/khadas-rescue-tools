@@ -1,0 +1,24 @@
+#!/bin/sh
+
+
+OUT=ramdisk
+CMP=gzip
+
+initrd=../initramfs.cpio
+[ -d "$OUT" ] || mkdir $OUT
+
+cd $OUT
+
+find . | cpio -H newc -ov -R 0:0 | $CMP -c > $initrd
+
+cd ..
+
+ mkimage -A arm64 \
+    -O linux \
+    -T ramdisk \
+    -C none \
+    -a 0x00000000 \
+    -e 0x00000000 \
+    -n uInitrd \
+    -d initramfs.cpio uInitrd.new
+

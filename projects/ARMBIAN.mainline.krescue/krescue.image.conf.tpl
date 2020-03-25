@@ -17,8 +17,6 @@ image:		$NAME
 type:		emmc
 format:		kresq
 args:		-comp zstd -Xcompression-level 3 -b 1M
-#args:		-comp zstd -Xcompression-level 22 -b 1M
-#args:		-comp xz -Xdict-size 100% -b 1M -Xbcj arm
 builder:	hyphop
 date:		$DATE
 link:		http://dl.khadas.com/Firmware
@@ -52,8 +50,9 @@ start:   100M
 size:    300M
 fstype:  vfat
 #label:  BOOT
-label:   $LABEL1
-uuid:    $UUID1
+#label:   $LABEL1
+#uuid:    $UUID1
+label:   BOOT_EMMC
 source:  BOOT.org
 
 ## overlay

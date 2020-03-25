@@ -1,0 +1,35 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= initramfs unpack
+
+OUT=ramdisk
+
+
+[ -f "$1" ] || {
+
+    echo "[e] undef initrd file">&2
+    exit 0
+
+}
+
+initrd=../$1
+
+
+[ -d "$OUT" ] || mkdir $OUT
+
+cd $OUT
+
+UNPACK="cpio -i -d -H newc --no-absolute-filenames"
+
+dd if=$initrd bs=64 skip=1 | gzip -dc  | $UNPACK || \
+dd if=$initrd bs=64 skip=1 | lzop -dc  | $UNPACK || \
+dd if=$initrd bs=64 skip=1 | lzma -dc  | $UNPACK || \
+dd if=$initrd bs=64 skip=1 | $UNPACK || \
+lzop -dc $initrd | $UNPACK || \
+gzip -dc $initrd | $UNPACK || \
+lzma -dc $initrd | $UNPACK || \
+cat $initrd | $UNPACK || \
+echo "[e] OOPS!">&2
+
