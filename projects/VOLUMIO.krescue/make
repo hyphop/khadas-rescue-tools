@@ -357,6 +357,8 @@ CMD rsync -a --inplace $VBOOT.org/Image $VBOOT
 CMD rsync -a --inplace $VBOOT.org/uInitrd $VBOOT
 CMD rsync -a --inplace $VBOOT.org/dtb $VBOOT
 
+CMD $DP/scripts/dtb_fix $VBOOT/dtb/*.dtb
+
 CMD rsync -a --inplace $DP/.meta .
 CMD rsync -a --inplace $DP/README/. $VBOOT
 CMD rsync -a --inplace $DP/BOOT/. $VBOOT

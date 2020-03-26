@@ -23,11 +23,14 @@ project source https://github.com/hyphop/khadas-rescue-tools/tree/master/project
 + make					# project build script
 + krescue.image.conf.tpl		# kreq image config template (shell wrapped script)
 					# (all variables starting from $ must be replace to valid values) 
-+ blobs/				# binary bootloaders and some toher files
++ BOOT/logo.bmp				# uboot logo
 + BOOT/boot.ini				# uboot script static file can use without modification
-+ BOOT/env.txt				# uboot env file need define BOOT_PART IMG_PART DATA_PART vars before
-+ BOOT/env.txt.header.tpl		# uboot env header template (shell wrapped script)
++ BOOT/env.txt				# uboot env file 
++ BOOT/env.user.txt			# uboot user env file
++ BOOT/env.system.txt.tpl		# uboot system env template generate system env for BOOT_PART IMG_PART DATA_PART
 					# (all variables starting from $ must be replace to valid values) 
++ scripts/dtb_fix			# fix dtb - audio
+
 ```
 
 ## templates usage

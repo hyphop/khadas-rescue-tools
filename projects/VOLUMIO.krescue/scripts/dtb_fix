@@ -1,0 +1,123 @@
+#!/usr/bin/perl
+
+## hyphop ##
+
+warn "fix audio dtb : $@\n";
+warn "USAGE: dtb_fix *.dtb\n";
+
+# VIMx
+
+%dev = qw/
+    AML-AUGESOUND   AML-AUGESOUND-V
+    AML-AUGESOUND-V AML-AUGESOUND-V
+/;
+
+
+# VIM3l
+
+%sub3l = qw/
+    alsaPORT-spdifb   HDMI
+    alsaPORT-pcm      BLUETOOTH
+    alsaPORT-i2s      HDMI_SPDIF_I2S
+    UNDEF	      NOT_USED
+    alsaPORT-spdif    HDMI_SPDIF
+    alsaPORT-earc     NOT_USED
+/;
+
+## 0 HDMI_SPDIF_I2S 
+## 1 HDMI
+## 2 HDMI_SPDIF
+## 3 BLUETOOTH
+## 4 remove
+## 5 remove
+
+# new replace order
+%vim3l = qw/
+    2 0
+    0 1
+    4 2
+    1 3
+    3 4
+    5 5
+/;
+
+# enable disable list
+%vim3la = qw/
+    0 1
+    1 1
+    2 1
+    3 1
+    4 0
+    5 0
+/;
+
+sub ee{
+    warn ">> $_[0]";
+    return "$_[0]"
+}
+
+$SND_PRE="AML-";
+$SND_ID12="AML-MESONAUDIO";
+$SND_ID3="AML-AUGESOUND";
+$SND_IDS="$SND_ID3|$SND_ID12";
+
+$q="\"";
+
+$DISABLED="\n	status = \"disabled\";";
+
+sub fix{
+    my $S=$_[0];
+    $PRE='suffix-name = "';
+    $DAI='aml-audio-card,dai-link@';
+    if ( $$S =~ /VIM3L/) {
+    if ( $$S =~ s/$q($SND_PRE.+?)$q/$q.($dev{$1}?$dev{$1}:$1).$q/seg ) {
+    my $m=0;
+    if ( $$S =~ s/$PRE(.+?)$q/$PRE.($sub3l{$1}?++$m&&$sub3l{$1}:$1).$q/seg ) {
+	$$S =~ s/$DAI(\d)/$DAI$vim3l{$1}/sg;
+	$$S =~ s/($DAI(\d)\s+{)/$1.($vim3la{$2}?"":$DISABLED)/seg;
+	## FORCE CHANGE ORDER
+	$$S =~ s/($DAI\d\s\{.+?)($DAI\d\s\{.+?)($DAI\d\s\{.+?)($DAI\d\s\{.+?)($DAI\d\s\{.+?)$DAI/$3$1$5$2$4$DAI/sg;
+	warn "[i] REBUILDED $m";
+	return $m
+    }
+    }
+    }
+
+    return 0
+}
+
+sub scan(){
+    warn "fix $_";
+    my $dtb = $_;
+    my $s = '';
+    open F, "dtc $dtb 2>/dev/null |" or die $@;
+    my $l;
+    my $b;
+    while ($l  = sysread F, $s, 256000, length $s) {
+	$b+=$l
+    }
+    close F;
+    #warn "[i] readed $b bytes";
+
+    if ( fix(\$s) ){
+    #   print $s
+    } else {
+	return undef
+    }
+
+    my $dtb2="$dtb.new";
+    open D, "|dtc -o $dtb2 2>/dev/null";
+    my $w = syswrite D, $s;
+    #warn "[i] write $w bytes to $dtb2";
+    close D;
+
+    if ( -s $dtb2 ) {
+    warn "[i] $dtb fixed";
+    rename $dtb2 => $dtb;
+    } else {
+    die "[e] $dtb rebuild fail";
+    }
+
+}
+
+scan for @ARGV;
