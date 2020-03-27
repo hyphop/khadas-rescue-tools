@@ -90,6 +90,7 @@ FAIL(){
 [ -d $META ] || mkdir -p $META
 [ -d $DL ] || mkdir -p $DL
 
+[ "LAST_NO_CHK" ] || \
 case $VARIANT in
     *nightly*)
     T=/tmp/coreelec.nightly.html
@@ -107,7 +108,6 @@ case $VARIANT in
     }
 
     ;;
-
 esac
 
 DESC_HEADER="based on ${IMG%.*} from $BASE"
@@ -217,6 +217,7 @@ mkimage="$(which mkimage)"
 	$BOOT/cfgload
 
     cp $DP/BOOT.2/boot.ini $BOOT/
+#   cp $DP/BOOT.2/boot.ini $BOOT/boot.cmd
 
     $mkimage -C none -A arm -T script -d $DP/BOOT.2/s905_autoscript.cmd \
 	$BOOT/s905_autoscript

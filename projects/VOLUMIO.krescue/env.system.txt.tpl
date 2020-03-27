@@ -2,8 +2,8 @@ cat <<end # template for env.system.txt
 ## SYSTEM ENV
 ## PLZ DONT CHANGE IT
 
-BOOT_PART=UUID=$UUID1
-IMG_PART=UUID=$UUID2
-DATA_PART=UUID=$UUID3
+bootpart=UUID=$UUID1
+imgpart=UUID=$UUID2
+datapart=UUID=$UUID3
 
 end

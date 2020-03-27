@@ -332,6 +332,8 @@ UBOOT_DL
 ## READ PROJECT CONFIG
 . $IMG2.conf
 
+
+## NO NEED JUST FOR DEVELOPER TESTS
 [ "$SPEEDUP" ] && {
 echo "[i] speed up bootup"
 ## speed up boot
@@ -366,7 +368,13 @@ CMD $SYNC $DP/BOOT/.		$VBOOT
 . $DP/env.system.txt.tpl >	$VBOOT/env.system.txt
 
 # copy env + user env
-CMD $SYNC $DP/env.txt		$VBOOT
+#CMD $SYNC $DP/env.txt		$VBOOT
+
+( . $DP/env.system.txt.tpl
+cat $DP/BOOT/env.txt )>		$VBOOT/env.txt
+
+exit 0
+
 CMD $SYNC $DP/env.user.txt	$VBOOT
 
 # copy additional files
