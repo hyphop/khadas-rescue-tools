@@ -4,7 +4,6 @@
 
 #= VOLUMIO krescue project generator
 
-
 DL="dl"
 CNF_=krescue.image.conf
 CNF=.$CNF_
@@ -122,10 +121,7 @@ M_=$(pwd)
     done
 }
 
-echo "[i] GENERATE kresq project...">&2
-
-[ -d "$VIMAGE" ] || mkdir -p $VIMAGE
-[ -d "$VDATA" ] || mkdir -p $VDATA
+## CHECK AND SCAN REQUIRE TOOLS
 
 [ "$mcopy" ] || \
 mcopy="$(which mcopy)"
@@ -142,6 +138,15 @@ e2cp="$(which e2cp)"
 [ "$e2ls" ] || \
 e2ls="$(which e2ls)"
 [ $? = 0 ] || FAIL e2ls ! plz install e2tools
+
+##
+## BEGIN
+##
+
+echo "[i] GENERATE kresq project...">&2
+
+[ -d "$VIMAGE" ] || mkdir -p $VIMAGE
+[ -d "$VDATA" ] || mkdir -p $VDATA
 
 [ -f $R ] || {
     echo "[i] create README: $R">&2
@@ -187,11 +192,13 @@ $DL => $(realpath $DL)
 IMG_="$DL/$IMG"
 IMG2="$DL/${IMG%.*}"
 
+## UNPACK 
 [ -f "$IMG2" ] || {
     echo "[i] unpack $IMG_">&2
     $unzip -p "$IMG_" '*.img' > $IMG2
 }
 
+## EXTRACT
 [ -s "$IMG2" ] && {
 
 echo "[i] extract $IMG2">&2
@@ -201,6 +208,7 @@ file $IMG2 | grep partition || {
     exit 1 
 }
 
+## SCAN IMAGE PARTITIONS
 START_PARTITION="$(file "$IMG2" | grep  -e "startsector [0-9]*" -o | grep -o -e "[0-9]*")"
 
 S1=
@@ -259,6 +267,7 @@ UUID3=$UUID3
 
 echo "[i] PART3 : UUID: '$UUID3' LABEL: '$LABEL3'">&2
 
+## COPY 1st partition files
 grep -q "mtools_skip_check=1" ~/.mtoolsrc || \
     echo mtools_skip_check=1 > ~/.mtoolsrc
 
@@ -272,8 +281,7 @@ $mcopy -sbpmi $IMG2@@$((512*S1)) :: $VBOOT.org || FAIL extract boot partition to
 #rm $VBOOT/uboot/*.bin
 }
 
-## generate kreq config
-
+## extract 2nd part
 [ -f $ROOTFS ] || {
 echo "[i] extract rootfs => $ROOTFS">&2
 dd if=$IMG2 skip=$((S2)) of=$ROOTFS
@@ -282,10 +290,12 @@ file $ROOTFS | grep ext4 || FAIL not rootfs
 
 $e2ls $ROOTFS || FAIL broken fs image
 
+## COPY 2st partition files
 for e in remoteConfig volumio_current.sqsh; do
     $e2cp $ROOTFS:$e $VIMAGE/$e || FAIL $e not found 
 done
 
+## MINIMIZE
 CMD truncate -s0 $IMG2
 CMD truncate -s0 $ROOTFS
 
@@ -304,6 +314,7 @@ done
 
 }
 
+## DOWNLOAD BOOTLOADERS
 [ "1" ] && {
 
 echo "[i] prepare mainline bootloaders">&2
@@ -318,20 +329,8 @@ UBOOT_DL
 
 }
 
+## READ PROJECT CONFIG
 . $IMG2.conf
-
-echo "[i] copy kresq config from template $CNF_.tpl ($NAME $DATE)"
-. $DP/$CNF_.tpl > $CNF || FAIL template not found
-
-#for v in 1 2 3 3l; do
-    #echo "$BOOT.org/dtb/*/*vim$v.dtb > $BOOT.VIM${v/l/L}/dtb.img">&2
-#    cat $BOOT.org/dtb/*/*vim${v/1/}.dtb > $BOOT.VIM${v/l/L}/dtb.img
-#done
-
-#CMD rsync -a --inplace $DP/$BOOT/. $BOOT.org
-
-
-echo "[i] project is ready: $MP">&2
 
 [ "$SPEEDUP" ] && {
 echo "[i] speed up bootup"
@@ -343,31 +342,46 @@ ln -s volumio_current.sqsh $VIMAGE/volumio_factory.sqsh
 ################
 }
 
-#[ -d .boot ] || {
-#    tar -xf $DP/blobs/.boot.tar.gz
-#}
+# krescue files
+mkdir -p .boot/VIM1 .boot/VIM2 .boot/VIM3 .boot/VIM3L		2>/dev/null
+ln -sf ../../$VBOOT/dtb/kvim_linux.dtb		.boot/VIM1/dtb	2>/dev/null
+ln -sf ../../$VBOOT/dtb/kvim2_linux.dtb		.boot/VIM2/dtb	2>/dev/null
+ln -sf ../../$VBOOT/dtb/kvim3_linux.dtb		.boot/VIM3/dtb	2>/dev/null
+ln -sf ../../$VBOOT/dtb/kvim3l_linux.dtb	.boot/VIM3L/dtb	2>/dev/null
 
-mkdir -p .boot/VIM1 .boot/VIM2 .boot/VIM3 .boot/VIM3L 2>/dev/null
-ln -sf ../../$VBOOT/dtb/kvim_linux.dtb .boot/VIM1/dtb 2>/dev/null
-ln -sf ../../$VBOOT/dtb/kvim2_linux.dtb .boot/VIM2/dtb 2>/dev/null
-ln -sf ../../$VBOOT/dtb/kvim3_linux.dtb .boot/VIM3/dtb 2>/dev/null
-ln -sf ../../$VBOOT/dtb/kvim3l_linux.dtb .boot/VIM3L/dtb 2>/dev/null
+SYNC="rsync -a --inplace"
 
-CMD rsync -a --inplace $VBOOT.org/Image $VBOOT
-CMD rsync -a --inplace $VBOOT.org/uInitrd $VBOOT
-CMD rsync -a --inplace $VBOOT.org/dtb $VBOOT
+# copy kernel + dtb + initrd
+CMD $SYNC $VBOOT.org/Image	$VBOOT
+CMD $SYNC $VBOOT.org/uInitrd	$VBOOT
+CMD $SYNC $VBOOT.org/dtb	$VBOOT
 
-CMD $DP/scripts/dtb_fix $VBOOT/dtb/*.dtb
+# fix fdt audio
+CMD $DP/scripts/dtb_fix		$VBOOT/dtb/*.dtb
 
-CMD rsync -a --inplace $DP/.meta .
-CMD rsync -a --inplace $DP/README/. $VBOOT
-CMD rsync -a --inplace $DP/BOOT/. $VBOOT
+# copy boot files configs
+CMD $SYNC $DP/BOOT/.		$VBOOT
 
-. $DP/env.system.txt.tpl > $VBOOT/env.system.txt
+# generate system env
+. $DP/env.system.txt.tpl >	$VBOOT/env.system.txt
 
-CMD rsync -a --inplace $DP/env.txt $VBOOT
-CMD rsync -a --inplace $DP/env.user.txt $VBOOT
+# copy env + user env
+CMD $SYNC $DP/env.txt		$VBOOT
+CMD $SYNC $DP/env.user.txt	$VBOOT
 
-echo "[i] make image">&2
+# copy additional files
+CMD $SYNC $DP/.meta		.
+CMD $SYNC $DP/README/.		$VBOOT
+
+## GENERATE KRESQ CONFIG
+echo "[i] copy kresq config from template $CNF_.tpl ($NAME $DATE)"
+. $DP/$CNF_.tpl > $CNF || FAIL template not found
+
+echo "[i] project is ready: $MP">&2
+echo "[i] make image...">&2
 
 CMD ../../image/make_image
+
+##
+## END
+##

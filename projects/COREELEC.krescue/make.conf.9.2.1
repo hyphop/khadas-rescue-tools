@@ -1,8 +1,9 @@
 LABEL=COREELEC
-VER=9.2.1
+VER=${VER:-9.2.1}
 LINK0=https://github.com/CoreELEC/CoreELEC/releases/tag/$VER
 NAME=VIM12.COREELEC.$VER
-IMG=CoreELEC-Amlogic.arm-$VER.tar
+IMG_PRE=CoreELEC-Amlogic.arm-
+IMG=$IMG_PRE$VER.tar
 BASE=https://github.com/CoreELEC/CoreELEC/releases
 LINK=$BASE/download/$VER/$IMG
 TYPE=12

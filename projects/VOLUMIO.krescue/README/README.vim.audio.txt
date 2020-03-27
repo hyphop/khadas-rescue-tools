@@ -47,5 +47,11 @@ card 0: AMLAUGESOUNDV [AML-AUGESOUND-V], device 2: TDM-B-dummy-HDMI_SPDIF_I2S mu
 card 0: AMLAUGESOUNDV [AML-AUGESOUND-V], device 3: SPDIF-dit-hifi-HDMI_SPDIF dit-hifi-3 []
 ```
 
-### dtb_fix 
 
+### dtb_fix order
+
+volumio@volumio:~$ aplay -l | grep AML
+card 0: AMLAUGESOUNDV [AML-AUGESOUND-V], device 0: TDM-B-dummy-HDMI_SPDIF_I2S multicodec-0 []
+card 0: AMLAUGESOUNDV [AML-AUGESOUND-V], device 1: SPDIF-B-dit-hifi-HDMI dit-hifi-1 []
+card 0: AMLAUGESOUNDV [AML-AUGESOUND-V], device 2: SPDIF-dit-hifi-HDMI_SPDIF dit-hifi-2 []
+card 0: AMLAUGESOUNDV [AML-AUGESOUND-V], device 3: TDM-A-dummy-BLUETOOTH dummy-3 []
