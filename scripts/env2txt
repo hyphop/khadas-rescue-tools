@@ -1,0 +1,26 @@
+#!/usr/bin/perl
+
+## hyphop ##
+
+#= read uboot env convert 2 txt
+
+my $IN=$ARGV[0] or "<&STDIN";
+my $r = open $F, $IN or die "[e] open file $IN - $! - $@" ;
+my $u = '';
+my $b = 0;
+
+while ( $r = sysread $F, $u, 65536, length $u ) {
+    $b+=$r;
+    break if $u =~ /\x0\x0/;
+}
+
+warn "[i] readed $b bytes from $IN";
+
+$u =~ /\x0\x0/;
+$u = $`;
+$u =~ /([\x00-\xff]{4})/;
+$u = $';
+$u =~ s/\0/\n/g;
+
+print $u
+

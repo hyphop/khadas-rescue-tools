@@ -373,7 +373,6 @@ CMD $SYNC $DP/BOOT/.		$VBOOT
 ( . $DP/env.system.txt.tpl
 cat $DP/BOOT/env.txt )>		$VBOOT/env.txt
 
-exit 0
 
 CMD $SYNC $DP/env.user.txt	$VBOOT
 

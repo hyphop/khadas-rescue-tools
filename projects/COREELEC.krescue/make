@@ -90,7 +90,7 @@ FAIL(){
 [ -d $META ] || mkdir -p $META
 [ -d $DL ] || mkdir -p $DL
 
-[ "LAST_NO_CHK" ] || \
+[ "$LAST_NO_CHK" ] || \
 case $VARIANT in
     *nightly*)
     T=/tmp/coreelec.nightly.html
@@ -106,7 +106,9 @@ case $VARIANT in
     rm -rf $BOOT
     }
     }
-
+    ;;
+    *)
+    echo "[i] no need checkup last version">&2
     ;;
 esac
 
@@ -180,7 +182,9 @@ echo "[i] prepare bootloaders">&2
 
 [ -d .boot ] || {
     tar -xf $DP/blobs/.boot.$TYPE.tar.gz
+    cat $DP/BOOT2/env.vim2.*.txt | mkenvimage -s 65536 -o - - > .boot/VIM2/env
 }
+
 
 echo $LABEL > $BOOT/LABEL
 echo $LABEL > $BOOT/$LABEL.label
@@ -209,18 +213,23 @@ CMD cp $BOOT/Khadas_VIM3_cfgload $BOOT/cfgload
 mkimage="$(which mkimage)"
 [ $? = 0 ] || FAIL mkimage not found ! plz install android-tools-mkbootimg
 
-#    $mkimage -C none -A arm -T script -d $DP/BOOT.2/aml_autoscript.cmd \
-#	$BOOT/aml_autoscript
-
     [ -f $BOOT/cfgload ] || \
-    $mkimage -C none -A arm -T script -d $DP/BOOT.2/cfgload.cmd \
+    $mkimage -C none -A arm -T script -d $DP/BOOT2/cfgload.cmd \
 	$BOOT/cfgload
 
-    cp $DP/BOOT.2/boot.ini $BOOT/
-#   cp $DP/BOOT.2/boot.ini $BOOT/boot.cmd
+cat $DP/BOOT2/boot.ini.header \
+    $DP/BOOT2/boot.cmd > $BOOT/boot.ini
 
-    $mkimage -C none -A arm -T script -d $DP/BOOT.2/s905_autoscript.cmd \
-	$BOOT/s905_autoscript
+#   cp $DP/BOOT2/boot.ini $BOOT/
+#   cp $DP/BOOT2/boot.ini $BOOT/boot.cmd
+
+    $mkimage -C none -A arm -T script -d $DP/BOOT2/boot.cmd \
+	$BOOT/boot.scr
+
+    cp $BOOT/boot.scr $BOOT/s905_autoscript
+
+#    $mkimage -C none -A arm -T script -d $DP/BOOT2/s905_autoscript.cmd \
+#	$BOOT/s905_autoscript
 
     [ $BOOT/config.ini ] || \
     cp $DP/BOOT2/config.ini $BOOT
@@ -245,6 +254,7 @@ CMD cp $BOOT/device_trees/g12b_a311d_khadas_vim3.dtb	OVERLAY.VIM3/dtb.img
 CMD cp $BOOT/device_trees/sm1_s905d3_khadas_vim3l.dtb	OVERLAY.VIM3L/dtb.img
 CMD cp $BOOT/device_trees/gxl_p212_2g_kvim.dtb		OVERLAY.VIM1/dtb.img
 CMD cp $BOOT/device_trees/gxm_kvim2.dtb			OVERLAY.VIM2/dtb.img
+
 
 mkdir -p $BOOT/dtb
 #cp $BOOT/device_trees/*khadas*.dtb $BOOT/dtb

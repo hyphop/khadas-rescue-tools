@@ -53,11 +53,11 @@ sub:	1
 data:   @zero
 
 ## raw data block
-block:  1
-start:  0x02400000
-size:	0x4000000
-sub:	1
-data:   .boot/reserved
+#block:  1
+#start:  0x02400000
+#size:	0x4000000
+#sub:	1
+#data:   .boot/reserved
 
 block:  3
 start:  0x02800000
@@ -80,14 +80,14 @@ sub:	1
 data:   @zero
 
 ## raw data block
-block:  2
-match:	BOARD=VIM1
-match:	BOARD=VIM3
-match:	BOARD=VIM3L
-start:  0x06c00000
-size:	128B
-sub:	1
-data:   .boot/%%BOARD%%/env.fix
+#block:  2
+#match:	BOARD=VIM1
+#match:	BOARD=VIM3
+#match:	BOARD=VIM3L
+#start:  0x06c00000
+#size:	128B
+#sub:	1
+#data:   .boot/%%BOARD%%/env.fix
 
 ## raw data block
 block:  3
@@ -97,7 +97,6 @@ match:	BOARD=VIM3L
 start:  0x07c00000
 sub:	1
 data:   .boot/logo
-
 
 ## raw data block
 block:  2
