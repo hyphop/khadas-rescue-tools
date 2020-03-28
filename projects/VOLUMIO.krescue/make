@@ -88,6 +88,7 @@ M="$M$VARIANT"
 echo "[i] CONFIG $CONF">&2
 . $CONF # config include
 
+echo "[i] system $(uname -a)">&2
 echo "[i] started $N -> $M">&2
 
 [ -d "$M" ] || \
@@ -279,6 +280,7 @@ echo "[i] copy boot partition">&2
 echo "#$mcopy -sbpmi $IMG2@@$((512*S1)) :: $VBOOT.org"
 $mcopy -sbpmi $IMG2@@$((512*S1)) :: $VBOOT.org || FAIL extract boot partition to $VBOOT.org
 #rm $VBOOT/uboot/*.bin
+ls -la $VBOOT.org
 }
 
 ## extract 2nd part
@@ -309,7 +311,7 @@ for VIM in VIM1 VIM2 VIM3 VIM3L; do
     [ -d $D ] || mkdir -p $D
     UBOOT=u-boot.$VIM.sd.bin
     ../../scripts/download $BASE$UBOOT $UBOOT $D || FAIL download uboot
-    rm $D/*.headers
+    rm $D/*.headers 2>/dev/null
 done
 
 }
