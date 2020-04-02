@@ -185,7 +185,6 @@ echo "[i] prepare bootloaders">&2
     cat $DP/BOOT2/env.vim2.*.txt | mkenvimage -s 65536 -o - - > .boot/VIM2/env
 }
 
-
 echo $LABEL > $BOOT/LABEL
 echo $LABEL > $BOOT/$LABEL.label
 

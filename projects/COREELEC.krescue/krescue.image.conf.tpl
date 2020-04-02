@@ -15,7 +15,7 @@ format:		kresq
 #args:		-comp gzip
 builder:	hyphop
 date:		$DATE
-link:		http://dl.khadas.com/Firmware
+link:		https://coreelec.org
 label:		COREELEC
 #match:		BOARD=VIM3
 #match:		BOARD=VIM3L

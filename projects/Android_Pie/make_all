@@ -1,0 +1,11 @@
+#!/bin/sh
+
+## hyphop ##
+
+D=$(dirname $0)
+
+#export LAST_NO_CHK=1
+
+for v in VIM1 VIM3 VIM3L ; do
+$D/make $v
+done

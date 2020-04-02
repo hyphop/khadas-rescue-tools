@@ -28,6 +28,7 @@ usb reset
 for devtype in $TYPES ; do
 for devnum in $DEVS ; do
 #if test -e $devtype $devnum / ; then
+if $devtype $devnum ; then
 for script in $SCRIPTS; do
     device=$devtype
     devnr=$devnum
@@ -60,7 +61,7 @@ if test -e $devtype $devnum SYSTEM && test -e $devtype $devnum kernel.img; then
     done
 fi
 
-#fi
+fi
 
 done
 done

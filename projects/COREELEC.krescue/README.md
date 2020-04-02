@@ -2,9 +2,16 @@
 
 + https://github.com/hyphop/khadas-rescue-tools/tree/master/projects/COREELEC.nightly.krescue
 
+## FIST TIME PREPARE
+
+if some required tools was missed
+
+    ../../scripts/prepare
+
 ## USAGE
 
     ./make       - generate default project ( make.conf -> make.conf.* )
+    ./make_all   - generate + update all projects
 
 ## PROJECT USAGE
 
@@ -12,21 +19,29 @@ after project preparation generation, we can use project standalone
 
     cd ../../img/PROJECT && make
 
+## OUTPUT images
+
+    ls -1 /tmp/*.kresq
+
+    /tmp/VIM12.COREELEC.9.2.1.emmc.kresq
+    /tmp/VIM12.COREELEC.9.2.nightly.emmc.kresq
+    /tmp/VIM3.COREELEC.9.2.1.emmc.kresq
+    /tmp/VIM3x.COREELEC.9.2.nightly.emmc.kresq
+
+
 ## WRITE krescue installation IMAGE
 
+    # VIM1
+    curl -sfL dl.khadas.com/.mega | sh -s - VIM1  VIM12.COREELEC.9.2.1.emmc.kresq > /dev/mmcblk0
+    curl -sfL dl.khadas.com/.mega | sh -s - VIM1  VIM12.COREELEC.9.2.nightly.emmc.kresq > /dev/mmcblk0
+    # VIM2
+    curl -sfL dl.khadas.com/.mega | sh -s - VIM2  VIM12.COREELEC.9.2.1.emmc.kresq > /dev/mmcblk0
+    curl -sfL dl.khadas.com/.mega | sh -s - VIM2  VIM12.COREELEC.9.2.nightly.emmc.kresq > /dev/mmcblk0
     # VIM3
-    curl -sfL dl.khadas.com/.mega | sh -s - VIM3 VIM3x.COREELEC.9.2.nightly.emmc.kresq > /dev/mmcblk0
-    # VIM3L
+    curl -sfL dl.khadas.com/.mega | sh -s - VIM3  VIM3.COREELEC.9.2.1.emmc.kresq > /dev/mmcblk0
     curl -sfL dl.khadas.com/.mega | sh -s - VIM3L VIM3x.COREELEC.9.2.nightly.emmc.kresq > /dev/mmcblk0
-    # autoinstall type
-    # VIM3
-    curl -sfL dl.khadas.com/.mega | sh -s - -A VIM3 VIM3x.COREELEC.9.2.nightly.emmc.kresq > /dev/mmcblk0
     # VIM3L
-    curl -sfL dl.khadas.com/.mega | sh -s - -A VIM3L VIM3x.COREELEC.9.2.nightly.emmc.kresq > /dev/mmcblk0
-
-    # VIM3
-    curl -sfL dl.khadas.com/.mega | sh -s - -A VIM3 VIM3.COREELEC.9.2.1.emmc.kresq > /dev/mmcblk0
-
+    curl -sfL dl.khadas.com/.mega | sh -s - VIM3L VIM3x.COREELEC.9.2.nightly.emmc.kresq> /dev/mmcblk0
 
 ## ABOUT 
 

@@ -140,6 +140,10 @@ e2cp="$(which e2cp)"
 e2ls="$(which e2ls)"
 [ $? = 0 ] || FAIL e2ls ! plz install e2tools
 
+[ "$mkimage" ] || \
+mkimage="$(which mkimage)"
+[ $? = 0 ] || FAIL mkimage ! plz install mkimage 
+
 ##
 ## BEGIN
 ##
@@ -365,6 +369,12 @@ CMD $DP/scripts/dtb_fix		$VBOOT/dtb/*.dtb
 
 # copy boot files configs
 CMD $SYNC $DP/BOOT/.		$VBOOT
+
+# addition boot script for wide boots # maybe no need 
+#grep -v KHADAS-UBOOT-CONFIG \
+#    $DP/BOOT/boot.ini > 	$VBOOT/boot.cmd
+#$mkimage -C none -A arm -T \
+#    script -d $VBOOT/boot.cmd	$VBOOT/s905_autoscript
 
 # generate system env
 . $DP/env.system.txt.tpl >	$VBOOT/env.system.txt

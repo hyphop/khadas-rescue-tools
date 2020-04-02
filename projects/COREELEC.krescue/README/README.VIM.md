@@ -8,6 +8,7 @@ rebuilded by ## hyphop ##
 
 # FEATURES
 
++ multiboot from USB -> SD -> EMMC
 + special optimized for VIM1 VIM2 VIM3 VIM3L
 + hardware video decoders - OK
 + khadas fan OK - work in auto mode
@@ -35,14 +36,14 @@ rebuilded by ## hyphop ##
 
 # KRESCUE shell - mega online install
 
-    curl -sfL dl.khadas.com/.mega | sh -s - -A VIM1  VIM2.VIM1.COREELEC.9.2.1.emmc.kresq
-    curl -sfL dl.khadas.com/.mega | sh -s - -A VIM2  VIM2.VIM1.COREELEC.9.2.1.emmc.kresq
+    curl -sfL dl.khadas.com/.mega | sh -s - -A VIM1  VIM12.COREELEC.9.2.1.emmc.kresq
+    curl -sfL dl.khadas.com/.mega | sh -s - -A VIM2  VIM12.COREELEC.9.2.1.emmc.kresq
     curl -sfL dl.khadas.com/.mega | sh -s - -A VIM3  VIM3.COREELEC.9.2.1.emmc.kresq
     curl -sfL dl.khadas.com/.mega | sh -s - -A VIM3  VIM3x.COREELEC.9.2.nightly.emmc.kresq
     curl -sfL dl.khadas.com/.mega | sh -s - -A VIM3L VIM3x.COREELEC.9.2.nightly.emmc.kresq
 
-
 # LINKS
 
-+ https://github.com/hyphop/khadas-rescue-tools/tree/master/projects/COREELEC.nightly.krescue
++ https://github.com/hyphop/khadas-rescue-tools/tree/master/projects/COREELEC.krescue
 + https://coreelec.org/
+

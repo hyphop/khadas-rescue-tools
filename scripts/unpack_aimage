@@ -1,0 +1,5 @@
+#!/bin/sh
+
+## hyphop ##
+
+abootimg -x $1

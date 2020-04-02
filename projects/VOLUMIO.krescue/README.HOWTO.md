@@ -25,7 +25,7 @@ project source https://github.com/hyphop/khadas-rescue-tools/tree/master/project
 					# (all variables starting from $ must be replace to valid values) 
 + BOOT/logo.bmp				# uboot logo
 + BOOT/boot.ini				# uboot script static file can use without modification
-+ BOOT/env.txt				# uboot env file 
++ BOOT/env.txt				# uboot env file template
 + BOOT/env.user.txt			# uboot user env file
 + BOOT/env.system.txt.tpl		# uboot system env template generate system env for BOOT_PART IMG_PART DATA_PART
 					# (all variables starting from $ must be replace to valid values) 
