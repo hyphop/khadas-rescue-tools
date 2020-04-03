@@ -37,3 +37,9 @@ card 0: AMLAUGESOUNDV [AML-AUGESOUND-V], device 1: SPDIF-B-dit-hifi-HDMI dit-hif
 card 0: AMLAUGESOUNDV [AML-AUGESOUND-V], device 2: SPDIF-dit-hifi-HDMI_SPDIF dit-hifi-2 []
 card 0: AMLAUGESOUNDV [AML-AUGESOUND-V], device 3: TDM-A-dummy-BLUETOOTH dummy-3 []
 .....
+
+
++ 01 - HDMI SPDIF I2S
++ 02 - HDMI only
++ 03 - HDMI SPDIF
++ 04 - BT
