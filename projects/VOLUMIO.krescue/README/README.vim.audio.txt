@@ -29,29 +29,11 @@ volumio@volumio:~$ cat /proc/asound/pcm
 + 04 - HDMI SPDIF
 + 05 - NOT_USED
 
-### uboot audio fixup VOLUMIO
-
-    fdt set /auge_sound aml-audio-card,name AML-AUGESOUND-V
-    fdt set /auge_sound/aml-audio-card,dai-link@0 suffix-name HDMI
-    fdt set /auge_sound/aml-audio-card,dai-link@1 suffix-name BLUETOOTH
-    fdt set /auge_sound/aml-audio-card,dai-link@2 suffix-name HDMI_SPDIF_I2S
-    fdt rm /auge_sound/aml-audio-card,dai-link@3
-    fdt set /auge_sound/aml-audio-card,dai-link@4 suffix-name HDMI_SPDIF
-    fdt rm /auge_sound/aml-audio-card,dai-link@5
-
-```
-aplay -l|grep V   
-card 0: AMLAUGESOUNDV [AML-AUGESOUND-V], device 0: SPDIF-B-dit-hifi-HDMI dit-hifi-0 []
-card 0: AMLAUGESOUNDV [AML-AUGESOUND-V], device 1: TDM-A-dummy-BLUETOOTH dummy-1 []
-card 0: AMLAUGESOUNDV [AML-AUGESOUND-V], device 2: TDM-B-dummy-HDMI_SPDIF_I2S multicodec-2 []
-card 0: AMLAUGESOUNDV [AML-AUGESOUND-V], device 3: SPDIF-dit-hifi-HDMI_SPDIF dit-hifi-3 []
-```
-
-
-### dtb_fix order
+### dtb_fix order maybe more elegant
 
 volumio@volumio:~$ aplay -l | grep AML
 card 0: AMLAUGESOUNDV [AML-AUGESOUND-V], device 0: TDM-B-dummy-HDMI_SPDIF_I2S multicodec-0 []
 card 0: AMLAUGESOUNDV [AML-AUGESOUND-V], device 1: SPDIF-B-dit-hifi-HDMI dit-hifi-1 []
 card 0: AMLAUGESOUNDV [AML-AUGESOUND-V], device 2: SPDIF-dit-hifi-HDMI_SPDIF dit-hifi-2 []
 card 0: AMLAUGESOUNDV [AML-AUGESOUND-V], device 3: TDM-A-dummy-BLUETOOTH dummy-3 []
+.....
