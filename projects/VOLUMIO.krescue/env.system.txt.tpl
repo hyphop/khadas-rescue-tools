@@ -6,4 +6,6 @@ bootpart=UUID=$UUID1
 imgpart=UUID=$UUID2
 datapart=UUID=$UUID3
 
+UUIDCONFIG=env.system.txt
+
 end

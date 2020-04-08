@@ -54,6 +54,7 @@ source: .boot
 source: $VBOOT
 source: $VIMAGE
 source: $VDATA
+source: OVERLAY*
 
 ## raw data block
 block:  -
@@ -148,10 +149,28 @@ type:   -
 start:  0x0b400000
 size:   -
 fstype: ext4
-source: $VDATA
+#source: $VDATA
 args:   -m 2 -O ^64bit,^metadata_csum
 label:  $LABEL3
 uuid:   $UUID3
+
+
+## overlay data back
+overlay: 2
+# source
+sub:     1
+# destination
+part:    3
+source:  OVERLAY.VDATA
+
+## overlay data back
+overlay: 3
+# source
+sub:     1
+# destination
+part:    3
+source:  OVERLAY.VDATA.%%BOARD%%
+
 
 ##END##
 end

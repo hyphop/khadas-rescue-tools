@@ -382,14 +382,19 @@ CMD $SYNC $DP/BOOT/.		$VBOOT
 # copy env + user env
 #CMD $SYNC $DP/env.txt		$VBOOT
 
-( . $DP/env.system.txt.tpl
-cat $DP/BOOT/env.txt )>		$VBOOT/env.txt
+#( . $DP/env.system.txt.tpl
+#cat $DP/BOOT/env.txt )>		$VBOOT/env.txt
 
-CMD $SYNC $DP/env.user.txt	$VBOOT
+CMD cp $DP/env.txt		$VBOOT
+CMD cp $DP/env.user.txt		$VBOOT
+
+#CMD $SYNC $DP/env.user.txt	$VBOOT
 
 # copy additional files
 CMD $SYNC $DP/.meta		.
 CMD $SYNC $DP/README/.		$VBOOT
+
+CMD $SYNC --delete $DP/OVER*	.
 
 ## GENERATE KRESQ CONFIG
 echo "[i] copy kresq config from template $CNF_.tpl ($NAME $DATE)"

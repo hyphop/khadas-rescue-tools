@@ -24,6 +24,14 @@ warn "USAGE: dtb_fix *.dtb\n";
     alsaPORT-earc     NOT_USED
 /;
 
+%sub3 = qw/
+    alsaPORT-spdif-b   HDMI
+    alsaPORT-pcm      BLUETOOTH
+    alsaPORT-i2s      HDMI_SPDIF_I2S
+    UNDEF	      NOT_USED
+    alsaPORT-spdif    HDMI_SPDIF
+/;
+
 ## 0 HDMI_SPDIF_I2S 
 ## 1 HDMI
 ## 2 HDMI_SPDIF
@@ -41,6 +49,25 @@ warn "USAGE: dtb_fix *.dtb\n";
     5 5
 /;
 
+# new replace order
+%vim3l = qw/
+    2 0
+    0 1
+    4 2
+    1 3
+    3 4
+    5 5
+/;
+
+# new replace order
+%vim3 = qw/
+    2 0
+    0 1
+    4 2
+    1 3
+    3 4
+/;
+
 # enable disable list
 %vim3la = qw/
     0 1
@@ -49,6 +76,15 @@ warn "USAGE: dtb_fix *.dtb\n";
     3 1
     4 0
     5 0
+/;
+
+# enable disable list
+%vim3a = qw/
+    0 1
+    1 1
+    2 1
+    3 1
+    4 0
 /;
 
 sub ee{
@@ -69,6 +105,7 @@ sub fix{
     my $S=$_[0];
     $PRE='suffix-name = "';
     $DAI='aml-audio-card,dai-link@';
+
     if ( $$S =~ /VIM3L/) {
     if ( $$S =~ s/$q($SND_PRE.+?)$q/$q.($dev{$1}?$dev{$1}:$1).$q/seg ) {
     my $m=0;
@@ -76,9 +113,34 @@ sub fix{
 	$$S =~ s/$DAI(\d)/$DAI$vim3l{$1}/sg;
 	$$S =~ s/($DAI(\d)\s+{)/$1.($vim3la{$2}?"":$DISABLED)/seg;
 	## FORCE CHANGE ORDER
-	$$S =~ s/($DAI\d\s\{.+?)($DAI\d\s\{.+?)($DAI\d\s\{.+?)($DAI\d\s\{.+?)($DAI\d\s\{.+?)$DAI/$3$1$5$2$4$DAI/sg;
-	warn "[i] REBUILDED $m";
-	return $m
+	$D = qr/$DAI.+?{.+?{.+?}.+?{.+?}.+?}\;\s+/s;
+	warn $D;
+	if ( $$S =~ s/($D)($D)($D)($D)($D)/$3$1$5$2$4/s ) {
+	    warn "[i] REBUILDED $m";
+	    return $m
+	} else {
+	    return undef
+	}
+
+    }
+    }
+    }
+
+    if ( $$S =~ /VIM3/) {
+    if ( $$S =~ s/$q($SND_PRE.+?)$q/$q.($dev{$1}?$dev{$1}:$1).$q/seg ) {
+    my $m=0;
+    if ( $$S =~ s/$PRE(.+?)$q/$PRE.($sub3{$1}?++$m&&$sub3{$1}:$1).$q/seg ) {
+	$$S =~ s/$DAI(\d)/$DAI$vim3{$1}/sg;
+	$$S =~ s/($DAI(\d)\s+{)/$1.($vim3a{$2}?"":$DISABLED)/seg;
+	## FORCE CHANGE ORDER
+	$D = qr/$DAI.+?{.+?{.+?}.+?{.+?}.+?}\;\s+/s;
+	warn $D;
+	if ( $$S =~ s/($D)($D)($D)($D)($D)/$3$1$5$2$4/s ) {
+	    warn "[i] REBUILDED $m";
+	    return $m
+	} else {
+	    return undef
+	}
     }
     }
     }
@@ -100,7 +162,8 @@ sub scan(){
     #warn "[i] readed $b bytes";
 
     if ( fix(\$s) ){
-    #   print $s
+#       print $s;
+#	exit 0;
     } else {
 	return undef
     }
