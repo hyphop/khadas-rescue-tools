@@ -1,0 +1,8 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= display alsa
+
+grep "" /proc/asound/card0/pcm?p/sub0/hw_params
+

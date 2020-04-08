@@ -1,0 +1,42 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= check play alsa devices
+
+
+CMD(){
+    echo "# $@">&2
+    $@
+}
+
+DURATION=2
+
+SOURCE="cat /dev/urandom"
+
+service mpd stop
+
+for d in 0 1 2; do
+
+    for RATE in 44100 48000 96000 192000 ; do
+
+	for FMTS in S16_LE S24_LE S32_LE; do
+
+	D="hw:0,$d"
+	echo "[i] sound test dev $D">&2
+	(
+	sleep 1
+	echo "[i] check status">&2
+	grep "" /proc/asound/card0/pcm${d}p/sub0/hw_params
+	)&
+
+	$SOURCE | CMD aplay -d $DURATION -fcd -f $FMTS -r $RATE -D$D $ARGS
+	echo "[i] silent">&2
+	sleep 1
+	
+	done
+
+    done
+
+done
+

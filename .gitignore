@@ -11,5 +11,5 @@ scripts/bin/*
 
 img/*
 dl
-opt
+/opt
 tmp
