@@ -16,7 +16,7 @@ for c in $C/policy*; do
     echo $FREQ > $c/scaling_min_freq
 done
 
-/opt/cpu_freq
+# /opt/cpu_freq
 
 /usr/bin/amixer sset 'Audio hdmi-out mute' off
 /usr/bin/amixer sset 'Audio spdif mute' off
