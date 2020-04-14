@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ## hyphop ##
 
@@ -13,6 +13,11 @@ USAGE
     
     -T#thread
     -B#blocksize in M
+
+META
+
+    ./xze rootfs_stage.sh -M INFO=\"any strings\" VAR=val
+
 "
 exit 
 }
@@ -40,8 +45,18 @@ OPTS=
 T=4      # threads
 B=90     # in MEGS
 
+META=
 for a in $@; do
+    shift
     case $a in
+	-m)
+	META=1
+	break
+	;;
+	-M)
+	META=2
+	break
+	;;
 	-T*)
 	T=${a#-T}
 	continue
@@ -52,7 +67,7 @@ for a in $@; do
 	;;
 	*)
 	[ -f "$a" ] && {
-	    [ "$IN" ] || IN=$a
+	    [ "$IN" ] || IN="$a"
 	    continue
 	}
 	OPTS="$OPTS $a"
@@ -65,30 +80,70 @@ done
 OUT="$IN.xz"
 
 BS=4096 # block size
-S1=$(stat -c%s $IN)
+S1=$(stat -c%s "$IN")
 S14=$((S1/T))
 
 [ $S14 -lt $B ] && B=$S14
 
 B="${B}M"
 
-ARGS="$xz -T$T --block-size $B -k -c $OPTS $IN"
+ARGS="$xz -T$T --block-size $B -k -c $OPTS "$IN""
 
 echo "[i] xze compress $IN ($S1 bytes) > $OUT">&2
 echo "# $ARGS">&2
 
-$ARGS > $OUT
+$ARGS > "$OUT"
 
-S=$(stat -c%s $OUT)
+S=
+S2=
+PAD(){
+S=$(stat -c%s "$1")
 S2=$((S/BS*BS))
 [ $S2 -lt $S ] && S2=$((S2+BS))
 SD=$((S2-S))
-dd if=/dev/zero bs=$SD count=1 2>/dev/null >> $OUT
+[ "$2" ] && \
+printf %${SD}s "$2" >> "$1"
+[ "$2" ] || \
+dd if=/dev/zero bs=$SD count=1 2>/dev/null >> "$1"
 echo "[i] compressed $S2 < $S1">&2
 echo $S2
+}
 
-XZS=$($xz -l $OUT)
+PAD "$OUT"
+
+XZS=$($xz -l "$OUT")
 echo "[i] XZ info
 $XZS">&2
 
+[ "$META" ] && {
+    echo "[i] add meta block">&2
+
+    meta="/tmp/meta.$$"
+    touch $meta
+
+    for m in "$@"; do
+    M="$m"
+    [ "$META" = "2" ] && M=${m/=/: }
+#   echo "[i] add meta $M">&2
+    [ -s $meta ] || {
+    (
+    echo "#META" 
+    echo "UNPACKED_SIZE: $S1"
+    echo "PACKED_SIZE: $S2"
+    echo "FILE_SIZE: $((S2+BS))"
+    ) >> $meta
+    }
+    echo "$M" >> $meta
+    done
+
+    [ -s $meta ] && {
+    cat $meta >&2
+    PAD $meta " "
+    }
+    $xz $meta
+    PAD $meta.xz
+    cat $meta.xz >> "$OUT"
+    rm $meta.xz
+
+}
 #echo "[i] pad +$SD">&2

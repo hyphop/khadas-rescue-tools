@@ -8,6 +8,7 @@ LABEL=MANJARO
 UBOOT_KERNEL=Image
 UBOOT_UINITRD=uInitrd
 UBOOT_ENV_INIT=uEnv.ini
+UBOOT_ENV_USER=uEnv.user
 
 ##
 
@@ -25,7 +26,7 @@ test "$devtype" = ""           && devtype=mmc
 ## scan boot part by distro LABEL
 test "$devnum" = "" && for d in 2 1 0; do
 for p in 1 2 3 4 5; do
-test "$devnum" = "" && load $devtype $d:$p $loadaddr $LABEL.label && devnum=$d && distro_bootpart=$p
+test "$devnum" = "" && test -e $devtype $d:$p $LABEL.label && devnum=$d && distro_bootpart=$p
 done
 done
 
@@ -44,6 +45,9 @@ $LOADER $initrd_addr $UBOOT_UINITRD  || exit 1
 
 echo "[i] ENV: $LOADER $env_addr $UBOOT_ENV_INIT"
 $LOADER $env_addr    $UBOOT_ENV_INIT && env import -t $env_addr $filesize
+
+echo "[i] ENV: $LOADER $env_addr $UBOOT_ENV_USER"
+$LOADER $env_addr    $UBOOT_ENV_USER && env import -t $env_addr $filesize
 
 DTB_NAME=$dtb_name
 test "X$DTB_NAME" = "X" && DTB_NAME="dtbs/$fdtfile"

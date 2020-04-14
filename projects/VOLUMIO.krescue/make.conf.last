@@ -7,8 +7,8 @@ IMG=volumio-2.718-2020-03-11-kvim3l.img.zip
 IMG=Volumio0.003-2020-03-19-kvim3l.img.zip
 IMG=volumio-2.736-2020-03-23-kvim3l.img.zip
 IMG=volumio-2.736-2020-03-23-kvim3l.img.zip
-VER=2.743
-DAT=2020-04-03
+VER=2.748
+DAT=2020-04-13
 #http://updates.volumio.org/kvim3l/volumio/2.743/volumio-2.743-2020-04-03-kvim3l.img.zip
 LINK0=http://updates.volumio.org/kvim3l/volumio/$VER/
 #IMG=volumio-2.741-2020-04-01-kvim3l.img.zip

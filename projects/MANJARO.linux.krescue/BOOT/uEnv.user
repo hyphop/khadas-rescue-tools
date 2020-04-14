@@ -1,0 +1,4 @@
+# USER CONFIG
+#user_args=video=HDMI-A-1:1280x720@60e
+#user_args=video=HDMI-A-1:800x600@60e
+user_args=video=HDMI-A-1:1920x1080@60e

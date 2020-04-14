@@ -22,11 +22,8 @@ builder:	hyphop
 date:		$DATE
 link:		http://dl.khadas.com/Firmware
 label:		MANJARO
-match:		BOARD=VIM3L
-match:		BOARD=VIM3
-match:		BOARD=VIM2
-match:		BOARD=VIM1
 vars:		BOARD=VIM1 VIM2 VIM3 VIM3L
+match:		$MATCH
 source:		.meta
 source:		README*
 duration:	70
@@ -36,7 +33,8 @@ desc:		Manjaro is a free and open-source Linux distribution based on the Arch Li
 
 # sub 1
 sub:	1
-source:	BOOT*
+source:	BOOT
+source:	BOOT.vim*
 source:	ROOT.*
 
 ## raw data block
@@ -47,9 +45,9 @@ data:   BOOT.%%BOARD%%/u-boot.%%BOARD%%.sd.bin
 
 ## partition + fs block
 part:	1
-type:	-
-start:	62500B
-size:	437500B
+type:	
+start:	62496B
+size:	409600B
 fstype:	vfat
 label:	BOOT
 source:	BOOT
@@ -65,7 +63,7 @@ source:	BOOT.%%BOARD%%
 ## partition + fs block
 part:	2
 type:	-
-start:  500000B
+start:  62496B
 size:	-
 
 # sub 2
@@ -75,7 +73,7 @@ args:	-comp zstd -Xcompression-level 1 -b 1M
 source: ROOT
 
 block:  1
-start:  500000B
+start:  62496B
 sub:    2
 #data:  &rootfs.img.xz
 data:   &ROOT/rootfs.img.xz

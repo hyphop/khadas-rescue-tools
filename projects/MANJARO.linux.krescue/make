@@ -154,7 +154,7 @@ IMG2="$DL/${IMG%.*}"
     echo "[i] unpack $IMG_">&2
 #    echo "[i] 7zr -so e $IMG_ > $IMG2">&2
 #    $z7r -so e "$IMG_" > $IMG2 || DIE
-    echo "[i] xz -dc $IMG_ > $IMG2">&2
+    echo "[i] $xz -dc $IMG_ > $IMG2">&2
     $xz -dc < "$IMG_" > $IMG2 || FAIL extract
 }
 
@@ -196,7 +196,7 @@ grep -q "mtools_skip_check=1" ~/.mtoolsrc || \
 [ -d  $BOOT.org ] || {
 echo "[i] copy boot partition">&2
 echo "#$mcopy -sbpmi $IMG2@@$((512*S1)) :: $BOOT.org"
-$mcopy -sbpmi $IMG2@@$((512*S1)) :: $BOOT.org || FAIL extract boot partition to $BOOT.org
+$mcopy -sbpmi "$IMG2@@$((512*S1))" :: "$BOOT.org" || FAIL extract boot partition to $BOOT.org
 }
 
 #S2="$($sfdisk $IMG2 --dump | grep img2)"
@@ -205,23 +205,24 @@ $mcopy -sbpmi $IMG2@@$((512*S1)) :: $BOOT.org || FAIL extract boot partition to 
 #S2=${S2%%,*}
 #S2=$(echo $S2)
 
-[ -d "$ROOT" ] || mkdir -p $ROOT
+[ -d "$ROOT" ] || mkdir -p "$ROOT"
 
-[ -f $ROOTFS ] || {
+[ -f "$ROOTFS" ] || {
 echo "[i] extract rootfs => $ROOTFS">&2
-dd if=$IMG2 skip=$((S2)) of=$ROOTFS
-file $ROOTFS | grep ext4 || FAIL not rootfs
-fsck.ext4 -f $ROOTFS || echo "[w] rootfs image check oops"
-#resize2fs -M $ROOTFS
+CMD fallocate -v -c -o 0 -l $((S2*512)) "$IMG2" || {
+CMD dd if=$IMG2 skip=$((S2)) of=$ROOTFS
+}
+file "$IMG2" | grep ext4 || FAIL not rootfs
+mv "$IMG2" "$ROOTFS"
 }
 
 ls -l1
 
-truncate -s0 $IMG2
+#truncate -s0 $IMG2
 
 }
 
-for p in $ROOTFS; do
+for p in "$ROOTFS"; do
 [ -s $p ] || continue
 [ -L $p ] && continue
 [ -f $p ] || continue
@@ -274,7 +275,7 @@ cp $BOOT.org/$UBOOT_DTB_VIM3L $BOOT/$UBOOT_DTB_VIM3L
 echo $LABEL > $BOOT/LABEL
 echo $LABEL > $BOOT/$LABEL.label
 
-rm -rf $BOOT.org
+#rm -rf $BOOT.org
 
 ls -l1 $BOOT
 
