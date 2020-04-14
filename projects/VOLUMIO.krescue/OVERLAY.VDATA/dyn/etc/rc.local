@@ -5,19 +5,62 @@ echo heartbeat > /sys/class/leds/sys_led/trigger
 ## hyphop ##
 ## fix cpu freq
 ## fix audio lags clicks
-
+#set -e
 C=/sys/devices/system/cpu/cpufreq
 [ "$FREQ" ] || FREQ=1200000
-
 echo "[i] set fix freq $FREQ">&2
-
 for c in $C/policy*; do
     echo $FREQ > $c/scaling_max_freq
     echo $FREQ > $c/scaling_min_freq
 done
 
-# /opt/cpu_freq
+## IRQ optimization
+grep -q "VIM1" /proc/cpuinfo && {
+echo 2 > /proc/irq/35/smp_affinity
+echo 4 > /proc/irq/36/smp_affinity
+echo 8 > /proc/irq/46/smp_affinity
+}
+grep -q "VIM2" /proc/cpuinfo && {
+echo 2 > /proc/irq/22/smp_affinity
+echo 4 > /proc/irq/23/smp_affinity
+echo 8 > /proc/irq/33/smp_affinity
+}
+grep -q "VIM3" /proc/cpuinfo && {
+echo 2 > /proc/irq/14/smp_affinity
+echo 4 > /proc/irq/42/smp_affinity
+echo 8 > /proc/irq/50/smp_affinity
+echo 2 > /proc/irq/29/smp_affinity
+}
+grep -q "VIM3L" /proc/cpuinfo && {
+echo 2 > /proc/irq/13/smp_affinity
+echo 4 > /proc/irq/44/smp_affinity
+echo 8 > /proc/irq/51/smp_affinity
+echo 4 > /proc/irq/14/smp_affinity
+}
 
+#set +e
+
+## mpd config fix only for VIM1 VIM2
+grep -q VIM3 /proc/cpuinfo || {
+(
+while [ "1" ] ; do
+grep -q period_time /etc/mpd.conf || {
+echo "[i] fix mpd.conf">&2
+for s in "hw:0,0" "hw:0,1" "hw:0,2"; do
+    sed -i s/$s\"/hw:0,0\"\\nperiod_time\ \"40000\"\\nbuffer_time\ \"4000000\"\\n/ \
+    /etc/mpd.conf
+done
+sed -i s/^audio_buffer_size/\#audio_buffer_size/ /etc/mpd.conf
+USER=volumio
+HOME=/home/volumio
+service mpd restart
+}
+sleep 2
+done
+) 1>/dev/null 2>/dev/null </dev/null &
+}
+
+## mixer fix
 /usr/bin/amixer sset 'Audio hdmi-out mute' off
 /usr/bin/amixer sset 'Audio spdif mute' off
 

@@ -1,0 +1,34 @@
+volumio@volumio:~$ cat /proc/interrupts 
+           CPU0       CPU1       CPU2       CPU3       CPU4       CPU5       CPU6       CPU7       
+  2:          0          0          0          0          0          0          0          0     GIC-0  29 Level     arch_timer
+  3:     256004      51375     109686      37410     371092      61605      17629       4509     GIC-0  30 Level     arch_timer
+  6:          0          0          0          0          0          0          0          0     GIC-0  92 Edge      Meson TimerF
+  8:       1506          0          0          0          0          0          0          0     GIC-0 241 Edge    
+  9:          8          0          0          0          0          0          0          0     GIC-0 242 Edge    
+ 10:        438          0          0          0          0          0          0          0     GIC-0 225 Edge      meson_uart
+ 11:        692          0          0          0          0          0          0          0     GIC-0  58 Edge      meson_uart
+ 12:         69          0          0          0          0          0          0          0     GIC-0 246 Edge      c11087c0.i2c
+ 14:          0          0          0          0          0          0          0          0     GIC-0 220 Edge      aml-aes, aml-tdes
+ 16:          0          0          0          0          0          0          0          0     GIC-0 228 Edge      keypad
+ 18:          0          0          0          0          0          0          0          0     GIC-0  83 Edge      dmc_monitor
+ 19:       8206          0          0          0          0          0          0          0     GIC-0 250 Edge      meson-aml-mmc
+ 20:          0          0          0          0          0          0          0          0     GIC-0 249 Edge      meson-aml-mmc
+ 21:      12094          0          0          0          0          0          0          0     GIC-0 248 Level     meson-aml-mmc
+ 22:      18339          0          0          0          0          0          0          0     GIC-0  40 Edge      eth0
+ 23:      92033          0          0          0          0          0          0          0     GIC-0  35 Edge      vsync, osd-vsync
+ 26:          0          0          0          0          0          0          0          0     GIC-0  75 Edge      vdec-0
+ 27:          0          0          0          0          0          0          0          0     GIC-0  76 Edge      vdec-1
+ 29:         45          0          0          0          0          0          0          0     GIC-0  62 Level     xhci-hcd:usb1
+ 30:          0          0          0          0          0          0          0          0     GIC-0  63 Level     dwc_otg, dwc_otg_pcd
+ 31:          2          0          0          0          0          0          0          0     GIC-0  89 Edge      hdmitx
+ 32:          0          0          0          0          0          0          0          0     GIC-0 231 Edge      hdmi_aocec
+ 33:     184061          0          0          0          0          0          0          0     GIC-0 121 Edge      rdma
+ 34:          0          0          0          0          0          0          0          0     GIC-0 182 Edge      ge2d
+ 37:          0          0          0          0          0          0          0          0     GIC-0  78 Edge      pre_di
+ 41:        300          0          0          0          0          0          0          0  meson-gpio-irqchip  96 Level   
+
+
+echo 2 > /proc/irq/22/smp_affinity
+echo 4 > /proc/irq/23/smp_affinity
+echo 8 > /proc/irq/33/smp_affinity
+
