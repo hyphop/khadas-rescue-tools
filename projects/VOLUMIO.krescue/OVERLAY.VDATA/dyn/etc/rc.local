@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/bin/sh
+##!/bin/sh -e
 
 echo heartbeat > /sys/class/leds/sys_led/trigger
 
@@ -13,6 +14,11 @@ for c in $C/policy*; do
     echo $FREQ > $c/scaling_max_freq
     echo $FREQ > $c/scaling_min_freq
 done
+
+## RC + lirc
+modprobe meson_ir
+modprobe ir_nec_decoder
+echo nec > /sys/class/rc/rc0/protocols
 
 ## IRQ optimization
 grep -q "VIM1" /proc/cpuinfo && {

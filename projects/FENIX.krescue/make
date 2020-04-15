@@ -1,0 +1,242 @@
+#!/bin/bash
+
+## hyphop ##
+
+#= kresq project generator
+
+DIR="$(dirname $0)"
+BN=$(basename $0)
+
+cd "$DIR"
+DP="$(realpath .)"
+
+#N=${DP%/*}
+N=${DP}
+N=${N##*/}
+M=${N%.krescue}
+
+M="../../img/$M"
+MP="$(realpath $M)"
+
+CMP_LEVEL="-22 -T2"
+
+case $PATH in
+    */opt/bin:*);;
+    *)PATH="$(realpath ../../opt/bin):$PATH";;
+esac
+
+DATE=$(TZ= date)
+
+CONF=$BN.conf
+COND=$BN.conf
+COND=${COND#./}
+VARIANT=
+[ "$1" ] && {
+[  -f "$1" ] || VARIANT=".$1"
+}
+[ -f "$1" ] && VARIANT="$1"
+[ "${VARIANT##*/}" = "${CONF##*/}" ] && VARIANT=
+[ "$VARIANT" ] || {
+    [ -L $CONF ] && VARIANT=$(readlink $CONF)
+}
+VARIANT=${VARIANT#$COND}
+echo "[i] VARIANT: $VARIANT">&2
+CONF=$CONF$VARIANT
+[ -f $CONF ] || {
+    echo "[e] config $CONF missed">&2
+    exit 1
+}
+
+M=$M$VARIANT
+
+echo "[i] CONFIG $CONF">&2
+
+. $CONF # config include
+
+echo "[i] started $N -> $M">&2
+
+#exit 0
+
+mkdir -p "$M"
+
+cd $M
+
+
+
+DL="dl"
+#TPL=boot.atv.v2.tar.gz
+CNF_=krescue.image.conf
+CNF=.$CNF_
+R=README.txt
+META=".meta"
+OUT=".boot"
+
+DIE(){
+    echo "[e] DIE $@">&2
+    exit 1
+}
+
+
+[ "$blkid" ] || \
+blkid="$(which blkid)"
+[ $? = 0 ] || DIE blkid ! plz install blkid
+
+[ "$bsdtar" ] || \
+bsdtar="$(which bsdtar)"
+[ $? = 0 ] || DIE bsdtar ! plz install bsdtar
+
+[ "$zstd" ] || \
+zstd="$(which pzstd)"
+
+[ "$zstd" ] || \
+zstd="$(which zstd)"
+[ $? = 0 ] || DIE zstd ! plz install zstd
+
+[ "$aml_image_v2_packer" ] || \
+aml_image_v2_packer=$(which aml_image_v2_packer)
+[ $? = 0 ] || DIE aml_image_v2_packer not found! plz install it
+
+##
+##
+
+CMD(){
+    echo "# $@">&2
+    $@
+}
+
+
+MATCH=
+for VIM in $BOARDS; do
+MATCH="BOARD=$VIM $MATCH"
+done
+
+DESC="$LABEL $VARIANT $REL $KERNEL $VER"
+#DESC="$NAME"
+
+
+[ -d BLANK ] || \
+    mkdir BLANK
+
+[ -d $META ] || mkdir -p $META
+[ -d $DL ] || mkdir -p $DL
+
+## use predownloaded
+[ -s "$DL/$IMG" ] || {
+[ -f "$DP/work/$IMG" ] && {
+    echo "[i] copy from preloaded "$DP/work/$IMG" "$DL"">&2
+    cp "$DP/work/$IMG" "$DL"
+    md5sum "$DL/$IMG" > "$DL/$IMG.md5sum"
+}
+}
+
+../../scripts/download "$LINK" "$IMG" $DL || DIE
+
+
+IMG_="$DL/$IMG"
+IMG2="$DL/${IMG%.*}"
+IMG2="${IMG2%.img}.img"
+
+echo "[i] $IMG_"
+echo "[i] $IMG2"
+
+[ -s "$IMG2.md5sum" ] || {
+    AT=$(file -b "$IMG_")
+    echo "[i] arch $AT">&2
+    case "$AT" in
+	7-zip*)
+	echo "[i] 7zr -so e $IMG_ > $IMG2">&2
+	$bsdtar -O -xf "$IMG_" '*.img' > $IMG2 || DIE
+	;;
+	*Zstandard*)
+	echo "[i] $zstd -dc "$IMG_" > $IMG2">&2
+	$zstd -dc "$IMG_" > $IMG2 || DIE
+	;;
+	*)
+	echo "[e] undef "
+	DIE
+	;;
+    esac
+    md5sum $IMG2 > $IMG2.md5sum
+}
+
+[ -d "$OUT" ] || \
+    mkdir $OUT
+
+[ -f $OUT/unpacked ] || {
+CMD $aml_image_v2_packer -d $IMG2 "$OUT" || DIE
+
+date > $OUT/unpacked
+
+[ -s $IMG2 ] && truncate -s0 $IMG2
+
+
+../../scripts/sparseimg2img $OUT
+
+}
+
+cd $OUT
+for r in *.ini  *.conf *.cfg *.xml bootloader.* *.USB; do
+    [ -e "$r" ] && \
+    CMD rm "$r"
+done
+cd ..
+
+for p in $OUT/*.PARTITION; do
+
+echo "[i] part $p">&2
+[ -L $p ] && continue
+[ -f $p ] || continue
+[ -s "$p.id" ] && {
+    . "$p.id"
+    echo "	$BLK_LABEL $BLK_UUID $BLK_TYPE">&2
+    continue
+}
+[ -s $p ] || continue
+[ -f $p.packed ] && continue
+
+$blkid -o export "$p" | sed s/^/BLK_/g > "$p.id"
+
+grep -q TYPE= "$p.id" && {
+
+[ -s "$p.xz" ] || {
+echo "[i] compress partition $p">&2
+CMD ../../scripts/xze -e -T4 -9 "$p" || FAIL compress
+echo "$p.xz" > "$p.packed"
+}
+CMD truncate -s0 "$p"
+
+}
+
+done
+
+[ -f $R ] || {
+    echo "[i] create README: $R">&2
+    echo "# SOURCES
+NAME:      $IMG
+SOURCE:    $LINK0
+
+IMAGE_URL: $LINK
+
+## BUILD IMAGE
+
+./make
+
+
+" > $R
+}
+
+
+echo "[i] copy kresq config from template $CNF_.tpl ($NAME $DATE)"
+. $DP/$CNF_.tpl > $CNF || FAIL template not found
+
+[ -e make ] || {
+    ln -s ../../image/make_image make
+}
+
+echo "[i] project is ready: $MP">&2
+
+
+#exit 0
+
+CMD ../../image/make_image
+

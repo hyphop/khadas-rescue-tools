@@ -500,7 +500,11 @@ desc: $desc
 		echo " CMP: $data - $sub"
 		;;
 		\&*)
-		echo " CMP: $data - $sub"
+		data_file=${data#\&}
+		echo " CMP: $data_file - $sub"
+		[ -e "$data_file" ] || {
+		    FAIL "$data_file missed file"
+		}
 		;;
 		*)
 		# check files

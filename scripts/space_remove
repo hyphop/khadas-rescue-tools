@@ -1,0 +1,58 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= remove zero bytes from tail
+
+BS=4096
+
+CMD(){
+    echo "# $@">&2
+    [ "$NOOP" ] || \
+    $@
+}
+
+
+F="$1"
+
+NOOP="$2"
+
+[ "$NOOP" ]  && echo "[i] NOOP MODE">&2
+
+S=$(stat -c%s "$F")
+T=/tmp/hex.test
+hexdump -C "$F" | tail -3 > $T
+T1=$(head -1 $T)
+T2=$(head -2 $T | tail -1)
+T3=$(tail -1 $T)
+
+[ "$T2" = "*" ] || {
+    echo "[w] not find zero tail">&2
+    exit 1
+}
+
+[ "$((0x$T3))" = "$S" ] || {
+    echo "[e] wrong size $T3 != $S">&2
+    exit 1
+}
+
+grep -q "00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00" $T || {
+    echo "[e] tail is not zero bytes">&2
+    echo "$T1" >&2
+    exit 1
+}
+
+E=${T1%% *}
+E2=$((0x$E))
+
+E4=$((E2/$BS*$BS))
+
+[ "$E4" = "$E2" ] || {
+    echo "[w] not padded by $BS">&2
+    E4=$(E4+$BS)
+}
+
+echo "[i] $F  - $S bytes -> $E2(($E4)) ($E)"
+
+CMD truncate -s $E2 $F
+

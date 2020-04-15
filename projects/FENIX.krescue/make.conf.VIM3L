@@ -1,0 +1,15 @@
+#
+BOARD=VIM3L
+VER=V0.8.3-20200415
+#
+BOARDS=$BOARD
+LABEL=Ubuntu
+VARIANT=server
+REL=bionic
+KERNEL=4.9_arm64
+LINK0=https://dl.khadas.com/Firmware/$BOARD/$LABEL/
+NAME=${BOARD}-${LABEL}-${VARIANT}-${REL}-Linux-${KERNEL}-$VER
+NAME2=${BOARD}_${LABEL}-${VARIANT}-${REL}_Linux-${KERNEL}_EMMC_$VER
+IMG=$NAME2.img.zst
+
+LINK=$LINK0$IMG
