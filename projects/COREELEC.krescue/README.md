@@ -23,25 +23,26 @@ after project preparation generation, we can use project standalone
 
     ls -1 /tmp/*.kresq
 
-    /tmp/VIM12.COREELEC.9.2.1.emmc.kresq
+    /tmp/VIM12.COREELEC.9.2.2.emmc.kresq
     /tmp/VIM12.COREELEC.9.2.nightly.emmc.kresq
-    /tmp/VIM3.COREELEC.9.2.1.emmc.kresq
+    /tmp/VIM3x.COREELEC.9.2.2.emmc.kresq
     /tmp/VIM3x.COREELEC.9.2.nightly.emmc.kresq
 
 
 ## WRITE krescue installation IMAGE
 
     # VIM1
-    curl -sfL dl.khadas.com/.mega | sh -s - VIM1  VIM12.COREELEC.9.2.1.emmc.kresq > /dev/mmcblk0
+    curl -sfL dl.khadas.com/.mega | sh -s - VIM1  VIM12.COREELEC.9.2.2.emmc.kresq > /dev/mmcblk0
     curl -sfL dl.khadas.com/.mega | sh -s - VIM1  VIM12.COREELEC.9.2.nightly.emmc.kresq > /dev/mmcblk0
     # VIM2
-    curl -sfL dl.khadas.com/.mega | sh -s - VIM2  VIM12.COREELEC.9.2.1.emmc.kresq > /dev/mmcblk0
+    curl -sfL dl.khadas.com/.mega | sh -s - VIM2  VIM12.COREELEC.9.2.2.emmc.kresq > /dev/mmcblk0
     curl -sfL dl.khadas.com/.mega | sh -s - VIM2  VIM12.COREELEC.9.2.nightly.emmc.kresq > /dev/mmcblk0
     # VIM3
-    curl -sfL dl.khadas.com/.mega | sh -s - VIM3  VIM3.COREELEC.9.2.1.emmc.kresq > /dev/mmcblk0
+    curl -sfL dl.khadas.com/.mega | sh -s - VIM3  VIM3x.COREELEC.9.2.2.emmc.kresq > /dev/mmcblk0
     curl -sfL dl.khadas.com/.mega | sh -s - VIM3L VIM3x.COREELEC.9.2.nightly.emmc.kresq > /dev/mmcblk0
     # VIM3L
-    curl -sfL dl.khadas.com/.mega | sh -s - VIM3L VIM3x.COREELEC.9.2.nightly.emmc.kresq> /dev/mmcblk0
+    curl -sfL dl.khadas.com/.mega | sh -s - VIM3  VIM3x.COREELEC.9.2.2.emmc.kresq > /dev/mmcblk0
+    curl -sfL dl.khadas.com/.mega | sh -s - VIM3L VIM3x.COREELEC.9.2.nightly.emmc.kresq > /dev/mmcblk0
 
 ## ABOUT 
 

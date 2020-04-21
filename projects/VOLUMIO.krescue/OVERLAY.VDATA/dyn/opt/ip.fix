@@ -1,0 +1,17 @@
+#!/bin/sh
+
+## hyphop ##
+
+# tmp hack
+# ignore eth iface down
+#
+# ifconfig eth0 down
+# ip link set dev eth0 down
+#    1     2   3   4   5
+
+#echo $0 $@
+
+grep -q VIM3 /proc/cpuinfo && \
+[ "$4" = "eth0" -a "$5" = "down" ] && exit 0
+
+exec /opt/ip $@

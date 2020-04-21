@@ -113,7 +113,7 @@ vars=
 
 qq="unset DSC sub args desc block image part date back \
     builder source match overlay label fstype size disabled \
-    start type data default tag ask desc format uuid link duration"
+    start type data default tag ask desc format uuid link duration resize"
     # vars
 
 eval $qq

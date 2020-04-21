@@ -1,0 +1,11 @@
+[Unit]
+Description=vim_poweroff
+DefaultDependencies=no
+After=final.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/poweroff
+
+[Install]
+WantedBy=final.target

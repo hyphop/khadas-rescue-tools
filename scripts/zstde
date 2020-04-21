@@ -37,7 +37,7 @@ EXT=zstd
 
 FOOTER=1
 
-CMP_OPTS_="-c"
+CMP_OPTS_="-c "
 #CMP_OPTS="-c -T0"
 
 IN=

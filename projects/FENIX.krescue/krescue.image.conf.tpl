@@ -101,6 +101,7 @@ data:  @zero:1M
 block: -
 start: 0x0b400000
 sub:    1
+resize:	1
 data:	&.boot/rootfs.PARTITION.xz
 
 ##END##

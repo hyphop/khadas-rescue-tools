@@ -1,0 +1,13 @@
+#!/bin/sh
+
+## hyphop ##
+
+# tmp hack
+# ifconfig eth0 down ignore
+
+# echo $0 $@
+
+grep -q VIM3 /proc/cpuinfo && \
+[ "$1" = "eth0" -a "$2" = "down" ] && exit 0
+
+exec /opt/ifconfig $@

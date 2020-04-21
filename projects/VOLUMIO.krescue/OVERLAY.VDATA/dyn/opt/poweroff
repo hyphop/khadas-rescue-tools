@@ -1,0 +1,8 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= power off wakeup activation for power_key | IR/rc | wlan 
+
+echo 1 > /sys/class/mcu/poweroff
+

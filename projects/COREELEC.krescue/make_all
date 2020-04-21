@@ -6,6 +6,6 @@ D=$(dirname $0)
 
 #export LAST_NO_CHK=1
 
-for v in 9.2.1 ng.9.2.1 ng.nightly nightly ; do
+for v in 9.x.x ng.9.x.x ng.nightly nightly ; do
 $D/make $v
 done
