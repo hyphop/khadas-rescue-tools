@@ -1,0 +1,15 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= shutdown script
+
+## dummy
+
+echo "
+[SHUTDOWN]
+" | tee /dev/ttyS0 /dev/tty0
+
+
+
+

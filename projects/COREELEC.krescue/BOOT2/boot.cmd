@@ -15,6 +15,8 @@ load=fatload
 DEVS="0 1 2 3"
 TYPES="usb mmc"
 
+test "$dtb_mem_addr" = "" && dtb_mem_addr=$fdt_addr_r
+
 Cdtb=dtb.img
 
 test "$boardname" = "kvim"     && Cdtb=device_trees/gxl_p212_2g_kvim.dtb

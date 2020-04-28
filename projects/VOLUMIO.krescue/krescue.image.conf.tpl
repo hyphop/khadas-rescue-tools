@@ -38,11 +38,11 @@ desc:		Volumio - The Audiophile Music Player.
     https://volumio.org/
 
 ## ask user block
-ask:     choose mainline uboot?
-type:    yesno
-tag:     UBOOTML
-default: NO
-desc:    press YES for mainline uboot and NO for legacy uboot
+#ask:     choose mainline uboot?
+#type:    yesno
+#tag:     UBOOTML
+#default: NO
+#desc:    press YES for mainline uboot and NO for legacy uboot
 
 ## sub archive already packed squash
 sub:    2

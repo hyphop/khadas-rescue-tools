@@ -11,7 +11,7 @@
 
 #echo $0 $@
 
-grep -q VIM3 /proc/cpuinfo && \
+#grep -q VIM3 /proc/cpuinfo && \
 [ "$4" = "eth0" -a "$5" = "down" ] && exit 0
 
 exec /opt/ip $@

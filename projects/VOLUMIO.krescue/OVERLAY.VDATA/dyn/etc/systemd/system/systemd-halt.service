@@ -5,7 +5,7 @@ After=final.target
 
 [Service]
 Type=oneshot
-ExecStart=/opt/poweroff
+ExecStart=/opt/poweroff-script
 
 [Install]
 WantedBy=final.target

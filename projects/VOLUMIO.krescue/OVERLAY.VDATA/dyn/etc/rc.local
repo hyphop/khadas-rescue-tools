@@ -18,16 +18,18 @@ service triggerhappy restart
 chmod 0777 /sys/class/mcu/poweroff
 ## activate last poweroff script for wake up by POWER_KEY | IR/RC | WLAN
 systemctl enable /etc/systemd/system/systemd-halt.service
+systemctl enable /etc/systemd/system/systemd-shutdown.service
 
 ## temp hack for VIM3 kernel crash
-grep -q VIM3 /proc/cpuinfo && {
+## VIM2 too
+#grep -q VIM3 /proc/cpuinfo && {
 [ -s /opt/ifconfig ] || {
     mv /sbin/ifconfig     /opt
     mv /bin/ip            /opt
     mv /opt/ifconfig.fix  /sbin/ifconfig
     mv /opt/ip.fix        /bin/ip
 }
-}
+#}
 
 ## hyphop ##
 ## fix cpu freq

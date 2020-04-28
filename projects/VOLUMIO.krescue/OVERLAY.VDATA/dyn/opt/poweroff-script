@@ -1,0 +1,11 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= power off script
+
+## dummy
+
+echo "
+[POWEROFF]
+" | tee /dev/ttyS0 /dev/tty0

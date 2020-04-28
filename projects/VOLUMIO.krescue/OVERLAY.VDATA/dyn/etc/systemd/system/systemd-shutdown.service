@@ -1,0 +1,12 @@
+[Unit]
+Description=Shutdown
+DefaultDependencies=no
+Before=shutdown.target
+
+[Service]
+ExecStart=/opt/shutdown-script
+Type=oneshot
+
+[Install]
+WantedBy=shutdown.target
+
