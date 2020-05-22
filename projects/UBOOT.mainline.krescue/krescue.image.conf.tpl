@@ -38,7 +38,21 @@ sub:	1
 source:	BOOT*
 
 ## raw data block
-block:  0
+block:  -
+part:	boot0
+start:  0
+sub:	1
+data:   BOOT.%%BOARD%%/u-boot.%%BOARD%%.sd.bin
+
+## raw data block
+block:  -
+part:	boot1
+start:  0
+sub:	1
+data:   BOOT.%%BOARD%%/u-boot.%%BOARD%%.sd.bin
+
+## raw data block
+block:  -
 start:  0
 sub:	1
 data:   BOOT.%%BOARD%%/u-boot.%%BOARD%%.sd.bin

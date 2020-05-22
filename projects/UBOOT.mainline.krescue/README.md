@@ -18,6 +18,9 @@ ALL questions to ##hyphop##
 
 ## ABOUT 
 
+
++ https://github.com/hyphop/khadas-uboot/
++ https://github.com/hyphop/khadas-uboot/releases/tag/mainline_last
 + https://github.com/hyphop/khadas-rescue-tools
 + https://github.com/hyphop/khadas-rescue-tools/tree/master/projects
 + https://www.khadas.com/

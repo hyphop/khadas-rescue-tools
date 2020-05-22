@@ -1,0 +1,14 @@
+#!/bin/sh
+
+CMP=gzip
+
+TARGET_KERNEL_ARCH=arm64
+
+[ -f "$1" ] || exit 0
+
+$CMP -9c "$1" > "$1.$CMP"
+
+mkimage -A $TARGET_KERNEL_ARCH \
+    -O linux -C $CMP -T kernel -a 0x01080000 -e 0x01080000 \
+    -n kernel -d "$1.$CMP" "$2"
+

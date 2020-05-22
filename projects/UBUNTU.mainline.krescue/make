@@ -176,14 +176,29 @@ echo "[i] PARTITIONS 1: $S1 2: $S2">&2
 PART1=$(dd if=$IMG2 skip=$((S1)) count=10 2>/dev/null| file -)
 echo "[i] PART1 $PART1">&2
 UUID1=${PART1#*number}
-#UUID1=$(echo ${UUID1%%,*})
 UUID1=${UUID1%%,*}
-UUID1=${UUID1#*0x}
+UUID1=$(printf "%X" $(($UUID1)))
+UUID1="${UUID1::4}-${UUID1:4:4}"
+
 LABEL1=${PART1#*label:}
 LABEL1=${LABEL1#*\"}
 LABEL1=$(echo ${LABEL1%\"*})
 
+
 echo "[i] PART1 : UUID: '$UUID_' LABEL: '$LABEL1'">&2
+
+echo "
+LABEL1=$LABEL1
+UUID1=$UUID1_
+LABEL2=$LABEL2
+UUID2=$UUID2_
+LABEL3=$LABEL3
+UUID3=$UUID3_
+
+UUID1_=$UUID1
+UUID2_=$UUID2
+UUID3_=$UUID3
+" > $IMG2.conf
 
 #
 #
@@ -252,8 +267,6 @@ for VIM in VIM1 VIM2 VIM3 VIM3L; do
     ../../scripts/download $BASE$UBOOT $UBOOT $D || FAIL download uboot
 done
 
-echo "[i] copy kresq config from template $CNF_.tpl ($NAME $DATE)"
-. $DP/$CNF_.tpl > $CNF || FAIL template not found
 
 for v in 1 2 3 3l; do
     #echo "$BOOT.org/dtb/*/*vim$v.dtb > $BOOT.VIM${v/l/L}/dtb.img">&2
@@ -268,7 +281,12 @@ CMD rsync -a --inplace $DP/$BOOT/. $BOOT.org
 
 CMD rsync --delete -a --inplace $DP/ROOT.* . 
 
+echo "[i] copy kresq config from template $CNF_.tpl ($NAME $DATE)"
+. $DP/$CNF_.tpl > $CNF || FAIL template not found
+
 echo "[i] project is ready: $MP">&2
+
+. $IMG2.conf
 
 echo "[i] make image">&2
 CMD ../../image/make_image

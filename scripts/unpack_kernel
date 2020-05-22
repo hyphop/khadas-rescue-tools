@@ -1,0 +1,14 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= unpack kernel
+
+kernel="$1"
+
+[ -f "$kernel" ] || exit 1
+
+dd if=$kernel bs=64 skip=1 | gzip -dc > $kernel.raw || \
+dd if=$kernel bs=64 skip=1 | xz -dc > $kernel.raw || \
+dd if=$kernel bs=64 skip=1 | lzop -dc > $kernel.raw
+#dd if=$kernel bs=64 skip=1 > $kernel.raw 

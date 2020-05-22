@@ -4,15 +4,6 @@
 echo heartbeat > /sys/class/leds/sys_led/trigger
 
 ## install advanced events daemon - simple & good replacement for heavy lirc stuff
-[ -s /etc/init.d/triggerhappy ] || {
-(
-USER=volumio
-HOME=/home/volumio
-apt-get install triggerhappy
-echo DAEMON_OPTS=\"--user root\" >> /etc/default/triggerhappy
-service triggerhappy restart
-)&
-}
 
 ## fix perms for poweroff
 chmod 0777 /sys/class/mcu/poweroff
@@ -22,14 +13,9 @@ systemctl enable /etc/systemd/system/systemd-shutdown.service
 
 ## temp hack for VIM3 kernel crash
 ## VIM2 too
-#grep -q VIM3 /proc/cpuinfo && {
-[ -s /opt/ifconfig ] || {
-    mv /sbin/ifconfig     /opt
-    mv /bin/ip            /opt
-    mv /opt/ifconfig.fix  /sbin/ifconfig
-    mv /opt/ip.fix        /bin/ip
-}
-#}
+
+mv /opt/ifconfig.fix  /sbin/ifconfig
+mv /opt/ip.fix        /bin/ip
 
 ## hyphop ##
 ## fix cpu freq
@@ -73,26 +59,6 @@ echo 4 > /proc/irq/14/smp_affinity
 }
 
 #set +e
-
-## mpd config fix only for VIM1 VIM2
-grep -q VIM3 /proc/cpuinfo || {
-(
-while [ "1" ] ; do
-grep -q period_time /etc/mpd.conf || {
-echo "[i] fix mpd.conf">&2
-for s in "hw:0,0" "hw:0,1" "hw:0,2"; do
-    sed -i s/$s\"/hw:0,0\"\\nperiod_time\ \"40000\"\\nbuffer_time\ \"4000000\"\\n/ \
-    /etc/mpd.conf
-done
-sed -i s/^audio_buffer_size/\#audio_buffer_size/ /etc/mpd.conf
-USER=volumio
-HOME=/home/volumio
-service mpd restart
-}
-sleep 2
-done
-) 1>/dev/null 2>/dev/null </dev/null &
-}
 
 ## mixer fix
 /usr/bin/amixer sset 'Audio hdmi-out mute' off

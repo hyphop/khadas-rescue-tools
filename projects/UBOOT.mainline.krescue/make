@@ -118,13 +118,39 @@ IMAGE_URL: $LINK
 
 echo "[i] prepare bootloaders">&2
 
-BASE=https://github.com/hyphop/khadas-uboot-spi/releases/download/mainline-test/
+BASE=https://github.com/hyphop/khadas-uboot/releases/download/mainline_last/
 
 for VIM in VIM1 VIM2 VIM3 VIM3L; do
     D=$BOOT.$VIM
     [ -d $D ] || mkdir -p $D
     UBOOT=u-boot.$VIM.sd.bin
+
+    [ "$VIM" = "VIM1" -a "$UBOOT_VIM1" ] && {
+	rm $D/* 2>/dev/null
+	CMD cp $UBOOT_VIM1 $D/$UBOOT
+	continue
+    }
+
+    [ "$VIM" = "VIM2" -a "$UBOOT_VIM2" ] && {
+	rm $D/* 2>/dev/null
+	CMD cp $UBOOT_VIM2 $D/$UBOOT
+	continue
+    }
+
+    [ "$VIM" = "VIM3" -a "$UBOOT_VIM3" ] && {
+	rm $D/* 2>/dev/null
+	CMD cp $UBOOT_VIM3 $D/$UBOOT
+	continue
+    }
+
+    [ "$VIM" = "VIM3L" -a "$UBOOT_VIM3L" ] && {
+	rm $D/* 2>/dev/null
+	CMD cp $UBOOT_VIM3L $D/$UBOOT
+	continue
+    }
+
     ../../scripts/download $BASE$UBOOT $UBOOT $D || FAIL download uboot
+
 done
 
 echo "[i] prepare boot">&2

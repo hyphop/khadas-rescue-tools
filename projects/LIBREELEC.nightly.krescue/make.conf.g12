@@ -6,3 +6,7 @@ IMG=LibreELEC-AMLG12.arm-9.80-nightly-20200316-9542570.tar
 LINK=https://test.libreelec.tv/$IMG
 LINK=https://dl.khadas.com/test/LE/$IMG
 BOARDS="VIM3 VIM3L"
+
+PART1_LABEL=LE_BOOT
+PART2_LABEL=LE_STORAGE
+
