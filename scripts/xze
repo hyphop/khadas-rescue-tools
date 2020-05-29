@@ -20,11 +20,12 @@ META USAGE
 
 META USAGE EXAMPLE (Krescue images)
 
-    ./xze FreeBSD-aarch64-13.0-Khadas-EDGE-V-361468M-20200528.img \
+    IN=FreeBSD-aarch64-13.0-Khadas-EDGE-V-361468M-20200528.img
+    ./xze "$IN" \
 	-M \
 	\##KRESCUE-META## \
 	LABEL=FreeBSD \
-	IMAGE="FreeBSD-aarch64-13.0-Khadas-EDGE-V-361468M-20200528" \
+	IMAGE="${IN%.*} \
 	BUILDER=Serega \
 	DATE="$(date)" \
 	MATCH=board=EDGE \
