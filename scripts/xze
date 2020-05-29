@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ## hyphop ##
 
@@ -79,10 +79,14 @@ done
 
 OUT="$IN.xz"
 
-BS=4096 # block size
-S1=$(stat -c%s "$IN")
-S14=$((S1/T))
 
+BS=4096 # block size
+
+for S1 in $(du -b "$IN");do
+break
+done
+
+S14=$((S1/T))
 [ $S14 -lt $B ] && B=$S14
 
 B="${B}M"
@@ -97,7 +101,9 @@ $ARGS > "$OUT"
 S=
 S2=
 PAD(){
-S=$(stat -c%s "$1")
+for S in $(du -b "$1"); do 
+break 
+done
 S2=$((S/BS*BS))
 [ $S2 -lt $S ] && S2=$((S2+BS))
 SD=$((S2-S))

@@ -42,14 +42,14 @@ block:  -
 part:	boot0
 start:  0
 sub:	1
-data:   BOOT.%%BOARD%%/u-boot.%%BOARD%%.sd.bin
+data:   BOOT.%%BOARD%%/u-boot.%%BOARD%%.spi.bin
 
 ## raw data block
 block:  -
 part:	boot1
 start:  0
 sub:	1
-data:   BOOT.%%BOARD%%/u-boot.%%BOARD%%.sd.bin
+data:   BOOT.%%BOARD%%/u-boot.%%BOARD%%.spi.bin
 
 ## raw data block
 block:  -
