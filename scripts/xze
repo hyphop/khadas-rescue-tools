@@ -2,9 +2,9 @@
 
 ## hyphop ##
 
-#= xze - advanced xz + suitable for mt decompression & padding
+#= xze - advanced xz + suitable for mt decompression & padding & meta
 
-USAGE() { echo "
+USAGE() { echo '
     xze - advanced xz + suitable for mt decompression & padding
 
 USAGE
@@ -14,11 +14,31 @@ USAGE
     -T#thread
     -B#blocksize in M
 
-META
+META USAGE
 
-    ./xze rootfs_stage.sh -M INFO=\"any strings\" VAR=val
+    ./xze rootfs_stage.sh -M INFO="any strings" VAR=val
 
-"
+META USAGE EXAMPLE (Krescue images)
+
+    ./xze FreeBSD-aarch64-13.0-Khadas-EDGE-V-361468M-20200528.img \
+	-M \
+	\##KRESCUE-META## \
+	LABEL=FreeBSD \
+	IMAGE="FreeBSD-aarch64-13.0-Khadas-EDGE-V-361468M-20200528" \
+	BUILDER=Serega \
+	DATE="$(date)" \
+	MATCH=board=EDGE \
+	LINK=http://dev.kubsu.ru/images/ \
+	DURATION=60 \
+	DESC="FreeBSD 13.0 for Khadas EDGE board aarch64...." \
+	\##KRESCUE_META## \
+	\##KRESCUE##END
+
+READ META
+
+tail -c4096 FILE.xz | xz -dc
+
+'
 exit 
 }
 
@@ -129,14 +149,16 @@ $XZS">&2
 
     for m in "$@"; do
     M="$m"
-    [ "$META" = "2" ] && M=${m/=/: }
+    [ "$META" = "2" ] && M=$(echo "$m" | sed s/=/:\ /)
 #   echo "[i] add meta $M">&2
     [ -s $meta ] || {
     (
-    echo "#META" 
+    echo "##META_FILE##"
+    echo "FILE: $OUT"
     echo "UNPACKED_SIZE: $S1"
     echo "PACKED_SIZE: $S2"
     echo "FILE_SIZE: $((S2+BS))"
+    echo "##META-FILE##"
     ) >> $meta
     }
     echo "$M" >> $meta
@@ -144,7 +166,7 @@ $XZS">&2
 
     [ -s $meta ] && {
     cat $meta >&2
-    PAD $meta " "
+#    PAD $meta " "
     }
     $xz $meta
     PAD $meta.xz
