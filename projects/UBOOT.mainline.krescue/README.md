@@ -1,6 +1,6 @@
 # UBOOT mainline
 
-mainline uboot for VIM1 VIM2 VIM3 VIM3L
+mainline uboot for VIM1 VIM2 VIM3 VIM3L and Edge
 
 ## USAGE
 

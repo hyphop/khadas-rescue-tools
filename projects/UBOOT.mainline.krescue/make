@@ -118,7 +118,8 @@ IMAGE_URL: $LINK
 
 echo "[i] prepare bootloaders">&2
 
-BASE=https://github.com/hyphop/khadas-uboot/releases/download/mainline_last/
+[ "$BASE" ] || \
+    BASE=$LINK
 
     D=$BOOT
     [ -d $D ] && rm -rf $D
@@ -170,16 +171,16 @@ done
 
 echo "[i] prepare boot">&2
 
-CMD rsync -av --inpalce  $DP/$BOOT .
+#CMD rsync -av --inplace  $DP/$BOOT .
 
 . $BOOT/boot.cfg
 
-CMD mkdir -p $BOOT/$UBOOT_DTB_DIR
+#CMD mkdir -p $BOOT/$UBOOT_DTB_DIR
+
+[ -d "$BOOT" ] || FAIL $BOOT dir was removed
 
 echo $LABEL > $BOOT/LABEL
 echo $LABEL > $BOOT/$LABEL.label
-
-[ -d "$BOOT" ] || FAIL $BOOT dir was removed
 
 echo "[i] project is ready: $MP">&2
 
