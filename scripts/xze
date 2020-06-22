@@ -39,6 +39,14 @@ READ META
 
     tail -c4096 FILE.xz | xz -dc
 
+WHY NOT xz -l
+
+not work from in this case
+
+    cat *.img.xz | xz -l
+    xz: --list does not support reading from standard input
+
+
 '
 exit 
 }
@@ -59,7 +67,8 @@ $xz --help | grep -q threads= || {
 
 
 IN=
-OPTS=
+#OPTS="-F xz --arm --lzma2"
+OPTS="-F xz"
 
 [ $# = 0 ] && USAGE
 

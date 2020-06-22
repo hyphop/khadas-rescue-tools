@@ -26,11 +26,12 @@ match:		BOARD=VIM3L
 match:		BOARD=VIM3
 match:		BOARD=VIM2
 match:		BOARD=VIM1
-vars:		BOARD=VIM1 VIM2 VIM3 VIM3L
+match:		BOARD=Edge
+vars:		BOARD=VIM1 VIM2 VIM3 VIM3L Edge
 source:		.meta
 source:		README*
 duration:	2
-desc:		mainline uboot for VIMx khadas boards.
+desc:		mainline uboot for VIMx and Edge khadas boards.
     just single uboot usefull for boot up system from sd or USB / PCIe or DHCP TFTP
 
 # sub 1
@@ -38,39 +39,39 @@ sub:	1
 source:	BOOT*
 
 ## raw data block
-block:  -
-part:	boot0
-start:  0
-sub:	1
-data:   BOOT.%%BOARD%%/u-boot.%%BOARD%%.spi.bin
+#block:  -
+#part:	boot0
+#start:  0
+#sub:	1
+#data:   BOOT.%%BOARD%%/u-boot.%%BOARD%%.spi.bin
+
+## raw data block
+#block:  -
+#part:	boot1
+#start:  0
+#sub:	1
+#data:   BOOT.%%BOARD%%/u-boot.%%BOARD%%.spi.bin
 
 ## raw data block
 block:  -
-part:	boot1
 start:  0
 sub:	1
-data:   BOOT.%%BOARD%%/u-boot.%%BOARD%%.spi.bin
-
-## raw data block
-block:  -
-start:  0
-sub:	1
-data:   BOOT.%%BOARD%%/u-boot.%%BOARD%%.sd.bin
+data:   BOOT/%%BOARD%%.u-boot.sd.bin
 
 ## partition + fs block
-part:	1
-type:	
-start:	100M
-size:	200M
-fstype:	vfat
-label:	UBOOT
-source:	BOOT
+#part:	1
+#type:	
+#start:	100M
+#size:	200M
+#fstype:	vfat
+#label:	UBOOT
+#source:	BOOT
 
 ## overlay
-overlay: 1
-part:	1
-sub:	1
-source:	BOOT.%%BOARD%%
+#overlay: 1
+#part:	1
+#sub:	1
+#source:BOOT.%%BOARD%%
 
 ##END##
 end

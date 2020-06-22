@@ -1,3 +1,6 @@
+# XZ format 
+
+## XZE
 
     xze - advanced xz + suitable for mt decompression & padding
 
@@ -96,4 +99,31 @@ time pixz -d < FreeBSD-aarch64-13.0-Khadas-EDGE-V-361468M-20200528.img.xz > /dev
     # PARTS
 
     /dev/mmcblk2p1: LABEL="EFI" UUID="43E7-170C" TYPE="vfat"
+
+## CRC and Hashes
+
++ xxh128sum	- fastest
++ md5sum	- medium + legacy
++ sha256sum	- slow
+
+    time xxh128sum Edge_Ubuntu-xfce-bionic_Linux-5.5-rc2_arm64_SD-USB_V0.8.3-20200110.img
+    3b60a7ddffefb46a5871bf1606299fde  Edge_Ubuntu-xfce-bionic_Linux-5.5-rc2_arm64_SD-USB_V0.8.3-20200110.img
+                                                                      
+    real	0m4.023s
+    user	0m0.475s
+    sys		0m1.870s
+
+    time md5sum Edge_Ubuntu-xfce-bionic_Linux-5.5-rc2_arm64_SD-USB_V0.8.3-20200110.img 
+    9980cebca2960820d79c9b18e8070ee3  Edge_Ubuntu-xfce-bionic_Linux-5.5-rc2_arm64_SD-USB_V0.8.3-20200110.img
+
+    real	0m10.706s
+    user	0m7.641s
+    sys		0m1.145s
+
+    time sha256sum Edge_Ubuntu-xfce-bionic_Linux-5.5-rc2_arm64_SD-USB_V0.8.3-20200110.img
+    615d96b9d4700e283c8669d2eba63cf6addb7d6be422c369458d9f8317d50b00  Edge_Ubuntu-xfce-bionic_Linux-5.5-rc2_arm64_SD-USB_V0.8.3-20200110.img
+
+    real	0m23.207s
+    user	0m21.810s
+    sys		0m1.248s
 

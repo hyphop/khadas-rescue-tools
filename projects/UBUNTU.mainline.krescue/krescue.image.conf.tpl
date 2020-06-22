@@ -94,7 +94,7 @@ match:	BOARD=VIM3
 match:	BOARD=VIM2
 match:	BOARD=VIM1
 sub:	1
-source:	ROOT.%%BOARD%%
+source:ROOT.%%BOARD%%
 
 ##END##
 end

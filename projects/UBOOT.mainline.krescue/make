@@ -120,37 +120,47 @@ echo "[i] prepare bootloaders">&2
 
 BASE=https://github.com/hyphop/khadas-uboot/releases/download/mainline_last/
 
-for VIM in VIM1 VIM2 VIM3 VIM3L; do
-    D=$BOOT.$VIM
+    D=$BOOT
+    [ -d $D ] && rm -rf $D
     [ -d $D ] || mkdir -p $D
-    UBOOT=u-boot.$VIM.sd.bin
-    UBOOT_SPI=u-boot.$VIM.spi.bin
 
-    [ "$VIM" = "VIM1" -a "$UBOOT_VIM1" ] && {
-	rm $D/* 2>/dev/null
+for B in $BOARDS; do
+
+    UBOOT=$B.u-boot.sd.bin
+    UBOOT_SPI=$B.u-boot.spi.bin
+
+    [ "$B" = "VIM1" -a "$UBOOT_VIM1" ] && {
+#	rm $D/* 2>/dev/null
 	CMD cp $UBOOT_VIM1	$D/$UBOOT
 	CMD cp $UBOOT_VIM1_SPI	$D/$UBOOT_SPI
 	continue
     }
 
-    [ "$VIM" = "VIM2" -a "$UBOOT_VIM2" ] && {
-	rm $D/* 2>/dev/null
+    [ "$B" = "VIM2" -a "$UBOOT_VIM2" ] && {
+#	rm $D/* 2>/dev/null
 	CMD cp $UBOOT_VIM2	$D/$UBOOT
 	CMD cp $UBOOT_VIM2_SPI	$D/$UBOOT_SPI
 	continue
     }
 
-    [ "$VIM" = "VIM3" -a "$UBOOT_VIM3" ] && {
-	rm $D/* 2>/dev/null
+    [ "$B" = "VIM3" -a "$UBOOT_VIM3" ] && {
+#	rm $D/* 2>/dev/null
 	CMD cp $UBOOT_VIM3 	$D/$UBOOT
 	CMD cp $UBOOT_VIM3_SPI	$D/$UBOOT_SPI
 	continue
     }
 
-    [ "$VIM" = "VIM3L" -a "$UBOOT_VIM3L" ] && {
-	rm $D/* 2>/dev/null
+    [ "$B" = "VIM3L" -a "$UBOOT_VIM3L" ] && {
+#	rm $D/* 2>/dev/null
 	CMD cp $UBOOT_VIM3L 	$D/$UBOOT
 	CMD cp $UBOOT_VIM3L_SPI	$D/$UBOOT_SPI
+	continue
+    }
+
+    [ "$B" = "Edge" -a "$UBOOT_EDGE" ] && {
+#	rm $D/* 2>/dev/null
+	CMD cp $UBOOT_EDGE 	$D/$UBOOT
+	CMD cp $UBOOT_EDGE_SPI	$D/$UBOOT_SPI
 	continue
     }
 
