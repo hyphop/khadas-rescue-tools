@@ -104,7 +104,9 @@ file_header(){
     FAIL "krescue image config not found"
 }
 
+[ "$OUT" ] || \
 OUT=/tmp
+
 IMAGE=
 OUT_IMAGE=
 IMAGE_SUBS=
