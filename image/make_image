@@ -24,7 +24,7 @@ USAGE(){
 
 USAGE
 
-    make_image [KRESCUE_CONFIG_FILE]
+    make_image [BUILD_DIR] [KRESCUE_CONFIG_FILE] [-Z][-m]
 
 NOTE
 

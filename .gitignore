@@ -1,15 +1,15 @@
 !.gitignore
-work
-share/*
-bin/*
-scripts/bin/*
+work/
+/share/*
+/bin/*
+/scripts/bin/*
 
 *.bak
 
 !README.md
 !README.txt
 
-img/*
-dl
+/img/*
+/dl
 /opt
-tmp
+/tmp
