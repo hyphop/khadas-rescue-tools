@@ -5,60 +5,85 @@
 #= xze - advanced xz + suitable for mt decompression & padding & meta
 
 USAGE() { echo '
-    xze - advanced xz + suitable for mt decompression & padding
+    xze - advanced xz packer (suitable for mt decompression + padding + meta)
 
 USAGE
 
     xze [ARGS] FILE
-    
+
     -T#thread
     -B#blocksize in M
+    -f - rewrite output file
+    -c | -C - ready for krescue check
+    --help - full help
 
 META USAGE
 
-    ./xze rootfs_stage.sh -M INFO="any strings" VAR=val
-
-META USAGE EXAMPLE (Krescue images)
+    ./xze rootfs_stage.sh -M INFO="any strings" var=VAR
+'; [ "$1" ] && echo 'META USAGE EXAMPLE (Krescue images)
 
     IN=FreeBSD-aarch64-13.0-Khadas-EDGE-V-361468M-20200528.img
     ./xze "$IN" \
 	-M \
-	\##KRESCUE-META## \
-	LABEL=FreeBSD \
-	IMAGE="${IN%.*} \
-	BUILDER=Serega \
-	DATE="$(date)" \
-	MATCH=board=EDGE \
-	LINK=http://dev.kubsu.ru/images/ \
-	DURATION=60 \
-	DESC="FreeBSD 13.0 for Khadas EDGE board aarch64...." \
 	\##KRESCUE_META## \
+	label=FreeBSD \
+	image="${IN%.*}" \
+	type=xz \
+	builder=Serega \
+	date="$(TZ= date)" \
+	match=BOARD=Edge \
+	link=http://dev.kubsu.ru/images/ \
+	duration=60 \
+	desc="FreeBSD 13.0 for Khadas EDGE board aarch64...." \
+	\##KRESCUE-META## \
 	\##KRESCUE##END
 
-READ META
+# CHECK META
+
+    ./xze *.xz
+
+# UPDATE/REPLACE META
+
+all prev meta will be replaced by new values
+
+    ./xze *.xz -M newvar=NEWVALUE
+
+# READ META alternative ways
 
     tail -c4096 FILE.xz | xz -dc
+    # or 
+    curl -s -jkLf -r-4096 https://dl.khadas.com/Firmware/Krescue/images/Edge-FreeBSD-aarch64-13.0-CURRENT-20200620.img.xz | xz -dc
 
-WHY NOT xz -l
+# WHY NOT xz -l
 
-not work from in this case
+not work in this case xz need full file
 
     cat *.img.xz | xz -l
     xz: --list does not support reading from standard input
-
-
 '
-exit 
+
+exit
 }
 
-[ "$xz" ] || xz=$(which xz)
+CLEAN(){
+#   echo "[i] clean $meta*">&2
+    [ -e "$meta" ] && rm $meta*
+}
+
+FAIL(){
+    echo "[e] $@">&2
+    CLEAN
+    exit 1
+}
+
+[ "$xz" ] || xz=$(which xz 2>/dev/null)
 [ $? = 0 ] || {
     echo "[e] plz install xz">&2
     echo " sudo apt-get install xz-utils">&2
     exit 1
 }
 
-echo "[i] $xz">&2
+#echo "[i] $xz">&2
 
 $xz --help | grep -q threads= || {
     echo "[i] plz install last xz with MT support">&2
@@ -68,7 +93,10 @@ $xz --help | grep -q threads= || {
 
 IN=
 #OPTS="-F xz --arm --lzma2"
+OPTS="-F xz -9e"
 OPTS="-F xz"
+
+BS=4096 # block size
 
 [ $# = 0 ] && USAGE
 
@@ -76,7 +104,12 @@ T=4      # threads
 B=90     # in MEGS
 
 META=
+FORCE=
+KRESCUE_CHK_END=
+KRESCUE_CHK_MT=
+
 for a in $@; do
+#    echo "++ $a"
     shift
     case $a in
 	-m)
@@ -87,12 +120,32 @@ for a in $@; do
 	META=2
 	break
 	;;
+	-c)
+	KRESCUE_CHK_END=1
+	;;
+	-C)
+	KRESCUE_CHK_END=1
+	KRESCUE_CHK_MT=1
+	;;
+	-f)
+	FORCE=1
+	OPTS="$OPTS $a"
+	continue
+	;;
 	-T*)
 	T=${a#-T}
 	continue
 	;;
 	-B*)
 	B=${a#-B}
+	continue
+	;;
+	-h|--help)
+	USAGE FULL
+	;;
+	*.xz)
+	[ -f "$a" ] || FAIL not found "$a"
+	CIN="$a"
 	continue
 	;;
 	*)
@@ -105,56 +158,34 @@ for a in $@; do
     esac
 done
 
-[ "$IN" ] || USAGE
+meta="/tmp/xze.meta.$$"
 
-OUT="$IN.xz"
-
-
-BS=4096 # block size
-
-for S1 in $(du -b "$IN");do
-break
+fsize(){
+for s_ in $(du -b "$1");do
+    break
 done
+echo $s_
+}
 
-S14=$((S1/T))
-[ $S14 -lt $B ] && B=$S14
-
-B="${B}M"
-
-ARGS="$xz -T$T --block-size $B -k -c $OPTS "$IN""
-
-echo "[i] xze compress $IN ($S1 bytes) > $OUT">&2
-echo "# $ARGS">&2
-
-$ARGS > "$OUT"
-
-S=
-S2=
 PAD(){
-for S in $(du -b "$1"); do 
-break 
-done
+S=$(fsize "$1")
 S2=$((S/BS*BS))
+[ $S2 = $S ] && {
+    return
+}
 [ $S2 -lt $S ] && S2=$((S2+BS))
 SD=$((S2-S))
 [ "$2" ] && \
 printf %${SD}s "$2" >> "$1"
 [ "$2" ] || \
 dd if=/dev/zero bs=$SD count=1 2>/dev/null >> "$1"
-echo "[i] compressed $S2 < $S1">&2
-echo $S2
+echo "[i] padded to $S2 from $S1">&2
+#echo $S2
 }
 
-PAD "$OUT"
-
-XZS=$($xz -l "$OUT")
-echo "[i] XZ info
-$XZS">&2
-
-[ "$META" ] && {
+META(){
     echo "[i] add meta block">&2
 
-    meta="/tmp/meta.$$"
     touch $meta
 
     for m in "$@"; do
@@ -183,5 +214,107 @@ $XZS">&2
     cat $meta.xz >> "$OUT"
     rm $meta.xz
 
+    CLEAN
+
 }
-#echo "[i] pad +$SD">&2
+
+
+[ "$CIN" ] && {
+
+    # check just header
+    HEADER=$(head -c5 "$CIN" | tail -c4)
+    [ "$HEADER" = "7zXZ" ] || FAIL broken or not xz input file
+
+    # fast scan
+    XZS=$($xz -l "$CIN" 2>/dev/null) || FAIL broken xz
+    echo "$XZS"
+
+    streams=
+    blocks=
+    compressed=
+    uncompressed=
+    cmp1=
+    cmp2=
+    unc1=
+    unc2=
+    i=0
+
+    for v in ${XZS#*Filename}; do
+	case $i in
+	    0) streams=$v;;
+	    1) blocks=$v;;
+	    2) cmp1=$v;;
+	    3) cmp2=$v;;
+	    4) unc1=$v;;
+	    5) unc2=$v;;
+	esac
+	i=$((i+1))
+    done
+
+    echo "[i] blocks: $blocks // $cmp1*$cmp2 // $unc1*$unc2"
+
+    [ "$blocks" -lt 2 ] && {
+	echo "[w] its not mt xz"
+	[ "$KRESCUE_CHK_END" ] || FAIL not ready for krescue mt usage
+    }
+
+    CS=$(fsize "$CIN")
+    CSCHK=$((CS/BS*BS))
+
+    [ "$CSCHK" = "$CS" ] || FAIL xz size $CS not padded by $BS
+    tail -c4096 "$CIN" | $xz -dc 2>/dev/null | tee $meta
+
+    [ -s "$meta" ] || {
+	FAIL empty meta
+    }
+
+    grep -A99 "##META_FILE" $meta \
+    | grep -B99 "##META-FILE" > $meta.2 || FAIL xz meta broken
+
+    [ "$KRESCUE_CHK_END" ] && {
+    tail -c15 $meta | grep -q "##KRESCUE##END" || FAIL xz meta not finished
+    }
+
+    [ "$META" ] && {
+    OUT="$CIN"
+    mv $meta.2 $meta
+    truncate -s-$BS "$OUT"
+    META "$@"
+    }
+    CLEAN
+    exit
+}
+
+[ "$IN" ] || FAIL input file not exist/defined
+
+OUT="$IN.xz"
+
+[ -e "$OUT" ] && {
+    echo "[w] $OUT exist already">&2
+    [ "$FORCE" ] || FAIL plz use -f for rewrite it
+}
+
+S1=$(fsize "$IN")
+
+S14=$((S1/T))
+[ $S14 -lt $B ] && B=$S14
+
+B="${B}M"
+
+ARGS="$xz -T$T --block-size $B -k -c $OPTS "$IN""
+
+echo "[i] xze compress $IN ($S1 bytes) > $OUT">&2
+echo "# $ARGS ">&2
+
+$ARGS > "$OUT"
+
+S=
+S2=
+
+PAD "$OUT"
+
+XZS=$($xz -l "$OUT")
+echo "[i] XZ info
+$XZS">&2
+
+[ "$META" ] && META "$@"
