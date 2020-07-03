@@ -194,7 +194,13 @@ SD=$((S2-S))
 printf %${SD}s "$2" >> "$1"
 [ "$2" ] || \
 dd if=/dev/zero bs=$SD count=1 2>/dev/null >> "$1"
-echo "[i] padded to $S2 from $S1">&2
+
+SC=$(fsize "$1")
+
+echo "[i] padded to $S2 from $S + $SD">&2
+
+[ "$SC" = "$S2" ] || FAIL jopa
+
 #echo $S2
 }
 
@@ -270,14 +276,14 @@ META(){
 
     [ "$blocks" -lt 2 ] && {
 	echo "[w] its not mt xz"
-	[ "$KRESCUE_CHK_END" ] || FAIL not ready for krescue mt usage
+	#[ "$KRESCUE_CHK_END" ] || FAIL not ready for krescue mt usage
     }
 
     CS=$(fsize "$CIN")
     CSCHK=$((CS/BS*BS))
 
     [ "$CSCHK" = "$CS" ] || FAIL xz size $CS not padded by $BS
-    tail -c4096 "$CIN" | $xz -dc 2>/dev/null | tee $meta
+    tail -c4096 "$CIN" | $xz -dc 2>/dev/null | grep -A99 "^##META" | tee $meta
 
     [ -s "$meta" ] || {
 	FAIL empty meta
