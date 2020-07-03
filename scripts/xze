@@ -160,12 +160,27 @@ done
 
 meta="/tmp/xze.meta.$$"
 
+case $(uname -o) in
+    *BSD*)
 fsize(){
-for s_ in $(du -bL "$1");do
+for s_ in $(stat -L -f "%z" "$1");do
     break
 done
 echo $s_
 }
+    ;;
+    ## linux gnu
+    *)
+fsize(){
+for s_ in $(stat -L -c%s "$1");do
+    break
+done
+echo $s_
+}
+    ;;
+
+esac
+
 
 PAD(){
 S=$(fsize "$1")
