@@ -161,7 +161,7 @@ done
 meta="/tmp/xze.meta.$$"
 
 fsize(){
-for s_ in $(du -b "$1");do
+for s_ in $(du -bL "$1");do
     break
 done
 echo $s_
