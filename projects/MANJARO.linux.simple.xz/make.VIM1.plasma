@@ -9,7 +9,7 @@ BOARD=VIM1
 
 WWW="manjaro.org"
 LINK=https://osdn.net/projects/manjaro-arm/storage/vim1/kde-plasma/20.08/Manjaro-ARM-kde-plasma-vim1-20.08.img.xz
-IMAGE_=VIM1.Manjaro-ARM-kde-plasma-20.08.sd.mmc.img
+IMAGE_=VIM1.Manjaro-ARM-kde-plasma-20.08.TEST.sd.mmc.img
 VARIANT="kde plasma desktop version 20.08"
 DESC="$VARIANT. Manjaro is FREE OPERATING SYSTEM FOR EVERYONE"
 #DURATION=120
