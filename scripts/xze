@@ -4,6 +4,10 @@
 
 #= xze - advanced xz + suitable for mt decompression & padding & meta
 
+# ##################
+# ###################
+# ###################
+
 USAGE() { echo '
     xze - advanced xz packer (suitable for mt decompression + padding + meta)
 
@@ -258,7 +262,7 @@ META(){
 	S1=$($pixz -dc < "$OUT" | wc --bytes)
     }
     echo "##META_FILE##"
-    echo "FILE: $OUT"
+    echo "FILE: $(basename "$OUT")"
     echo "UNPACKED_SIZE: $S1"
     echo "PACKED_SIZE: $S2"
     echo "FILE_SIZE: $((S2+BS))"
@@ -323,7 +327,7 @@ META(){
     [ "$ADD_duration" ] || echo "duration: 60" >> $meta
     [ "$ADD_builder" ] || echo "builder: $(uname -n)" >> $meta
     [ "$ADD_date" ] || echo "date: $(TZ= date)" >> $meta
-    [ "$ADD_image" ] || echo "image: ${OUT%.*}" >> $meta
+    [ "$ADD_image" ] || echo "image: $(basename ${OUT%.*})" >> $meta
 
     for m in $META_POST  ; do
 	echo "$m" >> $meta
@@ -334,13 +338,14 @@ META(){
 #    PAD $meta " "
     }
 
-    $xz $meta
-    PAD $meta.xz
-    cat $meta.xz >> "$OUT"
+    $xz $meta || exit 1
+    PAD $meta.xz || exit 2
+    cat $meta.xz >> "$OUT" || exit 3
     rm $meta.xz
 
     CLEAN
-
+#   echo "[i] DONE">&2
+    exit 0
 }
 
 
@@ -467,4 +472,9 @@ XZS=$($xz -l "$OUT")
 echo "[i] XZ info
 $XZS">&2
 
-[ "$META" ] && META "$@"
+[ "$META" ] && {
+META "$@"
+exit 
+}
+
+exit 0
