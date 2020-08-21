@@ -8,7 +8,6 @@ LABEL=Manjaro
 BOARD=VIM1
 
 WWW="manjaro.org"
-LINK=https://osdn.net/projects/manjaro-arm/storage/vim1/kde-plasma/20.08/Manjaro-ARM-kde-plasma-vim1-20.08.img.xz
 LINK=https://osdn.net/projects/manjaro-arm/storage/vim1/xfce/20.08/Manjaro-ARM-xfce-vim1-20.08.img.xz
 IMAGE_=VIM1.Manjaro-ARM-xfce-20.08.sd.mmc.img
 VARIANT="xfce desktop version 20.08"
@@ -64,7 +63,7 @@ ln -sf $IMAGE "$M/$IMAGE_"
 
 echo "PACK: "$IMAGE_" to $IMAGE_XZE">&2
 
-../../scripts/xze "$M/$IMAGE_" \
+../../scripts/xze "$M/$IMAGE_" -9 \
     --meta LABEL=$LABEL \
     BOARD=$BOARD \
     LINK=$WWW \

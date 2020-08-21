@@ -63,7 +63,7 @@ ln -sf $IMAGE "$M/$IMAGE_"
 
 echo "PACK: "$IMAGE_" to $IMAGE_XZE">&2
 
-../../scripts/xze "$M/$IMAGE_" \
+../../scripts/xze "$M/$IMAGE_" -9 \
     --meta LABEL=$LABEL \
     BOARD=$BOARD \
     LINK=$WWW \
