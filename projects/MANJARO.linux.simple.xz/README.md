@@ -2,7 +2,7 @@
 
 simple example how to generate xz krescue image 
 
-next example: download original image, add some extra files, pack again
+next example: download original image, add some extra files, pack again with better compression level
 to xz krescue image which can used for krescue same as for normal usage via xz or pixz
 
 ```
