@@ -17,6 +17,10 @@ USAGE
     -c | -C - ready for krescue check
     --help - full help
 
+    -mn - remove meta
+    -p  - add padding
+    -MM - krescue meta
+
 META USAGE
 
     ./xze rootfs_stage.sh -M INFO="any strings" var=VAR
@@ -24,19 +28,16 @@ META USAGE
 
     IN=FreeBSD-aarch64-13.0-Khadas-EDGE-V-361468M-20200528.img
     ./xze "$IN" \
-	-M \
-	\##KRESCUE_META## \
+	-MM \
 	label=FreeBSD \
-	image="${IN%.*}" \
-	type=xz \
 	builder=Serega \
 	date="$(TZ= date)" \
 	match=BOARD=Edge \
 	link=http://dev.kubsu.ru/images/ \
 	duration=60 \
 	desc="FreeBSD 13.0 for Khadas EDGE board aarch64...." \
-	\##KRESCUE-META## \
-	\##KRESCUE##END
+
+    ./xze Manjaro-ARM-xfce-vim1-20.08.img.xz -p -MM LABEL=manjaro BOARD=VIM1
 
 # CHECK META
 
@@ -119,6 +120,19 @@ for a in $@; do
 	-M)
 	META=2
 	break
+	;;
+	-MM)
+	META=2
+	META_LOW_CASE=1
+	META_PRE="##KRESCUE_META## type:xz "
+	META_POST="##KRESCUE-META## ##KRESCUE##END"
+	break
+	;;
+	-mn)
+	META_REMOVE=1
+	;;
+	-p)
+	ADD_PAD=1
 	;;
 	-c)
 	KRESCUE_CHK_END=1
@@ -204,17 +218,91 @@ echo "[i] padded to $S2 from $S + $SD">&2
 #echo $S2
 }
 
+REQ_label=
+REQ_match=
+
+ADD_image=
+ADD_builder=
+ADD_date
+ADD_duration=
+ADD_desc=
+
+REQ="
+    label
+    image
+    builder
+    date
+    duration
+    desc
+"
+
+#    date="$(TZ= date)" \
+#    match=BOARD=Edge \
+#    link=http://dev.kubsu.ru/images/ \
+#    duration=60 \
+#    desc="FreeBSD 13.0 for Khadas EDGE board aarch64...." \
+
+
 META(){
-    echo "[i] add meta block">&2
+    echo "
+[i] add meta block
+">&2
 
     touch $meta
 
-    for m in "$@"; do
+    for m in $META_PRE  ; do
+	echo "$m" >> $meta
+    done
+
+    for m in "$@"  ; do
     M="$m"
-    [ "$META" = "2" ] && M=$(echo "$m" | sed s/=/:\ /)
+    [ "$META" = "2" ] && {
+#	echo "$m" | grep -q ^\# || {
+	M=$(echo "$m" | sed s/=/:\ /)
+	m1=$(echo "${M%%:*}" | tr '[:upper:]' '[:lower:]' )
+	m2=$(echo ${M#*:})
+#	echo "[=] '$m1'">&2
+	case $m1 in
+	    label)
+	    REQ_label="$m2"
+	    ;;
+	    date)
+	    ADD_date="$m2"
+	    ;;
+	    image)
+	    ADD_image="$m2"
+	    ;;
+	    builder)
+	    ADD_builder="$m2"
+	    ;;
+	    desc)
+	    ADD_desc="$m2"
+	    ;;
+	    duration)
+	    ADD_duration="$m2"
+	    ;;
+	    match)
+	    REQ_match="$m2"
+	    META_POST="asd=asd $META_POST"
+	    ;;
+	    board)
+	    m1=match
+	    m2="BOARD=$m2"
+	    REQ_match="$m2"
+	esac
+
+	M="$m1: $m2"
+
+#	}
+    }
+    
 #   echo "[i] add meta $M">&2
     [ -s $meta ] || {
     (
+    [ "$S1" ] || {
+	echo "[i] calculating uncompressed size ...">&2
+	S1=$(pixz -dc < "$OUT" | wc --bytes)
+    }
     echo "##META_FILE##"
     echo "FILE: $OUT"
     echo "UNPACKED_SIZE: $S1"
@@ -226,10 +314,24 @@ META(){
     echo "$M" >> $meta
     done
 
+    [ "$REQ_label" ] || FAIL meta label not defined
+    [ "$REQ_match" ] || FAIL meta match not defined
+
+    [ "$ADD_image" ] || echo "image: ${OUT%.*}" >> $meta
+    [ "$ADD_date" ] || echo "date: $(TZ= date)" >> $meta
+    [ "$ADD_builder" ] || echo "builder: $(uname -n)" >> $meta
+    [ "$ADD_duration" ] || echo "duration: 60" >> $meta
+    [ "$ADD_desc" ] || echo "desc: undescripted image" >> $meta
+
+    for m in $META_POST  ; do
+	echo "$m" >> $meta
+    done
+
     [ -s $meta ] && {
     cat $meta >&2
 #    PAD $meta " "
     }
+
     $xz $meta
     PAD $meta.xz
     cat $meta.xz >> "$OUT"
@@ -282,13 +384,32 @@ META(){
     CS=$(fsize "$CIN")
     CSCHK=$((CS/BS*BS))
 
+    [ "$ADD_PADD" ] && 
+    [ "$CSCHK" = "$CS" ] || {
+	PAD "$CIN"
+	CS=$(fsize "$CIN")
+	CSCHK=$((CS/BS*BS))
+    }
     [ "$CSCHK" = "$CS" ] || FAIL xz size $CS not padded by $BS
     tail -c4096 "$CIN" | $xz -dc 2>/dev/null | grep -A99 "^##META" | tee $meta
 
+
     [ -s "$meta" ] || {
+	[ "$META" ] && {
+	OUT="$CIN"
+	#echo "[w] empty meta">&2
+	META "$@"
+	#CLEAN
+	exit
+	}
 	FAIL empty meta
     }
 
+    [ "$META_REMOVE" ] && {
+	echo "[i] remove meta"
+	truncate -s-4096 "$CIN"
+	exit
+    }
     grep -A99 "##META_FILE" $meta \
     | grep -B99 "##META-FILE" > $meta.2 || FAIL xz meta broken
 
@@ -299,6 +420,12 @@ META(){
     [ "$META" ] && {
     OUT="$CIN"
     mv $meta.2 $meta
+    [ "$S1" ] || {
+#    echo "[i] get size"
+    for S1 in $(grep UNPACKED_SIZE $meta) ; do
+	echo $S1 >/dev/null
+    done
+    }
     truncate -s-$BS "$OUT"
     META "$@"
     }
