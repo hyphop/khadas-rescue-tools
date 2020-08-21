@@ -234,47 +234,50 @@ PART1=$(dd if=$IMG2 skip=$((S1)) count=10 2>/dev/null| file -)
 #echo "[i] PART1 $PART1">&2
 UUID1=${PART1#*number}
 UUID1=${UUID1%%,*}
-UUID1=$(printf "%X" $(($UUID1)))
+UUID1=$(printf "%08X" $(($UUID1)))
 UUID1="${UUID1::4}-${UUID1:4:4}"
+#UUID1=$(printf "%04X-%04X" $RANDOM $RANDOM)
 LABEL1=${PART1#*label:}
 LABEL1=${LABEL1#*\"}
 LABEL1=$(echo ${LABEL1%\"*})
+LABEL1=BOOT
 
 echo "[i] PART1 : UUID: '$UUID1' LABEL: '$LABEL1'">&2
+#exit 0
 
 PART2=$(dd if=$IMG2 skip=$((S2)) count=10 2>/dev/null| file -)
-#echo "[i] PART2 $PART2">&2
-UUID2=${PART2#*UUID=}
-UUID2=${UUID2%%,*}
+echo "[i] PART2 $PART2">&2
+#UUID2=${PART2#*UUID=}
+#UUID2=${UUID2%%,*}
+UUID2=$(uuidgen)
 LABEL2=${PART2#*label:}
 LABEL2=${LABEL2#*\"}
 LABEL2=$(echo ${LABEL2%\"*})
+LABEL2="volumio"
 
 echo "[i] PART2 : UUID: '$UUID2' LABEL: '$LABEL2'">&2
 
 PART3=$(dd if=$IMG2 skip=$((S3)) count=10 2>/dev/null| file -)
-#echo "[i] PART1 $PART3">&2
-UUID3=${PART3#*UUID=}
-UUID3=${UUID3%%,*}
+echo "[i] PART1 $PART3">&2
+#UUID3=${PART3#*UUID=}
+#UUID3=${UUID3%%,*}
+UUID3=$(uuidgen)
 LABEL3=${PART3#*label:}
 LABEL3=${LABEL3#*\"}
 LABEL3=$(echo ${LABEL3%\"*})
+LABEL3="volumio_data"
 
-UUID1_=${UUID1%???}777
-UUID2_=${UUID2%???}777
-UUID3_=${UUID3%???}777
+#UUID1_=${UUID1%???}777
+#UUID2_=${UUID2%???}777
+#UUID3_=${UUID3%???}777
 
 echo "
 LABEL1=$LABEL1
-UUID1=$UUID1_
+UUID1=$UUID1
 LABEL2=$LABEL2
-UUID2=$UUID2_
+UUID2=$UUID2
 LABEL3=$LABEL3
-UUID3=$UUID3_
-
-UUID1_=$UUID1
-UUID2_=$UUID2
-UUID3_=$UUID3
+UUID3=$UUID3
 " > $IMG2.conf
 
 echo "[i] PART3 : UUID: '$UUID3' LABEL: '$LABEL3'">&2
@@ -294,8 +297,10 @@ $mcopy -sbpmi $IMG2@@$((512*S1)) :: $VBOOT.org || FAIL extract boot partition to
 ls -la $VBOOT.org
 }
 
+echo 123
+
 ## extract 2nd part
-[ -f $ROOTFS ] || {
+[ -s $IMG2 ] && {
 echo "[i] extract rootfs => $ROOTFS">&2
 dd if=$IMG2 skip=$((S2)) of=$ROOTFS
 file $ROOTFS | grep ext4 || FAIL not rootfs

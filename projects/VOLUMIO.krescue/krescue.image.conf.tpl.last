@@ -119,7 +119,7 @@ start:  0x0b400000
 size:   100M
 fstype: vfat
 source: $VBOOT
-label:  $LABEL1
+label:  $LABEL1-
 uuid:   $UUID1
 
 ## partition
@@ -131,7 +131,7 @@ size:   2G
 fstype: ext4
 source: $VIMAGE
 args:   -m 2 -O ^64bit,^metadata_csum
-label:  $LABEL2
+label:  $LABEL2-
 uuid:   $UUID2
 
 ## overlay data back
@@ -151,7 +151,7 @@ size:   -
 fstype: ext4
 #source: $VDATA
 args:   -m 2 -O ^64bit,^metadata_csum
-label:  $LABEL3
+label:  $LABEL3-
 uuid:   $UUID3
 
 
