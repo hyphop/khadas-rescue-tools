@@ -223,7 +223,7 @@ REQ_match=
 
 ADD_image=
 ADD_builder=
-ADD_date
+ADD_date=
 ADD_duration=
 ADD_desc=
 
@@ -249,6 +249,22 @@ META(){
 ">&2
 
     touch $meta
+
+    [ -s $meta ] || {
+    (
+    [ "$S1" ] || {
+	echo "[i] calculating uncompressed size ...">&2
+	S1=$(pixz -dc < "$OUT" | wc --bytes)
+    }
+    echo "##META_FILE##"
+    echo "FILE: $OUT"
+    echo "UNPACKED_SIZE: $S1"
+    echo "PACKED_SIZE: $S2"
+    echo "FILE_SIZE: $((S2+BS))"
+    echo "##META-FILE##"
+    ) >> $meta
+    }
+    echo "$M" >> $meta
 
     for m in $META_PRE  ; do
 	echo "$m" >> $meta
@@ -297,21 +313,6 @@ META(){
     }
     
 #   echo "[i] add meta $M">&2
-    [ -s $meta ] || {
-    (
-    [ "$S1" ] || {
-	echo "[i] calculating uncompressed size ...">&2
-	S1=$(pixz -dc < "$OUT" | wc --bytes)
-    }
-    echo "##META_FILE##"
-    echo "FILE: $OUT"
-    echo "UNPACKED_SIZE: $S1"
-    echo "PACKED_SIZE: $S2"
-    echo "FILE_SIZE: $((S2+BS))"
-    echo "##META-FILE##"
-    ) >> $meta
-    }
-    echo "$M" >> $meta
     done
 
     [ "$REQ_label" ] || FAIL meta label not defined
