@@ -31,7 +31,7 @@ vars:		BOARD=VIM1 VIM2 VIM3 VIM3L
 source:		README*
 source:		.meta
 duration:	60
-desc:		Volumio - The Audiophile Music Player.
+desc:		Volumio $VER $DAT - The Audiophile Music Player.
     All your music in one place.
     With bit-perfect audio quality.
     Free and Open Source Forever.

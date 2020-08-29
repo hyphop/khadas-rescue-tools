@@ -37,7 +37,7 @@ esac
 
 REBUILD_ALL=
 
-DATE=$(date)
+DATE=$(TZ= date)
 
 CONF=$BN.conf
 COND=$BN.conf
