@@ -12,6 +12,8 @@ DAT=2020-04-26
 VER=2.774
 DAT=2020-05-06
 
+#VER=v2.766
+
 #http://updates.volumio.org/kvim3/volumio/2.774/volumio-2.774-2020-05-06-kvim3.img.zip
 
 LINK0=http://updates.volumio.org/kvim3/volumio/$VER/
