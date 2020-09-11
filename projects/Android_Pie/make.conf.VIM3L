@@ -2,6 +2,7 @@ LABEL=ANDROID
 #
 BOARD=VIM3L
 VER=V200320
+VER=V200624
 #
 BOARDS=$BOARD
 LINK0=https://dl.khadas.com/Firmware/$BOARD/Android/

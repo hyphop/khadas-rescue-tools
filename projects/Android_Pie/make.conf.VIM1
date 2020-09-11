@@ -2,6 +2,7 @@ LABEL=ANDROID
 #
 BOARD=VIM1
 VER=V200317
+#VER=V200624
 #
 BOARDS=$BOARD
 LINK0=https://dl.khadas.com/Firmware/$BOARD/Android/Pie/

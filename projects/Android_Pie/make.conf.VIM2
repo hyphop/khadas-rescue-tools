@@ -1,12 +1,11 @@
 LABEL=ANDROID
 #
-BOARD=VIM3
-VER=V200319
+BOARD=VIM2
 VER=V200624
 
 #
 BOARDS=$BOARD
-LINK0=https://dl.khadas.com/Firmware/$BOARD/Android/
+LINK0=https://dl.khadas.com/Firmware/$BOARD/Android/Pie/
 NAME=$BOARD.Android.Pie_$VER
 IMG=${BOARD}_Pie_$VER.7z
 LINK=$LINK0$IMG

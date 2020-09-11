@@ -20,9 +20,15 @@ MP="$(realpath $M)"
 
 CMP_LEVEL="-22 -T2"
 
+AP=aml_image_v2_packer
+FENIX=fenix/build/utils-*/flash-tool/tools
+for AML_IMAGE_PACKER_PATH in ../../../../$FENIX ""; do
+    [ -e "$AML_IMAGE_PACKER_PATH/$AP" ] && break
+done
+
 case $PATH in
     */opt/bin:*);;
-    *)PATH="$(realpath ../../opt/bin):$PATH";;
+    *)PATH="$(realpath $AML_IMAGE_PACKER_PATH):$(realpath ../../opt/bin):$PATH";;
 esac
 
 DATE=$(TZ= date)
@@ -130,12 +136,18 @@ echo "[i] $IMG2"
 [ -f $OUT/unpacked ] || {
 CMD $aml_image_v2_packer -d $IMG2 "$OUT" || DIE
 
-date > $OUT/unpacked
 
 [ -s $IMG2 ] && truncate -s0 $IMG2
 
+../../scripts/sparseimg2img $OUT #|| {
+    
+#    rm $IMG2
+#    rm $IMG2.md5sum
 
-../../scripts/sparseimg2img $OUT
+#    DIE "$OUT"
+#}
+
+date > $OUT/unpacked
 
 }
 
