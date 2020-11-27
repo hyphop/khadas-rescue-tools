@@ -153,7 +153,7 @@ date > $OUT/unpacked
 
 cd $OUT
 for r in *.ini  *.conf *.cfg *.xml bootloader.* *.USB; do
-    CMD rm "$r"
+    CMD rm -f "$r"
 done
 cd ..
 
@@ -166,7 +166,7 @@ for p in $OUT/*.raw; do
 
 echo "[i] compress partition $p">&2
 
-CMD ../../scripts/xze -e -T4 -9 $p || FAIL compress
+CMD ../../scripts/xze -e -T0 -9 $p || FAIL compress
 echo $p.xz > $p.packed
 
 CMD truncate -s0 $p
