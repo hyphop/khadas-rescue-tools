@@ -1,19 +1,41 @@
-# ANDROID - kresq image progect generator
+# ANDROID - kresq image generator
 
-+ https://github.com/hyphop/khadas-rescue-tools/tree/master/projects/Android_Nougat_VIM1
++ https://github.com/hyphop/khadas-rescue-tools/tree/master/projects/Android_Pie
 
 ## USAGE
 
     ./make       - generate default project ( make.conf -> make.conf.* )
 
+    ./make_all   - make all images
+
+    ./make VIM1
+    ./make VIM2
+    ./make VIM3
+    ./make VIM3L
+
+## IMAGES OUTPUT
+
+    /tmp
+
+    VIM1.Android.Pie_V??????.emmc.kresq
+    VIM2.Android.Pie_V??????.emmc.kresq
+    VIM3.Android.Pie_V??????.emmc.kresq
+    VIM3L.Android.Pie_V?????.emmc.kresq
+
 ## PROJECT USAGE
 
 after project preparation generation, we can use project standalone
 
+    img/Android_Pie.VIM1
+    img/Android_Pie.VIM2
+    img/Android_Pie.VIM3
+    img/Android_Pie.VIM3L
+
+    ../../image/make_image
 
 ## ABOUT 
 
-+ https://github.com/hyphop/khadas-rescue-tools/tree/master/projects/Android_Nougat_VIM1
++ https://github.com/hyphop/khadas-rescue-tools/tree/master/projects/Android_Pie
 + https://github.com/hyphop/khadas-rescue-tools
 + https://github.com/hyphop/khadas-rescue-tools/tree/master/projects
 + https://dl.khadas.com/Firmware/Krescue/mega/README.megaimage_online.txt
