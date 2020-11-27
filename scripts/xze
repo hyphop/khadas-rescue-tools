@@ -450,6 +450,7 @@ OUT="$IN.xz"
 }
 
 S1=$(fsize "$IN")
+[ "$T" = 0 ] && T=$(grep -c processor /proc/cpuinfo)
 
 S14=$((S1/T))
 [ $S14 -lt $B ] && B=$S14
