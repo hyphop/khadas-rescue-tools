@@ -184,8 +184,7 @@ IMAGE_URL: $LINK
 
 ## BUILD IMAGE
 
-./make
-
+../../image/make_image
 
 " > $R
 }
