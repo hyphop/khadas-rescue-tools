@@ -25,11 +25,11 @@ duration:	110
 desc:		$DESC
 
 ## ask user block
-ask:     store bootup logo YES or without logo NO
-type:    yesno
-tag:     LOGO
-default: NO
-desc:    press YES - khadas logo and NO - blank logo
+#ask:     store bootup logo YES or without logo NO
+#type:    yesno
+#tag:     LOGO
+#default: YES
+#desc:    press YES - khadas logo and NO - blank logo
 
 # sub 1
 sub:	1
@@ -95,7 +95,7 @@ data:	@zero:8M
 
 # partition 4 logo
 block:	-
-match:	LOGO=1
+#match:	LOGO=1
 start: 0x4e400000
 size:  0x00800000
 #end:  0x4ec00000
