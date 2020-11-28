@@ -5,6 +5,8 @@ VER=V200320
 VER=V200624
 VER=V201113
 #
+TPL=krescue.image.conf.tpl.new
+
 BOARDS=$BOARD
 LINK0=https://dl.khadas.com/Firmware/$BOARD/Android/
 NAME=$BOARD.Android.Pie_$VER

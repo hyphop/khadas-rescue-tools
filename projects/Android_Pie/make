@@ -107,8 +107,18 @@ done
 
 DESC="$NAME"
 
-echo "[i] copy kresq config from template $CNF_.tpl ($NAME $DATE)"
-. $DP/$CNF_.tpl > $CNF || FAIL template not found
+
+[ "$TPL" ] || \
+    TPL=$CNF_.tpl
+
+[ -s "$TPL" ] || {
+    [ -s "$DP/$TPL" ] || DIE "Template not found"
+    TPL="$DP/$TPL"
+}
+
+echo "[i] copy kresq config from template $(basename "$TPL") ($NAME $DATE)"
+
+. $TPL > $CNF || FAIL template not found
 
 [ -d BLANK ] || \
     mkdir BLANK
@@ -152,7 +162,10 @@ date > $OUT/unpacked
 }
 
 cd $OUT
-for r in *.ini  *.conf *.cfg *.xml bootloader.* *.USB; do
+
+#exit 0
+
+for r in *.ini *.conf *.cfg *.xml bootloader.* *.USB; do
     CMD rm -f "$r"
 done
 cd ..

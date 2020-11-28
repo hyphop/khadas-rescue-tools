@@ -4,6 +4,8 @@ BOARD=VIM3
 VER=V200319
 VER=V201112
 #
+TPL=krescue.image.conf.tpl.new
+
 BOARDS=$BOARD
 LINK0=https://dl.khadas.com/Firmware/$BOARD/Android/
 NAME=$BOARD.Android.Pie_$VER
