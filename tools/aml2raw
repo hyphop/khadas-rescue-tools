@@ -1,0 +1,457 @@
+#!/bin/bash
+
+## hyphop ##
+
+#= amlogic android image 2 raw image
+
+REQUIRED="device-tree-compiler android-sdk-libsparse-utils libarchive-tools zstd xz-utils"
+
+USAGE() { echo "aml2raw convert amlogic android image 2 raw image
+
+USAGE:
+	[ARGS] aml2raw [DIR|image.[img|7z]] [OUTPUT|-] [--setup|--help]
+
+ARGS:
+	[CT=zst|CT=xz|CT=raw] [TMP=/output_path]
+
+DEFAULT:
+	CZ=zst TMP=/tmp/aml2raw
+
+REQUIRE:
+	dtc simg2img [bsdtar] [zstd] [xz]
+	$REQUIRED
+
+KRESCUE:
+	curl krescue/shell/write | sh -s - /tmp/aml2raw/img/image.zst
+
+"
+}
+
+EXAMPLES() { echo "
+EXAMPLES:
+
+	# raw image output
+	CT=raw aml2raw ../img/Android_Pie.VIM1/dl/VIM1_Pie_V200317.7z   # convert to raw image
+
+	# raw image output to stdout
+	CT=raw aml2raw ../img/Android_Pie.VIM2/dl/VIM2_Pie_V200624.7z - # output to stdout
+
+	# zst image output to stdout + compression detected from output extension name
+	aml2raw ../img/Android_Pie.VIM3/dl/VIM3_Pie_V201112.7z - > ../img/VIM3_Pie_V201112.zst
+
+	# xz image output to file + compression detected from output extension name
+	aml2raw ../img/Android_Pie.VIM3/dl/VIM3_Pie_V201112.7z ../img/VIM3_Pie_V201112.xz
+
+	# raw image output to file + compression detected from output name extension (img)
+	aml2raw ../img/Android_Pie.VIM3/dl/VIM3_Pie_V201112.7z ../img/VIM3_Pie_V201112.img
+
+"
+}
+
+ACFG=image.cfg
+
+# BOOT RES
+BOOT_START=0
+
+RES_START=0x02400000
+DTB_START=0x02800000
+DT2_START=0x02840000
+
+ ENV_START=0x4d400000
+LOGO_START=0x4e400000
+
+CACHE_START=0x06c00000
+
+PART_OFFSET=0x4e400000
+
+BE=0x80000
+BC=0x800000
+BS=0x400000
+
+CMD(){
+    echo "# $@" >&2
+    $@
+}
+
+MSG(){
+    echo "$@">&2
+}
+
+DIE(){
+    echo "[e] DIE $@" >&2
+    exit 1
+}
+
+
+chk_d(){
+[ "$dtc" ] || \
+dtc="$(which dtc)"
+[ $? = 0 ] || DIE "dtc not found ! sudo apt-get install device-tree-compiler"
+}
+
+chk_a(){
+[ "$bsdtar" ] || \
+bsdtar="$(which bsdtar)"
+[ $? = 0 ] || DIE "bsdtar not found ! sudo apt-get install libarchive-tools"
+}
+
+chk_p(){
+b=aml_image_v2_packer
+[ "$aml_image_v2_packer" ] || \
+aml_image_v2_packer=$(which $b)
+[ $? = 0 ] && return
+
+o="$TMP/bin/$b"
+c="$o.gz"
+MSG "[i] download $b => $c"
+curl -jkL -C- -o "$c" \
+    https://github.com/hyphop/khadas-rescue-tools/releases/download/dl/$b.gz
+
+[ -e "$o" ] || {
+    gzip -d $c || DIE "unpack $c"
+    chmod 0777 "$o"
+}
+
+}
+
+chk_s(){
+b=simg2img
+[ "$simg2img" ] || \
+simg2img=$(which $b)
+[ $? = 0 ] && return
+
+o="$TMP/bin/$b"
+c="$o.gz"
+MSG "[i] download $b => $c"
+curl -jkL -C- -o "$c" \
+    https://github.com/hyphop/khadas-rescue-tools/releases/download/dl/$b.gz
+
+[ -e "$o" ] || {
+    #sudo apt-get install android-sdk-libsparse-utils
+    gzip -d $c || DIE "unpack $c"
+    chmod 0777 "$o"
+}
+
+}
+
+SETUP(){
+    CMD="sudo apt-get install $REQUIRED"
+    MSG "[i] setup need root privs for next command"
+    MSG "# $CMD"
+    $CMD
+}
+
+case "$@" in
+    *--help*|-h)
+    USAGE && exit
+    ;;
+    *--setup*)
+    SETUP
+    exit 
+    ;;
+esac
+
+IN=$1
+
+[ "$IN" ] || {
+    USAGE && DIE "input not defined"
+}
+[ -e "$IN" ] || DIE "not found $IN"
+
+[ "$TMP" ] || \
+TMP=/tmp/${0##*/}
+
+mkdir -p "$TMP/bin"
+
+export PATH="$TMP/bin:$PATH"
+
+MSG "[i] TMP: $TMP"
+
+O="$TMP"/update.img
+
+while [ ! -d "$IN" ]; do
+
+case $(file "$IN") in
+    *7-zip*)
+    MSG "[i] 7z unpack $IN"
+    chk_a
+    $bsdtar -O -xf "$IN" '*.img' > "$O"  || DIE "unpack $IN"
+    IN=$O
+    ;;
+    *)
+    D="$TMP"/update.img.dir
+    mkdir -p $D
+    MSG "[i] aml unpack $IN => $D"
+    chk_p
+    chk_p
+    head -c4096 "$IN" | grep -q PARTITION || DIE "unknown input $IN"
+    $aml_image_v2_packer -d "$IN" "$D" 1>&2 || DIE "aml unpack $IN"
+    cd $D
+
+
+    break
+esac
+
+done
+
+[ -d "$IN" ] && cd $IN
+
+    chk_s
+    chk_s
+
+#$simg2img
+
+## BEGIN
+
+while read l ; do
+    case $l in
+	*main_type=\"UBOOT\"*)
+	f=${l#*\"}
+	f=${f%%\"*}
+	UBOOT=$f
+	MSG "[i] UBOOT : $f"
+	;;
+	*main_type=\"dtb\"*)
+	f=${l#*\"}
+	f=${f%%\"*}
+	DTB=$f
+	MSG "[i] DTB   : $f"
+	;;
+    esac
+done < $ACFG
+
+#cat /sys/class/block/mmcblk2/device/erase_size 
+#  524288
+# 0x80000
+#cat /sys/class/block/mmcblk2/device/preferred_erase_size
+# 4194304
+#0x400000
+
+[ "$DTB" ] || \
+    DTB=_aml_dtb.PARTITION
+
+#[ "$DTS" ] || \
+#    DTS=_aml_dtb.PARTITION.dts
+
+chk_d
+
+[ "$DTB" ] && {
+INPUT="$dtc -q $DTB"
+$INPUT 1>/dev/null || DIE "dtb broken $DTB"
+}
+
+[ "$DTS" ] && \
+INPUT="cat $DTS"
+
+P="$TMP"/parts.dts.info
+T="$TMP"/img
+mkdir -p $T
+
+MSG "[i] $P"
+
+# extract parition info !!! NOTE not super solution
+
+
+$INPUT | \
+grep -m1 partitions -A200 | \
+    grep -B200 -A2 0xffffffff | \
+    grep -e pname -e mask -e size -e phandle | tail -n+2 > $P
+# cat $P
+# sort phandles
+grep phandle $P | sort > $P.parts
+# reorder parts
+while read l ; do
+    grep -B3 "$l" $P
+done < $P.parts > $P.sort
+# done
+mv $P.sort $P
+
+BS=512
+
+DD() {
+    CMD dd status=none conv=fsync,notrunc if="$1" of="$2" $3 $4 $5 $6
+}
+
+DZ() {
+    [ "$3" ] || DIE DZ $@
+    DD /dev/zero "$2" seek=$(($3/BS-1)) count=1
+    case "$1" in
+	/dev/null|/dev/zero|"")
+	return
+	;;
+    esac
+    DD "$1" "$2"
+}
+
+DO() {
+    DD "$1" "$2" seek=$(($3/BS))
+}
+
+CMP() {
+    case $CT in
+    zst)
+    CMP_="zstd -T0 -5 -c"
+    MSG "[i] $CMP_"
+    $CMP_ "$1" >> "$2"
+    ;;
+    xz)
+    CMP_="xz -v -T4 --block-size 90M -k -c -F xz -9"
+    MSG "[i] $CMP_"
+    $CMP_ "$1" >> "$2"
+    ;;
+    raw)
+    MSG "[i] RAW copy $1 > $2"
+    cat "$1" >> "$2"
+    ;;
+    *)
+    DIE undefined compress method
+    esac
+
+}
+
+[ "$CT" ] || \
+    CT=zst
+
+RO=$T/image
+
+[ "$2" ] && CO="$2"
+
+[ "$CO" ] || {
+    CO=$RO.$CT
+}
+
+PID=$$
+
+[ "$CO" = "-" ] && {
+    co=/proc/$PID/fd/1
+    STDOUT=$(readlink $co)
+    MSG "[i] output to STDOUT $STDOUT"
+    case $STDOUT in
+	*/dev/pts*)
+	DIE "bin output to console REJECTED"
+    ;;
+    esac
+    CO=$co
+}
+
+rm -f $RO
+[ -f $CO ] && \
+rm -f $CO 2>/dev/null
+
+MSG "[i] image output to $CO"
+
+for cc in $CO $STDOUT; do
+case $cc in
+    *.xz|*.zst)
+    CT=${cc##*.}
+    MSG "[i] force output $CT compressed"
+    ;;
+    *.img)
+    CT=raw
+    MSG "[i] force output $CT"
+    ;;
+esac
+done
+
+#cp $UBOOT $T/image
+#CMD truncate -s $((LOGO_START)) $T/image
+
+DZ $UBOOT    $RO $LOGO_START
+DO $DTB      $RO $DTB_START
+DO $DTB      $RO $DT2_START
+
+CMP $RO $CO
+
+while read l ; do
+
+    case $l in
+	*pname*)
+	a=${l#*\"}
+	pname=${a%\"*}
+	;;
+	*size*)
+
+	a=${l##* }
+	size=${a%\>*}
+	b=$PART_OFFSET
+	o=$((PART_OFFSET+size))
+	P=$pname.PARTITION
+	
+	case "$pname" in
+	    cache)
+	    continue
+	    ;;
+	    data)
+	    size=$((1024*1024*64))
+	    o=$((PART_OFFSET+size))
+	    #break
+	    ;;
+	esac
+
+	printf "[i] %10s %10x %10x %10x\n" $pname $b $size $o >&2
+	
+	PD=/dev/zero
+	[ -s $P ] && {
+	case $(file $P) in
+	    *sparse*)
+	    PD=$P.raw
+	    CMD simg2img "$P" "$PD"
+	    ls -l1 "$P" "$PD" >&2
+	    ;;
+	    *)
+	    PD="$P"
+	esac
+	}
+	PART_OFFSET=$((o+BC))
+	
+	#continue
+	
+	rm       $RO
+	DZ "$PD" $RO $((PART_OFFSET-b))
+	[ ! "$NOCLEAN" ] && \
+	    [ -f "$PD" ] && CMD rm -f "$PD" "${PD%.raw}"
+	MSG "=$pname"
+	CMP $RO $CO
+
+	[ -s $P ] && ls -l1 $P >&2
+	
+	[ "$pname" = "data" ] && break
+
+    esac
+
+done < $P
+
+case $CO in
+    /proc/*)
+    MSG "[i] PIPE output $STDOUT end"
+    #cat /proc/$PID/fdinfo/1 >&2
+    ;;
+    *)
+    ls -l1 $CO >&2
+esac
+
+exit 0
+
+[h] NN         partname 0xhex_offs 0xhex_size 0xhex_end_ -      offset        size -  512off  512_sz 512_end
+----------------------------------------------------------------------------------------------------
+[i] 00       bootloader 0x00000000 0x00400000 0x00400000 -           0     4194304 -       0    8192    8192
+[i] 01         reserved 0x02400000 0x04000000 0x06400000 -    37748736    67108864 -   73728  131072  204800
+[i] 02            cache 0x06c00000 0x46000000 0x4cc00000 -   113246208  1174405120 -  221184 2293760 2514944
+[i] 03              env 0x4d400000 0x00800000 0x4dc00000 -  1296039936     8388608 - 2531328   16384 2547712
+[i] 04             logo 0x4e400000 0x00800000 0x4ec00000 -  1312817152     8388608 - 2564096   16384 2580480
+[i] 05         recovery 0x4f400000 0x01800000 0x50c00000 -  1329594368    25165824 - 2596864   49152 2646016
+[i] 06             misc 0x51400000 0x00800000 0x51c00000 -  1363148800     8388608 - 2662400   16384 2678784
+[i] 07             dtbo 0x52400000 0x00800000 0x52c00000 -  1379926016     8388608 - 2695168   16384 2711552
+[i] 08         cri_data 0x53400000 0x00800000 0x53c00000 -  1396703232     8388608 - 2727936   16384 2744320
+[i] 09            param 0x54400000 0x01000000 0x55400000 -  1413480448    16777216 - 2760704   32768 2793472
+[i] 10             boot 0x55c00000 0x01000000 0x56c00000 -  1438646272    16777216 - 2809856   32768 2842624
+[i] 11              rsv 0x57400000 0x01000000 0x58400000 -  1463812096    16777216 - 2859008   32768 2891776
+[i] 12         metadata 0x58c00000 0x01000000 0x59c00000 -  1488977920    16777216 - 2908160   32768 2940928
+[i] 13           vbmeta 0x5a400000 0x00200000 0x5a600000 -  1514143744     2097152 - 2957312    4096 2961408
+[i] 14              tee 0x5ae00000 0x02000000 0x5ce00000 -  1524629504    33554432 - 2977792   65536 3043328
+[i] 15           vendor 0x5d600000 0x1c000000 0x79600000 -  1566572544   469762048 - 3059712  917504 3977216
+[i] 16              odm 0x79e00000 0x08000000 0x81e00000 -  2044723200   134217728 - 3993600  262144 4255744
+[i] 17           system 0x82600000 0x50000000 0xd2600000 -  2187329536  1342177280 - 4272128 2621440 6893568
+[i] 18          product 0xd2e00000 0x08000000 0xdae00000 -  3537895424   134217728 - 6909952  262144 7172096
+[i] 19             data 0xdb600000 0x00000000 0xdb600000 -  3680501760           0 - 7188480       0 7188480
+
