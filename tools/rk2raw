@@ -1,0 +1,474 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= rockchip gen raw image
+
+REQUIRED="android-sdk-libsparse-utils libarchive-tools zstd xz-utils curl"
+
+USAGE() { echo "rk2raw convert rockchip android image 2 raw image
+
+USAGE:
+    [ARGS] rk2raw [URL|DIR|image.[img|7z]] [OUTPUT|-] [--setup|--help|--examples]
+
+ARGS:
+    [CT=zst|CT=xz|CT=raw] [TMP=/output_path]
+
+DEFAULT:
+    CZ=zst TMP=/tmp/aml2raw
+
+REQUIRE:
+    simg2img [curl] [bsdtar] [zstd] [xz]
+    $REQUIRED
+
+KRESCUE:
+    curl krescue/shell/write | sh -s - /tmp/aml2raw/img/image.zst
+
+"
+}
+
+EXAMPLES() { echo "
+EXAMPLES:
+
+    # raw image output
+    # wip ...
+
+    ./rk2raw https://dl.khadas.com/Firmware/Edge/Android/Edge_Pie_V191227.7z Edge_Android_Pie_V191227.img.xz
+
+"
+}
+
+[ "$TMP" ] || \
+TMP=/tmp/${0##*/}
+TMPI="$TMP/images"
+
+CMD(){
+    echo "# $@" >&2
+    $@
+}
+
+MSG(){
+    echo "$@">&2
+}
+
+DIE(){
+    echo "[e] DIE $@" >&2
+    exit 1
+}
+
+chk_v(){
+[ "$pv" ] || \
+pv="$(which pv)"
+[ $? = 0 ] || DIE "pv not found ! sudo apt-get install pv"
+}
+
+chk_a(){
+[ "$bsdtar" ] || \
+bsdtar="$(which bsdtar)"
+[ $? = 0 ] || DIE "bsdtar not found ! sudo apt-get install libarchive-tools"
+}
+
+chk_s(){
+b=simg2img
+[ "$simg2img" ] || \
+simg2img=$(which $b)
+[ $? = 0 ] && return
+
+o="$TMP/bin/$b"
+c="$o.gz"
+MSG "[i] download $b => $c"
+curl -jkL -C- -o "$c" \
+    https://github.com/hyphop/khadas-rescue-tools/releases/download/dl/$b.gz \
+    || DIE donwload
+
+[ -e "$o" ] || {
+    #sudo apt-get install android-sdk-libsparse-utils
+    gzip -d $c || DIE "unpack $c"
+    chmod 0777 "$o"
+}
+
+}
+
+chk_t(){
+b=afptool
+[ "$afptool" ] || \
+afptool=$(which $b)
+[ $? = 0 ] && return
+
+o="$TMP/bin/$b"
+c="$o.gz"
+MSG "[i] download $b => $c"
+curl -jkL -C- -o "$c" \
+    https://github.com/hyphop/khadas-rescue-tools/releases/download/dl/$b.gz \
+    || DIE download
+
+[ -x "$o" ] || {
+    #sudo apt-get install android-sdk-libsparse-utils
+    gzip -d $c || DIE "unpack $c"
+    chmod 0777 "$o"
+}
+
+}
+
+chk_z(){
+b=xze
+o="$TMP/bin/$b"
+
+[ "$xze" ] || \
+xze=$(which $b)
+[ $? = 0 ] && return
+
+MSG "[i] download $b"
+curl -jkL -C- -o "$o" \
+    https://raw.githubusercontent.com/krescue/krescue/master/tools/xze
+
+[ -x "$o" ] || \
+    chmod 0777 "$o"
+
+}
+
+mkdir -p "$TMP/bin"
+mkdir -p "$TMPI"
+
+export PATH="$TMP/bin:$PATH"
+
+R=$(printf "\r")
+MARK="RKAF"
+#387508:RKAF
+
+MSG "[i] TMP: $TMP"
+
+SETUP(){
+    CMD="sudo apt-get install $REQUIRED"
+    MSG "[i] setup need root privs for next command"
+    MSG "# $CMD"
+    $CMD
+}
+
+case "$@" in
+    *--help*|-h)
+    USAGE && exit
+    ;;
+    *--setup*)
+    SETUP
+    exit 
+    ;;
+    *--examples*)
+    EXAMPLES
+    exit 
+    ;;
+esac
+
+case $1 in
+    http*)
+
+    Z="$TMP/$(basename "$1")"
+
+    [ -s $Z.md5sum ] || {
+    MSG "[i] download $1 > $Z"
+    curl -jkL -C- -o "$Z" "$1" || DIE "download $1"
+
+    md5sum "$Z" > $Z.md5sum
+    }
+
+    IN=$Z
+    shift
+    ;;
+esac
+
+[ "$IN" ] || {
+[ "$1" ] && {
+
+[ -d "$1" ] && {
+IN=$1
+IN=${IN%%/}
+shift
+}
+
+[ -f "$1" ] && {
+IN=$1
+IN=${IN%%/}
+shift
+}
+}
+}
+
+
+[ "$IN" ] || {
+USAGE
+DIE "input undefined"
+}
+
+IDB_URL=https://github.com/hyphop/khadas-rescue-tools/releases/download/dl/idbloader.img.gz
+
+[ "$IDBLOADER" ] || \
+IDBLOADER="$TMP"/idbloader.img
+
+[ -s "$IDBLOADER" ] || {
+    MSG "download IDBLOADER"
+    curl -jkL -C- -o "$IDBLOADER.gz" "$IDB_URL" || DIE "download $1"
+    gzip -d "$IDBLOADER.gz"
+}
+
+O="$TMP"/update.img
+
+while [ ! -d "$IN" ]; do
+
+case $(file "$IN") in
+    *7-zip*)
+    MSG "[i] 7z unpack $IN"
+    chk_v
+    chk_a
+    O=${IN%.*}.rkimage
+    [ -s ${IN%.*}.unpacked ] || {
+    $bsdtar -O -xf "$IN" '*.img' | $pv > "$O"  || DIE "unpack $IN"
+    date > ${IN%.*}.unpacked
+    }
+    IN=$O
+    ;;
+    *)
+
+    echo "[i] file IN $IN"
+
+[ "$(head -c4 "$IN")" = "RKFW" ] && {
+
+OF=$(head -c1M "$IN" | grep -m1 --binary-files=text -o -b $MARK | head -c11 )
+
+case "$OF" in
+    *RKAF)
+    o=${OF%:*}
+    echo "[i] unpack by offset $o"
+    # simple rkImageMaker alternative
+    IN2=$IN.afp
+    tail -c+$((o+1)) $IN | head -c-32 > $IN2
+    IN=$IN2
+    ;;
+    *)
+    echo "[i] not found mark $MARK"
+    exit 1
+    ;;
+esac
+
+}
+
+mark="$(head -c4 "$IN")"
+[ "$mark" = "RKAF" ] || DIE "undefined packaging $mark"
+
+chk_t
+chk_t || DIE "not prepared"
+
+cd "$(dirname "$IN")"
+CMD $afptool -unpack "$IN" "$(basename "$IN.dir")" || DIE "unpack $IN"
+cd -
+
+rm -f $IN2
+
+IN="$IN.dir"
+
+    break
+    ;;
+
+esac
+
+done
+
+#exit 0
+
+SS=0
+
+CMD() {
+    echo "# $@" >&2
+    $@
+}
+
+DD() {
+    CMD dd status=none conv=fsync,notrunc if="$1" of="$2" $3 $4 $5 $6
+}
+
+
+#[ -d "$IN" ] && cd $IN
+
+[ "$OUT" ] || \
+OUT=$1
+
+[ "$OUT" ] || \
+OUT=rk.img
+
+#out=output
+
+grep -q recovery.img "$IN"/package-file && {
+    PTYPE=android_pi
+    MSG "[i] android image detected $PTYPE"
+    [ "$PARTS" ] || \
+	PARTS="$TMP"/$PTYPE.parts
+
+#    [ -s $PARTS ] || {
+	grep "PARTS_BEGIN $PTYPE" -A100 "$0" | \
+	    grep "PARTS_END $PTYPE" -B100 > $PARTS
+#    }
+
+    #exit 0
+}
+
+#[ "$PARTS" ] || \
+#    PARTS=rk_parts
+
+#exit 0
+
+[ "$PARTS" ] || {
+    DIE PARTS undefined
+}
+
+CREATED=
+
+
+while read l ; do
+
+
+    case "$l" in
+    \#*)
+    continue
+    ;;
+    *lba*)
+    S=${l##*:}
+    SS=$((SS+S))
+    ;;
+
+    "")
+    [ "$CREATED" ] || {
+    echo "[i] create sparse $SS">&2
+    truncate -s$(((SS)*512)) $OUT
+    echo "[i] create parts from $PARTS">&2
+    sfdisk $OUT < $PARTS || DIE created gpt parts
+    CREATED=1
+    echo "[i] write bootloader">&2
+    DD "$IDBLOADER" "$OUT" seek=64
+    }
+    ;;
+    *start=*)
+    s=${l##*start=}
+    s=${s%%,*}
+    s=$(echo $s)
+
+    z=${l##*size=}
+    z=${z%%,*}
+    z=$(echo $z)
+
+    n=${l##*name=\"}
+    n=${n%%\"*}
+    case $n in
+	loader1)
+	#n=bootloader
+	;;
+    esac
+    f=
+    F=
+    for f in $(grep -m1 --binary-files=text -w "^$n" "$IN/package-file" | grep -v \#) ; do
+	f=${f%$R}
+    done
+    [ "$f" ] && F="$IN/$f"
+
+    printf "%24s %16s %16s %32s\n" "$n" "$s" "$z" "$F"
+    #continue
+
+    [ -f "$F" ] && {
+	case $(file $F) in
+	    *sparse*)
+	    chk_s
+	    PD="$TMPI"/$(basename "$F").raw
+	    #mkfifo $PD
+	    simg2img "$F" "$PD"
+	    DD "$PD" "$OUT" seek=$((s))
+	    rm $PD
+	    ;;
+	    *)
+	    echo ">> $F">&2
+	    DD "$F" "$OUT" seek=$((s))
+	    ;;
+	esac
+    }
+    ;;
+    esac
+
+done < $PARTS
+
+    BS=512
+    case $n in
+	rootfs)
+	# truncate by rootfs image size
+        R=$(stat -c%s $F)
+	r=$((R/BS+1))
+	SSS=$(((s+r)*BS))
+	echo "[i] truncate $s+$z $r = $SSS">&2
+	truncate -s$SSS $OUT
+	;;
+	userdata)
+	# truncate by usedata + 64M
+	SSS=$(((s+64*2048)*BS))
+	echo "[i] truncate $SSS">&2
+	truncate -s $SSS $OUT
+	;;
+
+	*)
+	# truncate by last part + 64M
+	SSS=$(((s+z+64*2048)*BS))
+	echo "[i] truncate $SSS">&2
+	truncate -s $SSS $OUT
+	;;
+    esac
+
+case $OUT in
+    *.xz)
+
+    chk_z
+    chk_z
+
+    O=${OUT%.*}
+    mv $OUT $O
+
+    $xze $O -9 --meta \
+    BOARD=Edge \
+    LABEL=Android \
+    BUILDER=Khadas \
+    LINK=http://dl.khadas.com \
+    DESC="Android $INF for Khadas EDGE board" \
+	|| DIE "xze fail"
+
+    rm -f $O
+
+    ;;
+
+esac
+
+exit
+
+## PARTS_BEGIN android_pi
+label: gpt
+label-id: 2A583E58-486A-4BD4-ACE4-8D5454E97F5C
+device: /dev/mmcblk2
+unit: sectors
+first-lba: 34
+#last-lba: 71071326
+#last-lba: 61071326
+last-lba: 31071326
+
+/dev/mmcblk2p1 : start=       16384, size=        8192, type=43784A32-A03D-4ADE-92C6-EDE64FF9B794, uuid=6115F139-4F47-4BAF-8D23-B6957EAEE4B3, name="uboot"
+/dev/mmcblk2p2 : start=       24576, size=        8192, type=000B305F-484A-4582-9090-4AD0099D47BD, uuid=A83FBA16-D354-45C5-8B44-3EC50832D363, name="trust"
+/dev/mmcblk2p3 : start=       32768, size=        8192, type=24EEB649-277F-4C11-FFEB-D9F20027A83B, uuid=500E2214-B72D-4CC3-D7C1-8419260130F5, name="misc"
+/dev/mmcblk2p4 : start=      139264, size=        8192, type=1CAC805F-726A-495A-FD35-821355A6E7E8, uuid=E099DA71-5450-44EA-AA9F-1B771C582805, name="dtb"
+/dev/mmcblk2p5 : start=      147456, size=        8192, type=2BFEE623-D83C-426A-AB80-21732C9BB7D3, uuid=AF12D156-5D5B-4EE3-B415-8D492CA12EA9, name="dtbo"
+/dev/mmcblk2p6 : start=      155648, size=        2048, type=B2AF085D-A675-48C6-C437-F6D557FF4744, uuid=8EB9EE49-E963-4BB6-FD75-F30618DF9DCD, name="vbmeta"
+/dev/mmcblk2p7 : start=      157696, size=       65536, type=2D9E7B61-1B31-47E7-EE0D-8CEC26D42EF6, uuid=6C36C03F-066E-4448-BF41-0BB95DCCABC3, name="boot"
+/dev/mmcblk2p8 : start=      223232, size=      131072, type=EC80B46B-853F-47CC-A948-39E36BB85D34, uuid=F2DF5432-4913-45F8-AEE6-D9B4369D6EFA, name="recovery"
+/dev/mmcblk2p9 : start=      354304, size=      229376, type=23008154-1571-4979-C78D-717E1FBAAB48, uuid=94414B7E-B134-4095-A5AD-D8EE067C8DE5, name="backup"
+/dev/mmcblk2p10 : start=      583680, size=        8192, type=F542A81A-020C-432C-E7DB-D2B23AF3F554, uuid=D4B4790F-534C-48D3-BDBC-9A754F50728A, name="security"
+/dev/mmcblk2p11 : start=      591872, size=     1048576, type=29B6A608-DC3D-4594-AD6B-6A5954A6BDAC, uuid=ECAC0550-6419-41B8-E417-25F1288D46BB, name="cache"
+/dev/mmcblk2p12 : start=     1640448, size=     5242880, type=6645CD44-EA30-439C-A128-4D8357A7173A, uuid=AF01642C-9B84-11E8-9B2A-234EB5E198A0, name="system"
+/dev/mmcblk2p13 : start=     6883328, size=       32768, type=63773A18-BB00-4410-D3C4-4AD855837FEC, uuid=D823D771-7B6A-4DD7-B260-E6A55E5BD61F, name="metadata"
+/dev/mmcblk2p14 : start=     6916096, size=     1048576, type=CAB97A46-5A78-40B2-D465-FDBA6F697AF2, uuid=99ECBF63-5E3C-4AA1-EF0B-3A614CA36B5E, name="vendor"
+/dev/mmcblk2p15 : start=     7964672, size=     1048576, type=DA6E384A-ED6A-493F-C135-AA9951DF0000, uuid=D404101F-0E49-4454-BD61-3EA352733CFF, name="oem"
+/dev/mmcblk2p16 : start=     9013248, size=        1024, type=15C43550-E038-4ED6-F32D-65611C20B69E, uuid=819FCF71-1A63-46E1-E154-ECCF47F8273A, name="frp"
+/dev/mmcblk2p17 : start=     9014272,                    type=7656173D-A31A-4F86-AF78-2CFD5654BD67, uuid=8CAA0E48-3B01-4D8D-F175-FB6A3ECA0D3C, name="userdata"
+#/dev/mmcblk2p17 : start=     9014272, size=    52057055, type=7656173D-A31A-4F86-AF78-2CFD5654BD67, uuid=8CAA0E48-3B01-4D8D-F175-FB6A3ECA0D3C, name="userdata"
+## PARTS_END android_pi
+
