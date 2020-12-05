@@ -382,6 +382,7 @@ while read l ; do
 	    continue
 	    ;;
 	    data)
+	    # clean data 64M
 	    size=$((1024*1024*64))
 	    o=$((PART_OFFSET+size))
 	    #break
