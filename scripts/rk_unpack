@@ -1,0 +1,41 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= rockchip unpack
+[ "$IN" ] || \
+IN=$1
+
+MARK="RKAF"
+#387508:RKAF
+
+OF=$(head -c1M "$IN" | grep -m1 --binary-files=text -o -b $MARK | head -c11 )
+
+case "$OF" in
+    *RKAF)
+    o=${OF%:*}
+    echo "[i] unpack by offset $o"
+    # simple rkImageMaker alternative
+    tail -c+$((o+1)) $IN | head -c-32 > $IN.out
+    ;;
+    *)
+    echo "[i] not found mark $MARK"
+    exit 1
+    ;;
+esac
+
+
+exit 
+
+http://wiki.t-firefly.com/ROC-RK3328-CC/fw_pack_unpack.html
+
+------- UNPACK ------
+package-file	0x0000000000000800	0x0000000000000199
+Image/MiniLoaderAll.bin	0x0000000000001000	0x000000000005E94E
+Image/parameter.txt	0x0000000000060000	0x000000000000024E
+Image/trust.img	0x0000000000060800	0x0000000000400000
+Image/uboot.img	0x0000000000460800	0x0000000000400000
+Image/resource.img	0x0000000000860800	0x0000000000108000
+Image/rootfs.img	0x0000000000968800	0x0000000085400000
+Unpack firmware OK!
+------ OK ------
