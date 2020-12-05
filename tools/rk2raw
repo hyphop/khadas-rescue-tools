@@ -450,7 +450,7 @@ unit: sectors
 first-lba: 34
 #last-lba: 71071326
 #last-lba: 61071326
-last-lba: 31071326
+ last-lba: 16777216
 
 /dev/mmcblk2p1 : start=       16384, size=        8192, type=43784A32-A03D-4ADE-92C6-EDE64FF9B794, uuid=6115F139-4F47-4BAF-8D23-B6957EAEE4B3, name="uboot"
 /dev/mmcblk2p2 : start=       24576, size=        8192, type=000B305F-484A-4582-9090-4AD0099D47BD, uuid=A83FBA16-D354-45C5-8B44-3EC50832D363, name="trust"
