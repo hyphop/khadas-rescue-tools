@@ -40,6 +40,7 @@ EXAMPLES:
     ## convert linux image
 
     ./rk2raw Edge_Ubuntu-server-focal_Linux-5.7_arm64_EMMC_V0.9.1-20200602.7z Edge_Ubuntu-server-focal_Linux-5.7_V0.9.1-20200602.img.xz
+    ./rk2raw Edge_Ubuntu-lxde-bionic_Linux-4.4_arm64_EMMC_V0.8.3-20200110.7z .img.xz
 
 "
 }
@@ -171,12 +172,16 @@ case "$@" in
     ;;
 esac
 
-get_name(){
+gen_name(){
 #Edge_Ubuntu-server-focal_Linux-5.7_arm64_EMMC_V0.9.1-20200602.7z
     case $1 in
     *EMMC*)
     INF=$(basename "$1")
-    INF=${INF%.*}
+
+    for s in rkimage afp dir 7z img; do
+    INF=${INF%%.$s}
+    done
+
     INF=${INF#Edge?}
     MSG "[i] INF: $INF"
     ;;
@@ -227,7 +232,7 @@ DIE "input undefined"
 
 
 [ "$INF" ] || \
-    get_name "$IN"
+    gen_name "$IN"
 
 IDB_URL=https://github.com/hyphop/khadas-rescue-tools/releases/download/dl/idbloader.img.gz
 
@@ -247,35 +252,60 @@ while [ ! -d "$IN" ]; do
 case $(file "$IN") in
     *7-zip*)
     MSG "[i] 7z unpack $IN"
-    chk_v
+    #chk_v
     chk_a
     O=${IN%.*}.rkimage
     [ -s ${IN%.*}.unpacked ] || {
-    $bsdtar -O -xf "$IN" '*.img' | $pv > "$O"  || DIE "unpack $IN"
+
+    # get offset from pack packed
+    OF=$($bsdtar -O -xf "$IN" '*.img' 2>/dev/null | head -c1M | grep -m1 --binary-files=text -o -b $MARK | head -c11)
+    OF=${OF%:*}
+    case $OF in
+	"")
+	$bsdtar -O -xf "$IN" '*.img' | \
+	dd conv=sparse status=progress of="$O" || DIE "unpack $IN"
+	;;
+	*)
+	# intelegent unpack ;-)
+	MSG "unpack by offset $OF"
+	$bsdtar -O -xf "$IN" '*.img' | \
+	dd bs=$OF skip=1 iflag=fullblock | \
+	head -c-32 | \
+	dd conv=sparse status=progress of="$O" || DIE "unpack $IN"
+	;;
+    esac
     date > ${IN%.*}.unpacked
+
     }
     IN=$O
     ;;
     *)
 
-    echo "[i] file IN $IN"
+    [ -s "$IN" ] || break
+
+echo "[i] file IN $IN"
 
 [ "$(head -c4 "$IN")" = "RKFW" ] && {
 
 OF=$(head -c1M "$IN" | grep -m1 --binary-files=text -o -b $MARK | head -c11 )
+OF=$(echo ${OF%:*})
 
 case "$OF" in
-    *RKAF)
-    o=${OF%:*}
-    echo "[i] unpack by offset $o"
-    # simple rkImageMaker alternative
-    IN2=$IN.afp
-    tail -c+$((o+1)) $IN | head -c-32 > $IN2
-    IN=$IN2
-    ;;
-    *)
+    "")
     echo "[i] not found mark $MARK"
     exit 1
+    ;;
+    *)
+    echo "[i] unpack by offset $OF"
+    # simple rkImageMaker alternative
+    IN2=$IN.afp
+
+    #fallocate=$(which fallocate)
+    #fallocate <magic> -o 0 -l 1131 inplace.dump
+
+    MSG "tail -c+$((OF+1)) $IN | head -c-32 > $IN2"
+    tail -c+$((OF+1)) $IN | head -c-32 > $IN2
+    IN=$IN2
     ;;
 esac
 
@@ -287,10 +317,12 @@ mark="$(head -c4 "$IN")"
 chk_t
 chk_t || DIE "not prepared"
 
+[ -d "$IN.dir" ] || {
 cd "$(dirname "$IN")"
 CMD $afptool -unpack "$IN" "$(basename "$IN.dir")" || DIE "unpack $IN"
 cd -
-
+rm $IN
+}
 rm -f $IN2
 
 IN="$IN.dir"
@@ -302,6 +334,14 @@ esac
 
 done
 
+#}
+
+[ -e "$IN" ] || {
+[ -d "$IN.dir" ] && {
+    IN="$IN.dir"
+}
+}
+
 #exit 0
 
 SS=0
@@ -312,7 +352,7 @@ CMD() {
 }
 
 DD() {
-    CMD dd status=none conv=fsync,notrunc if="$1" of="$2" $3 $4 $5 $6
+    CMD dd status=none conv=sparse,fsync,notrunc if="$1" of="$2" $3 $4 $5 $6
 }
 
 
@@ -321,8 +361,31 @@ DD() {
 [ "$OUT" ] || \
 OUT=$1
 
-[ "$OUT" ] || \
-OUT=rk.img
+# generate output name prepare
+b=$(basename "$OUT")
+db=$(basename "$OUT")
+di=$(dirname "$IN")
+bi=$(basename "$IN")
+
+for s in rkimage afp dir 7z img; do
+    bi=${bi%%.$s*}
+done
+
+case $OUT in
+    */.img*)
+    OUT="$db/$bi$b"
+    ;;
+    .img*)
+    OUT="$bi$b"
+    ;;
+    "")
+    OUT="$bi".raw.img
+    ;;
+esac
+
+MSG ">$OUT"
+
+#exit 0
 
 #out=output
 [ "$PTYPE" ] || \
