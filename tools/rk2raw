@@ -4,7 +4,7 @@
 
 #= rockchip gen raw image
 
-REQUIRED="android-sdk-libsparse-utils libarchive-tools zstd xz-utils curl"
+REQUIRED="fdisk android-sdk-libsparse-utils libarchive-tools zstd xz-utils curl"
 
 USAGE() { echo "rk2raw convert rockchip android image 2 raw image
 
@@ -15,10 +15,11 @@ ARGS:
     [CT=zst|CT=xz|CT=raw] [TMP=/output_path]
 
 DEFAULT:
-    CZ=zst TMP=/tmp/aml2raw
+#   CZ=zst TMP=/tmp/aml2raw
+    CZ=raw TMP=.
 
 REQUIRE:
-    simg2img [curl] [bsdtar] [zstd] [xz]
+    sfdisk [simg2img] [curl] [bsdtar] [zstd] [xz]
     $REQUIRED
 
 KRESCUE:
@@ -31,9 +32,14 @@ EXAMPLES() { echo "
 EXAMPLES:
 
     # raw image output
-    # wip ...
+
+    ## convert android image
 
     ./rk2raw https://dl.khadas.com/Firmware/Edge/Android/Edge_Pie_V191227.7z Edge_Android_Pie_V191227.img.xz
+
+    ## convert linux image
+
+    ./rk2raw Edge_Ubuntu-server-focal_Linux-5.7_arm64_EMMC_V0.9.1-20200602.7z Edge_Ubuntu-server-focal_Linux-5.7_V0.9.1-20200602.img.xz
 
 "
 }
@@ -60,6 +66,12 @@ chk_v(){
 [ "$pv" ] || \
 pv="$(which pv)"
 [ $? = 0 ] || DIE "pv not found ! sudo apt-get install pv"
+}
+
+chk_f(){
+[ "$sfdisk" ] || \
+sfdisk="$(which sfdisk)"
+[ $? = 0 ] || DIE "sfdisk not found ! sudo apt-get install sfdisk"
 }
 
 chk_a(){
@@ -159,10 +171,24 @@ case "$@" in
     ;;
 esac
 
+get_name(){
+#Edge_Ubuntu-server-focal_Linux-5.7_arm64_EMMC_V0.9.1-20200602.7z
+    case $1 in
+    *EMMC*)
+    INF=$(basename "$1")
+    INF=${INF%.*}
+    INF=${INF#Edge?}
+    MSG "[i] INF: $INF"
+    ;;
+    esac
+}
+
 case $1 in
     http*)
 
     Z="$TMP/$(basename "$1")"
+
+    gen_name "$Z"
 
     [ -s $Z.md5sum ] || {
     MSG "[i] download $1 > $Z"
@@ -198,6 +224,10 @@ shift
 USAGE
 DIE "input undefined"
 }
+
+
+[ "$INF" ] || \
+    get_name "$IN"
 
 IDB_URL=https://github.com/hyphop/khadas-rescue-tools/releases/download/dl/idbloader.img.gz
 
@@ -295,20 +325,25 @@ OUT=$1
 OUT=rk.img
 
 #out=output
+[ "$PTYPE" ] || \
+PTYPE=linux
 
-grep -q recovery.img "$IN"/package-file && {
+grep -q ^recovery "$IN"/package-file && {
     PTYPE=android_pi
     MSG "[i] android image detected $PTYPE"
+}
+
     [ "$PARTS" ] || \
 	PARTS="$TMP"/$PTYPE.parts
 
+MSG "[i] PART TYPE $PTYPE"
 #    [ -s $PARTS ] || {
 	grep "PARTS_BEGIN $PTYPE" -A100 "$0" | \
 	    grep "PARTS_END $PTYPE" -B100 > $PARTS
 #    }
 
     #exit 0
-}
+
 
 #[ "$PARTS" ] || \
 #    PARTS=rk_parts
@@ -339,7 +374,8 @@ while read l ; do
     echo "[i] create sparse $SS">&2
     truncate -s$(((SS)*512)) $OUT
     echo "[i] create parts from $PARTS">&2
-    sfdisk $OUT < $PARTS || DIE created gpt parts
+    chk_f
+    $sfdisk $OUT < $PARTS || DIE created gpt parts
     CREATED=1
     echo "[i] write bootloader">&2
     DD "$IDBLOADER" "$OUT" seek=64
@@ -351,8 +387,11 @@ while read l ; do
     s=$(echo $s)
 
     z=${l##*size=}
+    [ "$z" = "$l" ] || {
     z=${z%%,*}
     z=$(echo $z)
+    }
+    [ "$z" = "$l" ] && z=""
 
     n=${l##*name=\"}
     n=${n%%\"*}
@@ -378,6 +417,8 @@ while read l ; do
 	    PD="$TMPI"/$(basename "$F").raw
 	    #mkfifo $PD
 	    simg2img "$F" "$PD"
+	    RS=$(stat -c%s $PD)
+	    MSG "[i] sparce unpacked $RS bytes"
 	    DD "$PD" "$OUT" seek=$((s))
 	    rm $PD
 	    ;;
@@ -396,10 +437,11 @@ done < $PARTS
     case $n in
 	rootfs)
 	# truncate by rootfs image size
-        R=$(stat -c%s $F)
-	r=$((R/BS+1))
+	[ "$RS" ] || \
+        RS=$(stat -c%s $F)
+	r=$((RS/BS+1))
 	SSS=$(((s+r)*BS))
-	echo "[i] truncate $s+$z $r = $SSS">&2
+	echo "[i] truncate $s+$r blocks = $SSS">&2
 	truncate -s$SSS $OUT
 	;;
 	userdata)
@@ -426,6 +468,20 @@ case $OUT in
     O=${OUT%.*}
     mv $OUT $O
 
+    case $PTYPE in
+
+    linux)
+    MSG "[i] compress xze :: $INF"
+    $xze $O -9 --meta \
+    BOARD=Edge \
+    LABEL=Linux \
+    BUILDER=Khadas \
+    LINK=http://dl.khadas.com \
+    DESC="linux $INF for Khadas EDGE board" \
+	|| DIE "xze fail"
+
+    ;;
+    *)
     $xze $O -9 --meta \
     BOARD=Edge \
     LABEL=Android \
@@ -433,6 +489,9 @@ case $OUT in
     LINK=http://dl.khadas.com \
     DESC="Android $INF for Khadas EDGE board" \
 	|| DIE "xze fail"
+    ;;
+
+    esac
 
     rm -f $O
 
@@ -472,3 +531,20 @@ first-lba: 34
 #/dev/mmcblk2p17 : start=     9014272, size=    52057055, type=7656173D-A31A-4F86-AF78-2CFD5654BD67, uuid=8CAA0E48-3B01-4D8D-F175-FB6A3ECA0D3C, name="userdata"
 ## PARTS_END android_pi
 
+## PARTS_BEGIN linux
+label: gpt
+label-id: 2A583E58-486A-4BD4-ACE4-8D5454E97F5C
+device: /dev/mmcblk2
+unit: sectors
+first-lba: 34
+ last-lba: 16777216
+
+/dev/mmcblk2p1 : start=          64, size=        8064, type=43784A32-A03D-4ADE-92C6-EDE64FF9B794, uuid=6115F139-4F47-4BAF-8D23-B6957EAEE4B3, name="loader1"
+/dev/mmcblk2p2 : start=       16384, size=        8192, type=000B305F-484A-4582-9090-4AD0099D47BD, uuid=A83FBA16-D354-45C5-8B44-3EC50832D363, name="uboot"
+/dev/mmcblk2p3 : start=       24576, size=        8192, type=24EEB649-277F-4C11-FFEB-D9F20027A83B, uuid=500E2214-B72D-4CC3-D7C1-8419260130F5, name="trust"
+/dev/mmcblk2p4 : start=       32768, size=        8192, type=1CAC805F-726A-495A-FD35-821355A6E7E8, uuid=E099DA71-5450-44EA-AA9F-1B771C582805, name="misc"
+/dev/mmcblk2p5 : start=       40960, size=       32768, type=2BFEE623-D83C-426A-AB80-21732C9BB7D3, uuid=AF12D156-5D5B-4EE3-B415-8D492CA12EA9, name="resource"
+/dev/mmcblk2p6 : start=       73728, size=      188416, type=B2AF085D-A675-48C6-C437-F6D557FF4744, uuid=8EB9EE49-E963-4BB6-FD75-F30618DF9DCD, name="kernel", attrs="LegacyBIOSBootable"
+/dev/mmcblk2p7 : start=      262144,                    type=2D9E7B61-1B31-47E7-EE0D-8CEC26D42EF6, uuid=614E0000-0000-4B53-8000-1D28000054A9, name="rootfs", attrs="LegacyBIOSBootable"
+#/dev/mmcblk2p7 : start=      262144, size=    60809183, type=2D9E7B61-1B31-47E7-EE0D-8CEC26D42EF6, uuid=614E0000-0000-4B53-8000-1D28000054A9, name="rootfs", attrs="LegacyBIOSBootable"
+## PARTS_END linux
