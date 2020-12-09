@@ -396,6 +396,11 @@ grep -q ^recovery "$IN"/package-file && {
     MSG "[i] android image detected $PTYPE"
 }
 
+grep -q ^super "$IN"/package-file && {
+    PTYPE=android_qt
+    MSG "[i] android image detected $PTYPE"
+}
+
     [ "$PARTS" ] || \
 	PARTS="$TMP"/$PTYPE.parts
 
@@ -564,6 +569,8 @@ esac
 
 exit
 
+#Image/super.img
+
 ## PARTS_BEGIN android_pi
 label: gpt
 label-id: 2A583E58-486A-4BD4-ACE4-8D5454E97F5C
@@ -611,3 +618,30 @@ first-lba: 34
 /dev/mmcblk2p7 : start=      262144,                    type=2D9E7B61-1B31-47E7-EE0D-8CEC26D42EF6, uuid=614E0000-0000-4B53-8000-1D28000054A9, name="rootfs", attrs="LegacyBIOSBootable"
 #/dev/mmcblk2p7 : start=      262144, size=    60809183, type=2D9E7B61-1B31-47E7-EE0D-8CEC26D42EF6, uuid=614E0000-0000-4B53-8000-1D28000054A9, name="rootfs", attrs="LegacyBIOSBootable"
 ## PARTS_END linux
+
+## PARTS_BEGIN android_qt
+label: gpt
+label-id: 872E0000-0000-4A2A-8000-22C700001B3C
+device: /dev/mmcblk2
+unit: sectors
+first-lba: 34
+#last-lba: 61071326
+ last-lba: 16777216
+
+/dev/mmcblk2p1 : start=       16384, size=        8192, type=135C0000-0000-4A06-8000-4A7300003D0D, uuid=534D0000-0000-425A-8000-770100005C8C, name="uboot"
+/dev/mmcblk2p2 : start=       24576, size=        8192, type=32080000-0000-4113-8000-477D00005FD8, uuid=DF250000-0000-4138-8000-333600000E4D, name="trust"
+/dev/mmcblk2p3 : start=       32768, size=        8192, type=C6630000-0000-4174-8000-20B700001E88, uuid=94310000-0000-4E2B-8000-6ECD00004565, name="misc"
+/dev/mmcblk2p4 : start=       40960, size=        8192, type=37440000-0000-4409-8000-098700004803, uuid=DA230000-0000-4110-8000-773000000ABE, name="dtb"
+/dev/mmcblk2p5 : start=       49152, size=        8192, type=EC370000-0000-4128-8000-6A5600001F33, uuid=1A5E0000-0000-4133-8000-50C60000583F, name="dtbo"
+/dev/mmcblk2p6 : start=       57344, size=        2048, type=4F790000-0000-4019-8000-5F8D000058FE, uuid=BA7B0000-0000-4859-8000-2CF7000020CF, name="vbmeta"
+/dev/mmcblk2p7 : start=       59392, size=       65536, type=C77D0000-0000-491A-8000-369200001F4E, uuid=24470000-0000-4D39-8000-772B00004558, name="boot"
+/dev/mmcblk2p8 : start=      124928, size=        8192, type=BC690000-0000-445B-8000-74CF0000100A, uuid=BE430000-0000-487D-8000-4DCA00001FC1, name="security"
+/dev/mmcblk2p9 : start=      133120, size=      196608, type=96190000-0000-4902-8000-4FAA00003F1A, uuid=F2230000-0000-4145-8000-013C00007BF2, name="recovery"
+/dev/mmcblk2p10 : start=      329728, size=      229376, type=BE1A0000-0000-4028-8000-348D00003066, uuid=274F0000-0000-4124-8000-17EA000019D2, name="backup"
+/dev/mmcblk2p11 : start=      559104, size=      786432, type=9A300000-0000-4159-8000-42DF00005FD5, uuid=C4630000-0000-4E20-8000-4A3A00002C4B, name="cache"
+/dev/mmcblk2p12 : start=     1345536, size=       32768, type=93500000-0000-4417-8000-4D0800003851, uuid=33320000-0000-4135-8000-069500005C44, name="metadata"
+/dev/mmcblk2p13 : start=     1378304, size=        1024, type=12260000-0000-4156-8000-5B7000001FC2, uuid=DB3E0000-0000-4251-8000-6D64000046A6, name="frp"
+/dev/mmcblk2p14 : start=     1379328, size=     6373376, type=7D0F0000-0000-4101-8000-297F0000690E, uuid=24410000-0000-4A59-8000-560D00007A57, name="super"
+/dev/mmcblk2p15 : start=     7752704,                    type=3D1F0000-0000-4A73-8000-269D0000601E, uuid=76270000-0000-4F22-8000-48FA00007C40, name="userdata"
+#/dev/mmcblk2p15 : start=     7752704, size=    53318623, type=3D1F0000-0000-4A73-8000-269D0000601E, uuid=76270000-0000-4F22-8000-48FA00007C40, name="userdata"
+## PARTS_END android_qt
