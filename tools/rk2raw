@@ -35,13 +35,19 @@ EXAMPLES:
 
     ## convert android image
 
-    ./rk2raw https://dl.khadas.com/Firmware/Edge/Android/Edge_Pie_V191227.7z Edge_Android_Pie_V191227.img.xz
+    ./rk2raw https://dl.khadas.com/Firmware/Edge/Android/Edge_Pie_V191227.7z \
+	Edge_Android_Pie_V191227.raw.img.xz
+    ./rk2raw https://dl.khadas.com/Firmware/Edge/Android/Edge_Qt_V200709.7z \
+	Edge_Android_Qt_V200709.raw.img.xz
+    ./rk2raw https://dl.khadas.com/Firmware/Edge/Android/Edge_Qt_V200908.7z \
+	Edge_Android_Qt_V200908.raw.img.xz
 
     ## convert linux image
 
-    ./rk2raw Edge_Ubuntu-server-focal_Linux-5.7_arm64_EMMC_V0.9.1-20200602.7z Edge_Ubuntu-server-focal_Linux-5.7_V0.9.1-20200602.img.xz
-    ./rk2raw Edge_Ubuntu-lxde-bionic_Linux-4.4_arm64_EMMC_V0.8.3-20200110.7z .img.xz
-
+    ./rk2raw Edge_Ubuntu-server-focal_Linux-5.7_arm64_EMMC_V0.9.1-20200602.7z \
+	Edge_Ubuntu-server-focal_Linux-5.7_V0.9.1-20200602.raw.img.xz
+    ./rk2raw Edge_Ubuntu-lxde-bionic_Linux-4.4_arm64_EMMC_V0.8.3-20200110.7z \
+	.raw.img.xz
 "
 }
 
@@ -321,9 +327,9 @@ chk_t || DIE "not prepared"
 cd "$(dirname "$IN")"
 CMD $afptool -unpack "$IN" "$(basename "$IN.dir")" || DIE "unpack $IN"
 cd -
-rm $IN
+#rm $IN
 }
-rm -f $IN2
+#rm -f $IN2
 
 IN="$IN.dir"
 
@@ -372,10 +378,10 @@ for s in rkimage afp dir 7z img; do
 done
 
 case $OUT in
-    */.img*)
+    */.img*|*/.raw.img*)
     OUT="$db/$bi$b"
     ;;
-    .img*)
+    .img*|.raw.img*)
     OUT="$bi$b"
     ;;
     "")
