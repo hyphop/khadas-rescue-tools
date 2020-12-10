@@ -1,0 +1,77 @@
+#!/bin/sh
+
+DIR="$(dirname $0)"
+BN=$(basename $0)
+
+cd "$DIR"
+DP="$(realpath .)"
+
+#N=${DP%/*}
+N=${DP}
+N=${N##*/}
+M=${N%.krescue}
+
+M="../../img/$M"
+MP="$(realpath $M)"
+
+mkdir -p $M
+cd "$M"
+
+DL=dl
+
+BOARD=Edge
+BUILDER=https://test.libreelec.tv
+URL=https://libreelec.tv/
+LABEL=LibreELEC
+
+echo "[i] build $LABEL for $BOARD"
+echo "[i] check last version"
+
+
+IN=$(curl $BUILDER|grep edge.img)
+
+[ "$IN" ] && {
+    IN=${IN%%.img.gz*}
+    IN=${IN##*LibreELEC}
+    IN=LibreELEC$IN.img.gz
+}
+
+VER=${IN%%-khadas*}
+
+IMG="$BOARD-$VER.img"
+
+VER=${VER##*arm-}
+
+echo "[i] IN $IN"
+echo "[i] VER $VER"
+echo "[i] OUT $IMG"
+
+#IN=LibreELEC-RK3399.arm-9.80-nightly-20201209-28a7161-khadas-edge-v.img.gz
+
+LINK="$BUILDER/$IN"
+
+[ -d $DL ] || mkdir -p $DL
+../../scripts/download "$LINK" "$IMG.gz" $DL || {
+    echo "[e] download error">&2
+    exit 1
+}
+
+[ -e $IMG ] || {
+    echo "[i] unpack $DL/$IMG.gz"
+    gzip -dc "$DL/$IMG.gz" > "$IMG"
+}
+
+../../scripts/xze "$IMG" \
+	--meta \
+	LABEL="$LABEL" \
+	BUILDER="$BUILDER" \
+	BOARD="$BOARD" \
+	LINK="$URL" \
+	DURATION=15 \
+	DESC="$LABEL version $VER. repacked from $LINK. ABOUT LibreELEC is a non-profit fork of OpenELEC as an open source software appliance, a just enough Linux distribution for Kodi."
+
+truncate -s0 $IMG
+
+for i in $PWD/$IMG*; do
+    echo " > $i"
+done
