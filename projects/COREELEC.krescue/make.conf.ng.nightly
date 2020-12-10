@@ -1,10 +1,10 @@
 LABEL=COREELEC
-LINK0=https://relkai.coreelec.org/
+LINK0=https://relkai.coreelec.org
 NAME=VIM3x.COREELEC.9.2.nightly
-VER=${VER:-20200318}
+VER=${VER:-20201209}
 IMG_PRE=CoreELEC-Amlogic-ng.arm-9.2-nightly_
 IMG=$IMG_PRE$VER.tar
-BASE=$LINK0
+BASE=$LINK0/archive/
 TYPE=NG
 LINK=$BASE$IMG
 MATCH="BOARD=VIM3L BOARD=VIM3"

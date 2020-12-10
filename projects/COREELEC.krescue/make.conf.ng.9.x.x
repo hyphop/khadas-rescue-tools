@@ -1,5 +1,5 @@
 LABEL=COREELEC
-VER=${VER:-9.2.2}
+VER=${VER:-9.2.5}
 LINK0=https://github.com/CoreELEC/CoreELEC/releases/tag/$VER
 NAME=VIM3x.COREELEC.$VER
 IMG_PRE=CoreELEC-Amlogic-ng.arm-
