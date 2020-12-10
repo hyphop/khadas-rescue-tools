@@ -457,7 +457,7 @@ S14=$((S1/T))
 
 B="${B}M"
 
-ARGS="$xz -T$T --block-size $B -k -c $OPTS "$IN""
+ARGS="$xz -v -T$T --block-size $B -k -c $OPTS "$IN""
 
 echo "[i] xze compress $IN ($S1 bytes) > $OUT">&2
 echo "# $ARGS ">&2
