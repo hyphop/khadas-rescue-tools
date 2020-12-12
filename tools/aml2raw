@@ -50,7 +50,7 @@ EXAMPLES:
 	# ATV  VIM3 image from SC convert example
 	aml2raw SC_VIM3_USER_ATV-v3.0-20200803.7z VIM3-Android-TV-SC_USER_ATV-v3.0-20200803.raw.img.xz
 	# ATV VIM2 aimge from SC convert example
-	
+	aml2raw SC_VIM2_USER_ATV-v1.0-20200731.7z VIM2-Android-TV-SC_USER_ATV-v1.0-20200731.raw.img.xz
 "
 }
 
