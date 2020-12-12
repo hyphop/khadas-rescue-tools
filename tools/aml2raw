@@ -45,11 +45,12 @@ EXAMPLES:
 	# raw image output to file + compression detected from output name extension (img)
 	aml2raw ../img/Android_Pie.VIM3/dl/VIM3_Pie_V201112.7z ../img/VIM3_Pie_V201112.img
 
-	# atv VIM3L image from SC convert example
+	# ATV VIM3L image from SC convert example
 	aml2raw SC_VIM3L_USER_ATV-v3.0-20201125.7z VIM3L-Android-TV-SC_USER-v3.0-20201125.raw.img.xz
-	# atv VIM3 image from SC convert example
+	# ATV  VIM3 image from SC convert example
 	aml2raw SC_VIM3_USER_ATV-v3.0-20200803.7z VIM3-Android-TV-SC_USER_ATV-v3.0-20200803.raw.img.xz
-
+	# ATV VIM2 aimge from SC convert example
+	
 "
 }
 
@@ -274,7 +275,7 @@ $INPUT 1>/dev/null || DIE "dtb broken $DTB"
 }
 
 #INPUT="
-BOARD_=$($dtc -q $DTB | grep "\"khadas, " )
+BOARD_=$($dtc -q $DTB | grep -i "\"khadas, " )
 
 case $BOARD_ in
     *vim3l*|*VIM3L*)
