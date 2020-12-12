@@ -9,7 +9,7 @@ REQUIRED="device-tree-compiler android-sdk-libsparse-utils libarchive-tools zstd
 USAGE() { echo "aml2raw convert amlogic android image 2 raw image
 
 USAGE:
-	[ARGS] aml2raw [DIR|image.[img|7z]] [OUTPUT|-] [--setup|--help]
+	[ARGS] aml2raw [DIR|image.[img|7z]] [OUTPUT|-] [--setup|--help|--examples]
 
 ARGS:
 	[CT=zst|CT=xz|CT=raw] [TMP=/output_path]
@@ -45,8 +45,10 @@ EXAMPLES:
 	# raw image output to file + compression detected from output name extension (img)
 	aml2raw ../img/Android_Pie.VIM3/dl/VIM3_Pie_V201112.7z ../img/VIM3_Pie_V201112.img
 
-	# atv images from SC convert example
-	./aml2raw SC_VIM3L_USER_ATV-v3.0-20201125.7z VIM3L-Android-TV-v3.0-20201125.raw.img.xz
+	# atv VIM3L image from SC convert example
+	aml2raw SC_VIM3L_USER_ATV-v3.0-20201125.7z VIM3L-Android-TV-SC_USER-v3.0-20201125.raw.img.xz
+	# atv VIM3 image from SC convert example
+	aml2raw SC_VIM3_USER_ATV-v3.0-20200803.7z VIM3-Android-TV-SC_USER_ATV-v3.0-20200803.raw.img.xz
 
 "
 }
@@ -167,6 +169,10 @@ case "$@" in
     ;;
     *--setup*)
     SETUP
+    exit 
+    ;;
+    *--exampl*)
+    EXAMPLES
     exit 
     ;;
 esac
