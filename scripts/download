@@ -12,6 +12,8 @@ PR=$(realpath $PP)
 	return 1
     }
 
+    URL="$1"
+
 OK(){
 	[ -s "$O_" ] || {
 	    echo "[e] $O_ not found">&2
@@ -19,10 +21,18 @@ OK(){
 	}
 
 	md5sum "$O_" > "$O_.md5sum"
+	echo "$URL" > $md5link.url
+
+
 	cd $P_
 	exit 0
 #	return 0
 }
+	for md5link in $(echo "$1" | md5sum); do
+	    break
+	done
+
+    echo "[i] md5link $md5link">&2
 
     O_="$2"
     D_="$3"
@@ -37,6 +47,12 @@ OK(){
     }
     [ -f "$O_.md5sum" ] && {
 	echo "[w] already downloaded">&2
+	cd $P_
+	return 0
+    }
+
+    [ -s "$md5link.filename" ] && {
+	cat "$md5link.filename"
 	cd $P_
 	return 0
     }
@@ -64,21 +80,38 @@ OK(){
 	}
 	
 
-	$megadl --print-names "$1" | tee $T_
+#	$megadl --print-names "$1"  | tee $T_
+	$megadl --print-names "$1" 2>&1 | tee $T_
 
 	o_=$(tail -1 "$T_")
-
+	
 	case "$o_" in
+	    *already*)
+	    o_=${o_##*/}
+	    O_=$o_
+	    r_=0
+	    echo "$O_" > $md5link.filename
+	    #echo "$URL" > $md5link.url
+	    echo "[i] mega downlaoded already as $o_">&2
+	    ;;
 	    /*)
-	    echo "[i] mega downlaoded $(basename $o_)">&2
+	    o_=${o_##*/}
+	    O_=$o_
+	    echo "$O_" > $md5link.filename
+	    r_=0
+	    #echo "$URL" > $md5link.url
+	    echo "[i] mega downlaoded $o_">&2
 	    ;;
 	    *)
 	    echo "[e] mega download error">&2
+	    echo ">> $(cat $T_)">&2
 	    return 1
+	    ;;
 	esac
 
-	[ "$o_" = "$O_" ] || \
-	mv "$o_" "$O_"
+	echo $O_
+	#[ "$o_" = "$O_" ] || \
+	#mv "$o_" "$O_"
 	;;
 	*//*)
 	curl -f -jkL -C- -D "$O_.headers" "$1" -o "$O_"
