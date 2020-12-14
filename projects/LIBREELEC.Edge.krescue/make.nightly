@@ -61,7 +61,7 @@ LINK="$BUILDER/$IN"
     gzip -dc "$DL/$IMG.gz" > "$IMG"
 }
 
-../../scripts/xze "$IMG" \
+../../scripts/xze -9 "$IMG" \
 	--meta \
 	LABEL="$LABEL" \
 	BUILDER="$BUILDER" \

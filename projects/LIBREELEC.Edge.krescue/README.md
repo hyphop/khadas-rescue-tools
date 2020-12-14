@@ -1,4 +1,4 @@
-# LibreElec nightly - raw xz image progect generator
+# LibreElec - raw xz image progect generator
 
 ## USAGE
 
