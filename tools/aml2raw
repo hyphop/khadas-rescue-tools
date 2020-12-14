@@ -37,20 +37,23 @@ EXAMPLES:
 	CT=raw aml2raw ../img/Android_Pie.VIM2/dl/VIM2_Pie_V200624.7z - # output to stdout
 
 	# zst image output to stdout + compression detected from output extension name
-	aml2raw ../img/Android_Pie.VIM3/dl/VIM3_Pie_V201112.7z - > ../img/VIM3_Pie_V201112.zst
+	aml2raw VIM3_Pie_V201112.7z - > VIM3_Pie_V201112.zst
 
 	# xz image output to file + compression detected from output extension name
-	aml2raw ../img/Android_Pie.VIM3/dl/VIM3_Pie_V201112.7z ../img/VIM3_Pie_V201112.xz
+	aml2raw VIM3_Pie_V201112.7z VIM3-Android-Pie_V201112.raw.img.xz
+
+	# online convert example
+	aml2raw https://dl.khadas.com/Firmware/VIM3/Android/VIM3_Pie_V201112.7z VIM3-Android-Pie_V201112.raw.img.xz
 
 	# raw image output to file + compression detected from output name extension (img)
-	aml2raw ../img/Android_Pie.VIM3/dl/VIM3_Pie_V201112.7z ../img/VIM3_Pie_V201112.img
+	aml2raw VIM3_Pie_V201112.7z VIM3_Pie_V201112.img
 
 	# ATV VIM3L image from SC convert example
 	aml2raw SC_VIM3L_USER_ATV-v3.0-20201125.7z VIM3L-Android-TV-SC_USER-v3.0-20201125.raw.img.xz
 	# ATV  VIM3 image from SC convert example
 	aml2raw SC_VIM3_USER_ATV-v3.0-20200803.7z VIM3-Android-TV-SC_USER_ATV-v3.0-20200803.raw.img.xz
 	# ATV VIM2 aimge from SC convert example
-	aml2raw SC_VIM2_USER_ATV-v1.0-20200731.7z VIM2-Android-TV-SC_USER_ATV-v1.0-20200731.raw.img.xz
+	
 "
 }
 
@@ -178,6 +181,54 @@ case "$@" in
     ;;
 esac
 
+gen_name(){
+    case $1 in
+    *EMMC*)
+    INF=$(basename "$1")
+
+    for s in amlimage dir 7z img; do
+    INF=${INF%%.$s}
+    done
+
+    INF=${INF#VIM1?}
+    INF=${INF#VIM2?}
+    INF=${INF#VIM3L?}
+    INF=${INF#VIM3?}
+    INF=${INF#VIM?}
+    MSG "[i] INF: $INF"
+    ;;
+    esac
+}
+
+
+[ "$TMP" ] || \
+TMP=/tmp/${0##*/}
+
+[ "$TMP" ] && {
+    TMP=$(realpath "$TMP")
+}
+
+case $1 in
+    http*)
+
+    Z="$TMP/$(basename "$1")"
+
+    #gen_name "$Z"
+
+    [ -s $Z.md5sum ] || {
+    MSG "[i] download $1 > $Z"
+    curl -jkL -C- -o "$Z" "$1" || DIE "download $1"
+
+    md5sum "$Z" > $Z.md5sum
+    }
+
+    IN=$Z
+#   shift
+    ;;
+esac
+
+
+[ "$IN" ] || \
 IN=$1
 
 [ "$IN" ] || {
@@ -187,14 +238,12 @@ IN=$1
 
 [ "$2" ] && CO="$(realpath "$2")"
 
-[ "$TMP" ] || \
-TMP=/tmp/${0##*/}
-
 mkdir -p "$TMP/bin"
 
 export PATH="$TMP/bin:$PATH"
 
-MSG "[i] TMP: $TMP"
+MSG "[i] TMP: $TMP "
+MSG "[i] OUT: $CO "
 
 O="$TMP"/update.img
 
@@ -222,7 +271,7 @@ case $(file "$IN") in
     head -c4096 "$IN" | grep -q PARTITION || DIE "unknown input $IN"
     $aml_image_v2_packer -d "$IN" "$D" 1>&2 || DIE "aml unpack $IN"
     cd $D
-
+    [ "$UNPACK_ONLY" ] && exit 0
     break
 esac
 
@@ -457,8 +506,8 @@ while read l ; do
 	    ls -l1 "$P" "$PD" >&2
 	    ;;
 	    *buildvariant=*)
-	    LABEL=Android-TV
-	    BUILDER=SC
+#	    LABEL=Android-TV
+#	    BUILDER=SC
 	    MSG "[i] BOARD $BOARD => $LABEL+$BUILDER || PTYPE: $PTYPE // $INF"
 	    PD="$P"
 	    ;;
