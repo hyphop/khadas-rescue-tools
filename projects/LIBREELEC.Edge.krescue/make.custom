@@ -1,5 +1,11 @@
 #!/bin/sh
 
+## hyphop ##
+
+# build script
+
+# https://forum.khadas.com/t/khadas-edge-libreelec/6065/12
+
 DIR="$(dirname $0)"
 BN=$(basename $0)
 

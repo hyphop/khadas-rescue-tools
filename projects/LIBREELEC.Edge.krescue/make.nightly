@@ -1,5 +1,9 @@
 #!/bin/sh
 
+## hyphop ##
+
+# build script 
+
 DIR="$(dirname $0)"
 BN=$(basename $0)
 
