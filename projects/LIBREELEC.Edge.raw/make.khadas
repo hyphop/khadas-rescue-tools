@@ -1,0 +1,93 @@
+#!/bin/sh
+
+## hyphop ##
+
+# build script
+
+# https://forum.khadas.com/t/khadas-edge-libreelec/6065/12
+
+DIR="$(dirname $0)"
+BN=$(basename $0)
+
+cd "$DIR"
+DP="$(realpath .)"
+
+#N=${DP%/*}
+N=${DP}
+N=${N##*/}
+M=${N%.krescue}
+
+M="../../img/$M"
+MP="$(realpath $M)"
+
+mkdir -p $M
+cd "$M"
+
+DL=dl
+
+BOARD=Edge
+BUILDER=https://test.libreelec.tv
+URL=https://libreelec.tv/
+LABEL=LibreELEC
+
+echo "[i] build $LABEL for $BOARD"
+echo "[i] check last version"
+
+#IN=LibreELEC-RK3399.arm-9.80-nightly-20201209-28a7161-khadas-edge-v.img.gz
+
+#LINK="$BUILDER/$IN"
+#LINK="https://mega.nz/file/AmpBgbyR#eR1fISfGG9sbr-C7yhkp1bq5RpJ3eGo697cuqIdnHUo"
+
+[ -d "$DL" ] || mkdir -p "$DL"
+
+INM=/tmp/dl.name
+#../../scripts/download "$LINK" "" $DL > $INM || {
+#    echo "[e] download error">&2
+#    exit 1
+#}
+
+#IND="$DL/$(cat $INM)"
+
+IND="LibreELEC-RK3399.arm-9.0-devel-20201216153706-3565115-khadas-edge.img.gz"
+IND="LibreELEC-RK3399.arm-9.2-devel-20201216182130-6bd7e98-khadas-edge.img.gz"
+
+echo "[i] IN $IND"
+
+[ "$IN" ] || {
+    IN=$IND
+    IN=${IN%%.img.gz*}
+    IN=${IN##*$LABEL}
+    IN=$LABEL$IN.img.gz
+}
+
+VER=${IN%%-khadas*}
+
+IMG="$BOARD-$VER.img"
+
+VER=${VER##*arm-}
+
+echo "[i] IN $IN"
+echo "[i] VER $VER"
+echo "[i] OUT $IMG"
+
+#exit 0
+
+[ -e $IMG ] || {
+    echo "[i] unpack $IND"
+    gzip -dc "$IND" > "$IMG"
+}
+
+../../scripts/xze -9 "$IMG" \
+	--meta \
+	LABEL="$LABEL" \
+	BUILDER="$BUILDER" \
+	BOARD="$BOARD" \
+	LINK="$URL" \
+	DURATION=15 \
+	DESC="$LABEL version $VER. repacked from $LINK. ABOUT LibreELEC is a non-profit fork of OpenELEC as an open source software appliance, a just enough Linux distribution for Kodi."
+
+truncate -s0 $IMG
+
+for i in $PWD/$IMG*; do
+    echo " > $i"
+done
