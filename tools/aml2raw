@@ -4,18 +4,14 @@
 
 #= amlogic android image 2 raw image
 
+#
+
 REQUIRED="device-tree-compiler android-sdk-libsparse-utils libarchive-tools zstd xz-utils"
 
 USAGE() { echo "aml2raw convert amlogic android image 2 raw image
 
 USAGE:
-	[ARGS] aml2raw [DIR|image.[img|7z]] [OUTPUT|-] [--setup|--help|--examples]
-
-ARGS:
-	[CT=zst|CT=xz|CT=raw] [TMP=/output_path]
-
-DEFAULT:
-	CZ=zst TMP=/tmp/aml2raw
+	[VARS] aml2raw [DIR|image.[img|7z]] [OUTPUT|-] [--setup|--help|--examples]
 
 REQUIRE:
 	dtc simg2img [bsdtar] [zstd] [xz]
@@ -24,6 +20,23 @@ REQUIRE:
 KRESCUE:
 	curl krescue/shell/write | sh -s - /tmp/aml2raw/img/image.zst
 
+VARS:
+
+	CT=[zst|xz|raw] - for compression
+	WORK=[path]     - work dir download unpack  :: DEFAULT ./aml2raw.work
+	TMP2=[path]     - temp dd dir               :: DEFAULT /tmp/aml2raw/$PID
+	USR=[path]      - usb bin dir               :: DEFAULT ~/aml2raw
+
+	REWRITE=        - enable output file rewrite        :: DEFAULT no
+	NOCLEANUP=      - no cleanup flag for TMP2          :: DEFAULT no
+	WORKCLEAN=      - clean up working dir after done   :: DEFAULT no
+	MKDIR=[no|yes]  - make unexist WORK dir             :: DEFAULT yes
+	SIMG=           - force use custom simg2img FLAG    :: DEFAULT no
+	NOSINGLE=	- no single stream archive FLAG     :: DEFAULT no
+			  NOTE: fully supported only from Krescue   201219_126
+				Sat 19 Dec 2020 03:10:58 AM UTC
+
+ 
 "
 }
 
@@ -49,29 +62,52 @@ EXAMPLES:
 	aml2raw VIM3_Pie_V201112.7z VIM3_Pie_V201112.img
 
 	# ATV VIM3L image from SC convert example
+	LABEL=Android-TV BUILDER=SC \
 	aml2raw SC_VIM3L_USER_ATV-v3.0-20201125.7z VIM3L-Android-TV-SC_USER-v3.0-20201125.raw.img.xz
 	# ATV  VIM3 image from SC convert example
+	LABEL=Android-TV BUILDER=SC \
 	aml2raw SC_VIM3_USER_ATV-v3.0-20200803.7z VIM3-Android-TV-SC_USER_ATV-v3.0-20200803.raw.img.xz
 	# ATV VIM2 aimge from SC convert example
 	
 "
 }
 
+CLEAN(){
+
+    MSG "CLEANUP WORK DIR $WORK"
+    ## carifull clean 
+
+    [ "$PACKED" ] && {
+    RM "$PACKED" "$PACKED.md5sum"
+    }
+
+    [ "$UNPACKED" ] && \
+    RM "$UNPACKED"
+
+    RM "$WORK"/*.unpacked
+    RM "$WORK"/*.amlimage
+    RM "$WORK"/*.unpackdir/*
+    RM "$WORK"/*.unpackdir
+
+}
+
 ACFG=image.cfg
 
 # BOOT RES
-BOOT_START=0
+ BOOT_START=0
+  RES_START=0x02400000
+  DTB_START=0x02800000
+  DT2_START=0x02840000
 
-RES_START=0x02400000
-DTB_START=0x02800000
-DT2_START=0x02840000
+#  ENV_START=0x4d400000
+# LOGO_START=0x4e400000
+#CACHE_START=0x06c00000
 
- ENV_START=0x4d400000
-LOGO_START=0x4e400000
+  UND_START=0x06c00000
+   UND_SIZE=0x00800000
 
-CACHE_START=0x06c00000
-
-PART_OFFSET=0x4e400000
+#PART_OFFSET=0x4e400000
+PART_OFFSET=0
 
 BE=0x80000
 BC=0x800000
@@ -91,6 +127,22 @@ DIE(){
     exit 1
 }
 
+RM(){
+    # safe clean
+    echo "[RM] $# : $@" >&2
+    [ "$#" = 0 ] && exit
+    for r in "$@"; do
+	[ -e "$r" ] || continue
+	[ ${#r} -lt  3 ] && DIE "unsafe del"
+	[ "${r%/}/" = "$r" ] && DIE "unsafe dir del"
+	MSG "[i] remove  $r"
+	if [ -d "$r" ] ; then
+	rmdir "$r"
+	else
+	rm "$r"
+	fi
+    done
+}
 
 chk_d(){
 [ "$dtc" ] || \
@@ -110,7 +162,7 @@ b=aml_image_v2_packer
 aml_image_v2_packer=$(which $b)
 [ $? = 0 ] && return
 
-o="$TMP/bin/$b"
+o="$USR/bin/$b"
 c="$o.gz"
 MSG "[i] download $b => $c"
 curl -jkL -C- -o "$c" \
@@ -125,11 +177,19 @@ curl -jkL -C- -o "$c" \
 
 chk_s(){
 b=simg2img
-[ "$simg2img" ] || \
+
+o="$USR/bin/$b"
+
+# force use custom simg2img
+[ "$SIMG" ] && simg2img="$o"
+
+[ "$simg2img" ] || {
 simg2img=$(which $b)
 [ $? = 0 ] && return
+}
 
-o="$TMP/bin/$b"
+[ -x "$o" ] && return
+
 c="$o.gz"
 MSG "[i] download $b => $c"
 curl -jkL -C- -o "$c" \
@@ -137,7 +197,7 @@ curl -jkL -C- -o "$c" \
 
 [ -e "$o" ] || {
     #sudo apt-get install android-sdk-libsparse-utils
-    gzip -d $c || DIE "unpack $c"
+    gzip -dc $c > $o || DIE "unpack $c"
     chmod 0777 "$o"
 }
 
@@ -146,7 +206,7 @@ curl -jkL -C- -o "$c" \
 
 chk_z(){
 b=xze
-o="$TMP/bin/$b"
+o="$USR/bin/$b"
 
 [ "$xze" ] || \
 xze=$(which $b)
@@ -181,9 +241,18 @@ case "$@" in
     ;;
 esac
 
+# default yes
+[ "$MKDIR" ] || MKDIR=yes
+# replace no to EMPTY
+[ "$MKDIR" = "no" ] && MKDIR=
+[ "$NOCLEANUP" = "no" ] && NOCLEANUP=
+[ "$WORKCLEAN" = "no" ] && WORKCLEAN=
+[ "$SIMG" = "no" ] && SIMG=
+
 gen_name(){
     case $1 in
-    *EMMC*)
+#    *EMMC*)
+    *)
     INF=$(basename "$1")
 
     for s in amlimage dir 7z img; do
@@ -201,17 +270,55 @@ gen_name(){
 }
 
 
-[ "$TMP" ] || \
-TMP=/tmp/${0##*/}
+[ "$WORK" ] || \
+    WORK=${0##*/}.work
 
-[ "$TMP" ] && {
-    TMP=$(realpath "$TMP")
+[ "$USR" ] || \
+    USR=$(realpath ~/${0##*/})
+
+mkdir -p $USR
+
+MSG "[i] aml2raw image converter starting ..."
+MSG "[i] USR : $USR"
+
+[ "$MKDIR" ] && {
+    mkdir -p $WORK || DIE "cant create working dir $WORK"
 }
+
+[ "$WORK" ] && {
+    WORK=$(realpath "$WORK")
+}
+
+[ "$WORKCLEAN" = "EXIT" ] && {
+    CLEAN
+    exit
+}
+
+
+[ "$TMP2" ] || \
+    TMP2=/tmp/${0##*/}
+
+mkdir -p $TMP2
+
+MSG "[i] TMP2 : $TMP2"
+
+[ "$TMP2" ] && {
+for t in $TMP2/*; do
+    [ -d "$t" ] || continue
+    p=${t##*/}
+    [ -d "/proc/$p" ] || {
+	MSG "[i] clean old unused cache dir $t"
+	rm -rf "$t"
+    }
+done
+}
+
+#exit 0
 
 case $1 in
     http*)
 
-    Z="$TMP/$(basename "$1")"
+    Z="$WORK/$(basename "$1")"
 
     #gen_name "$Z"
 
@@ -238,38 +345,52 @@ IN=$1
 
 [ "$2" ] && CO="$(realpath "$2")"
 
-mkdir -p "$TMP/bin"
+mkdir -p "$USR/bin"
 
-export PATH="$TMP/bin:$PATH"
+export PATH="$USR/bin:$PATH"
 
-MSG "[i] TMP: $TMP "
+MSG "[i] WORK: $WORK "
 MSG "[i] OUT: $CO "
 
-O="$TMP"/update.img
+O="$WORK"/update.img
 
 INF=${IN%.*}
+
+PACKED=
+UNPACKED=
 
 while [ ! -d "$IN" ]; do
 
 case $(file "$IN") in
     *7-zip*)
+
     O=${IN%.*}.amlimage
-    MSG "[i] 7z unpack $IN"
-    [ -e "$IN.unpacked" ] || {
+    O="$WORK/${O##*/}"
+    PACKED="$IN"
+    UNPACKED="$O"
+    UN="$O".unpacked
+    [ -e "$UN" ] || {
+    MSG "[i] 7z unpack $IN to $O"
     chk_a
     $bsdtar -O -xf "$IN" '*.img' | dd conv=sparse status=progress of="$O"  || DIE "unpack $IN"
-    date > "$IN.unpacked"
+    date > "$UN"
     }
     IN=$O
     ;;
     *)
-    D="$TMP"/update.img.dir
-    mkdir -p $D
+    D="$WORK/${IN##*/}".unpackdir
+    UN="$D".unpacked
+    [ -d "$D" ] || rm $UN
+    mkdir -p "$D"
+    chk_p
+    chk_p
+    MSG "CHK UN $UN"
+    [ -s "$UN" ] || {
     MSG "[i] aml unpack $IN => $D"
-    chk_p
-    chk_p
     head -c4096 "$IN" | grep -q PARTITION || DIE "unknown input $IN"
     $aml_image_v2_packer -d "$IN" "$D" 1>&2 || DIE "aml unpack $IN"
+    date > "$UN"
+    }
     cd $D
     [ "$UNPACK_ONLY" ] && exit 0
     break
@@ -277,7 +398,15 @@ esac
 
 done
 
+MSG "[i] IN: $IN"
+
 [ -d "$IN" ] && cd $IN
+
+[ -s $ACFG ] || \
+    DIE "config $ACFG not found"
+
+# linux detect
+tail -1 $ACFG | grep rootfs && LABEL=${LABEL:-Linux}
 
     chk_s
     chk_s
@@ -324,7 +453,7 @@ $INPUT 1>/dev/null || DIE "dtb broken $DTB"
 }
 
 #INPUT="
-BOARD_=$($dtc -q $DTB | grep -i "\"khadas, " )
+BOARD_=$($dtc -q $DTB | grep -m1 -i amlogic-dt-id )
 
 case $BOARD_ in
     *vim3l*|*VIM3L*)
@@ -345,13 +474,16 @@ case $BOARD_ in
 esac
 #"
 
-MSG "[i] BOARD $BOARD"
+MSG "[i] BOARD : $BOARD"
+
+MSG "[i] TMP2 : $TMP2"
 
 [ "$DTS" ] && \
 INPUT="cat $DTS"
 
-P="$TMP"/parts.dts.info
-T="$TMP"/img
+P="$TMP2"/$$/parts.dts.info
+T="$TMP2"/$$/img
+
 mkdir -p $T
 
 MSG "[i] $P"
@@ -393,6 +525,8 @@ DO() {
     DD "$1" "$2" seek=$(($3/BS))
 }
 
+CMP_XZ="xz -v -T4 --block-size 90M -k -c -F xz -9"
+
 CMP() {
     case $CT in
     zst)
@@ -401,11 +535,16 @@ CMP() {
     $CMP_ "$1" >> "$2"
     ;;
     xz)
-    CMP_="xz -v -T4 --block-size 90M -k -c -F xz -9"
+    CMP_=$CMP_XZ
     MSG "[i] $CMP_"
     $CMP_ "$1" >> "$2"
     ;;
     raw)
+    [ "$2" = "-" ] && {
+        MSG "[i] RAW stdout $1"
+	cat "$1"
+	return
+    }
     MSG "[i] RAW copy $1 > $2"
     cat "$1" >> "$2"
     ;;
@@ -439,8 +578,7 @@ PID=$$
 }
 
 rm -f $RO
-[ -f $CO ] && \
-rm -f $CO 2>/dev/null
+
 
 MSG "[i] image output to $CO"
 
@@ -457,15 +595,70 @@ case $cc in
 esac
 done
 
+MSG "[i] LABEL: $LABEL"
+
+case $CO in
+    */.raw*)
+    PRE=${CO%/*}
+    POST=${CO##*/.raw}
+    MSG "INF: $INF"
+    gen_name "$IN"
+    MSG "INF: $INF"
+
+    CO=$PRE/$BOARD-$LABEL-$INF.raw$POST
+    MSG "[i] auto rename output to $CO"
+    ;;
+esac
+
+#exit 0
 #cp $UBOOT $T/image
 #CMD truncate -s $((LOGO_START)) $T/image
 
-DZ $UBOOT    $RO $LOGO_START
+#CMP_SINGLE=1
+
+[ "$NOOP" ] && exit
+
+[ -f $CO ] && {
+    [ "$REWRITE" ] || DIE "output file $CO exist need enable REWRITE flag"
+    rm -f $CO 2>/dev/null
+}
+BOOT_WRITED=
+
+write_boot(){
+
+MSG "write boot end is $(printf %06x $1) = $1"
+END=$1
+
+DZ $UBOOT    $RO $END
 DO $DTB      $RO $DTB_START
 DO $DTB      $RO $DT2_START
 
 CMP $RO $CO
+BOOT_WRITED=1
 
+}
+
+CONVERT(){
+
+# first scan
+while read l ; do
+    case $l in
+	*pname*)
+	a=${l#*\"}
+	pname=${a%\"*}
+	;;
+	*size*)
+	a=${l##* }
+	size=${a%\>*}
+        case "$pname" in
+	cache)
+	CACHE_SIZE=$size
+	;;
+	esac
+    esac
+done < $P
+
+# second scan
 while read l ; do
 
     case $l in
@@ -477,6 +670,22 @@ while read l ; do
 
 	a=${l##* }
 	size=${a%\>*}
+
+	[ "$PART_OFFSET" = 0 ] && {
+	case $LABEL in
+	    *nux*)
+	    PART_OFFSET=$((UND_START+size+BC))
+	    write_boot $PART_OFFSET
+	    ;;
+	    *)
+	    MSG "CACHE SIZE $CACHE_SIZE"
+	    PART_OFFSET=$((UND_START+$CACHE_SIZE+size+BC+BC))
+	    write_boot $PART_OFFSET
+	    ;;
+	esac
+
+	}
+
 	b=$PART_OFFSET
 	o=$((PART_OFFSET+size))
 	P=$pname.PARTITION
@@ -496,21 +705,29 @@ while read l ; do
 	printf "[i] %10s %10x %10x %10x\n" $pname $b $size $o >&2
 	
 	PD=/dev/zero
-	PART_TYPE=$(file $P)
+
+	PART_TYPE=_BLANKED_
+
+	[ -s "$P" ] && \
+	PART_TYPE=$(file "$P")
+
 	MSG "> $PART_TYPE"
-	[ -s $P ] && {
+	SPARSE=
+	[ -s "$P" ] && {
 	case $PART_TYPE in
 	    *sparse*)
-	    PD=$P.raw
-	    CMD simg2img "$P" "$PD"
+	    #PD=$P.raw
+	    PD=$TMP2/$P.raw
+	    CMD $simg2img "$P" "$PD"
+	    SPARSE=1
 	    ls -l1 "$P" "$PD" >&2
 	    ;;
-	    *buildvariant=*)
+#	    *buildvariant=*)
 #	    LABEL=Android-TV
 #	    BUILDER=SC
-	    MSG "[i] BOARD $BOARD => $LABEL+$BUILDER || PTYPE: $PTYPE // $INF"
-	    PD="$P"
-	    ;;
+#	    MSG "[i] BOARD $BOARD => $LABEL+$BUILDER || PTYPE: $PTYPE // $INF"
+#	    PD="$P"
+#	    ;;
 	    *)
 	    PD="$P"
 	    ;;
@@ -521,9 +738,18 @@ while read l ; do
 	#continue
 	
 	rm       $RO
+
+	############# part size padded
 	DZ "$PD" $RO $((PART_OFFSET-b))
-	[ ! "$NOCLEAN" ] && \
-	    [ -f "$PD" ] && CMD rm -f "$PD" "${PD%.raw}"
+
+#	[ ! "$NOCLEAN" ] && {
+#	    [ -f "$PD" ] && CMD rm -f "$PD" "${PD%.raw}"
+#	}
+
+	[ "$SPARSE" ] && \
+	    [ -e "$PD" ] && \
+		rm "$PD"
+
 	MSG "=$pname"
 	CMP $RO $CO
 
@@ -535,7 +761,29 @@ while read l ; do
 
 done < $P
 
+
+}
+
+case $CT in
+    xz)
+    [ "$NOSINGLE" ] && {
+    MSG "[w] XZ multy stream output!!!"
+    CONVERT
+    }
+    [ "$NOSINGLE" ] || {
+    # single stream compress
+    MSG "[i] XZ single stream output"
+    CT=raw CO=- CONVERT | $CMP_XZ > $CO
+    }
+    ;;
+    *)
+    CONVERT
+esac
+
 case $CO in
+    -)
+    MSG "[i] PIPE output - end"
+    ;;
     /proc/*)
     MSG "[i] PIPE output $STDOUT end"
     #cat /proc/$PID/fdinfo/1 >&2
@@ -543,9 +791,6 @@ case $CO in
     *)
     ls -l1 $CO >&2
 esac
-
-[ "$PTYPE" ] || \
-PTYPE=android
 
 [ "$LABEL" ] || \
 LABEL=android
@@ -556,50 +801,63 @@ BOARD=VIMx
 [ "$BUILDER" ] || \
 BUILDER=Khadas
 
-MSG "[i] BOARD $BOARD => $LABEL+$BUILDER || PTYPE: $PTYPE // $INF"
+[ "$LINK" ] || \
+LINK=http://dl.khadas.com
 
+[ "$CMP_PID" ] && {
+MSG "[i] wait $CMP_PID"
+wait $CMP_PID
+}
+
+[ "$DESC" ] || \
+    DESC="$LABEL $INF for Khadas $BOARD board"
+
+MSG "[i] BOARD $BOARD => $LABEL+$BUILDER
+	 INF: $INF // LINK: $LINK
+	 DESC: $DESC
+=========================================================
+"
+
+## add meta
 case $CO in
     *.xz)
-
     chk_z
     chk_z
-
-    case $PTYPE in
-
-    linux)
-    MSG "[i] compress xze :: $INF"
     $xze $CO -9 --meta \
-    BOARD=BOARD \
-    LABEL=Linux \
-    BUILDER=Khadas \
-    LINK=http://dl.khadas.com \
-    DESC="linux $INF for Khadas EDGE board" \
+    BOARD="$BOARD" \
+    LABEL="$LABEL" \
+    BUILDER="$BUILDER" \
+    LINK="$LINK" \
+    DESC="$DESC" \
     || DIE "xze fail"
-
     ;;
     *)
-    $xze $CO -9 --meta \
-    BOARD=$BOARD \
-    LABEL=$LABEL \
-    BUILDER=$BUILDER \
-    LINK=http://dl.khadas.com \
-    DESC="$LABEL $INF for Khadas $BOARD board" \
-    || DIE "xze fail"
     ;;
-
-    esac
-
-    rm -f $O
-
-    ;;
-
 esac
+
+    [ "$NOCLEANUP" ] || rm -rf $TMP2
+    [ "$WORKCLEAN" ] || exit
+
+    CLEAN
 
 exit
 
 
-
 exit 0
+
+## Ubuntu FENIX
+
+[h] NN         partname 0xhex_offs 0xhex_size 0xhex_end_ -      offset        size -  512off  512_sz 512_end
+----------------------------------------------------------------------------------------------------
+[i] 00       bootloader 0x00000000 0x00400000 0x00400000 -           0     4194304 -       0    8192    8192
+[i] 01         reserved 0x02400000 0x04000000 0x06400000 -    37748736    67108864 -   73728  131072  204800
+[i] 02              env 0x06c00000 0x00800000 0x07400000 -   113246208     8388608 -  221184   16384  237568
+[i] 03             logo 0x07c00000 0x00800000 0x08400000 -   130023424     8388608 -  253952   16384  270336
+[i] 04          ramdisk 0x08c00000 0x02000000 0x0ac00000 -   146800640    33554432 -  286720   65536  352256
+[i] 05           rootfs 0x0b400000 0x00000000 0x0b400000 -   188743680           0 -  368640       0  368640
+
+
+## ANDROID PIE
 
 [h] NN         partname 0xhex_offs 0xhex_size 0xhex_end_ -      offset        size -  512off  512_sz 512_end
 ----------------------------------------------------------------------------------------------------
