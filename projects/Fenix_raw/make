@@ -1,0 +1,47 @@
+#!/bin/bash
+
+## hyphop ##
+
+#= 
+
+DIR="$(dirname $0)"
+BN=$(basename $0)
+
+cd "$DIR"
+DP="$(realpath .)"
+
+#N=${DP%/*}
+N=${DP}
+N=${N##*/}
+M=${N%.krescue}
+
+M="../../img/$M"
+MP="$(realpath $M)"
+
+mkdir -p $M
+cd $M
+
+case $0 in
+*VIM3L)
+DEVICE=VIM3L
+LABEL=Linux
+LINK=https://dl.khadas.com/Firmware/VIM3L/Ubuntu/EMMC/VIM3L_Ubuntu-server-focal_Linux-4.9_arm64_EMMC_V0.9-20200530.7z
+;;
+esac
+
+INF=${LINK#*_}
+INF=${INF%.*}
+
+#OUT=$DEVICE-$LABEL-$INF.raw.img.xz
+OUT=.raw.img.xz
+#OUT=/tmp/.raw.img.xz
+#OUT=/tmp/.raw.img
+
+echo "[i] $LINK to $OUT"
+
+#NOOP=1 \
+#UNPACK_ONLY=1 \
+#NOSINGLE=1 \
+#NOCLEANUP=1 \
+REWRITE=1 \
+../../tools/aml2raw "$LINK" "$OUT"
