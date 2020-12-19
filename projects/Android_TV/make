@@ -1,0 +1,72 @@
+#!/bin/bash
+
+## hyphop ##
+
+#= 
+
+DIR="$(dirname $0)"
+BN=$(basename $0)
+
+cd "$DIR"
+DP="$(realpath .)"
+
+#N=${DP%/*}
+N=${DP}
+N=${N##*/}
+M=${N%.krescue}
+
+M="../../img/$M"
+MP="$(realpath $M)"
+
+mkdir -p $M
+cd $M
+
+#DEVICE=VIM1
+#LINK=https://dl.khadas.com/Firmware/VIM1/Android/Pie/VIM1_Pie_V200317.7z
+
+export LABEL=Android-TV
+export BUILDER=SC
+
+case $0 in
+*VIM3L)
+DEVICE=VIM3L
+#https://drive.google.com/drive/folders/1whUz1H7jUj3-1m-0phCH1l_z-Kk4bI3v?usp=sharing
+
+LINK=SC_VIM3L_USER_ATV-v3.0-20201125.7z
+LINK=http://localhost:8081/SC_VIM3L_USER_ATV-v3.0-20201125.7z
+;;
+*VIM3)
+DEVICE=VIM3
+LINK=https://mega.nz/folder/dkAxhCCK#_lAAxk902CrZegcCoh-HjQ/file/whhnFBTZ
+LINK=SC_VIM3_USER_ATV-v3.0-20200803.7z
+;;
+esac
+
+[ "$DEVICE" ] || {
+echo "[e] device not defined">&2
+exit 1
+}
+
+INF=${LINK#*_}
+INF=${INF%.*}
+
+OUT=/tmp/$DEVICE-$LABEL-$INF.raw.img.xz
+
+echo "[i] $LINK to $OUT"
+
+#UNPACK_ONLY=1 \
+#TMP=. ../../tools/aml2raw "$LINK" "$OUT"
+#WORKCLEAN=EXIT \
+
+#NOCLEAN=1 \
+#WORK=/tmp/123
+#SIMG=CUSTOM \
+
+echo "../../tools/aml2raw "$LINK" "$OUT""
+
+NOSINGLE=1 \
+WORK=/tmp/123 \
+../../tools/aml2raw "$LINK" "$OUT"
+
+#WORK=. ../../tools/aml2raw "update.img.dir" "$OUT"
+
