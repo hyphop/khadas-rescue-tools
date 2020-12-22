@@ -36,7 +36,13 @@ VARS:
 			  NOTE: fully supported only from Krescue   201219_126
 				Sat 19 Dec 2020 03:10:58 AM UTC
 
- 
+EXTRA VARS for write meta
+
+	BUILDER		-
+	LABEL		-
+	DESC		-
+	LINK		- 
+
 "
 }
 
