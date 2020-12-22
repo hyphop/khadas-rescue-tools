@@ -1,0 +1,39 @@
+#!/bin/bash
+
+## hyphop ##
+
+#= zero free last part
+
+DIE(){
+    echo "[e] DIE $@">&2
+    exit 1
+}
+
+IN="$1"
+
+[ -e "$IN" ] || DIE "file $IN not found"
+echo "[i] zero free $IN helper">&2
+o=$(file -L "$IN")
+echo "[FILE] $o">&2
+ST=${o##*startsector}
+ST=${ST%%,*}
+END=${o##*, }
+END=${END% *}
+SZ=$((ST+$END))
+SF=$(stat -L -c%s "$IN")
+echo "$ST + $END = $SZ = $((SF/512))">&2
+
+#
+
+OUT="$2"
+
+[ "$OUT" ] || \
+OUT=/tmp/"$(basename "$IN")".lastpart
+
+dd if="$IN" of="$OUT" conv=fsync,sparse skip=$((ST*1)) || DIE "dd fail"
+
+zerofree -v $OUT 1>&2 || DIE "zero free oops"
+
+echo $OUT
+
+#dd if="$P" of="$IN" conv=fsync,sparse seek=$((ST*1)) || DIE "dd fail"
