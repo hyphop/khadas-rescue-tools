@@ -1,0 +1,36 @@
+#!/bin/sh
+
+## hyphop ##
+
+IN="$1"
+
+FAIL(){
+    echo "[e] $@">&2
+    exit 1
+}
+
+[ -s "$IN" ] || FAIL input file not defined
+
+shift
+
+for O in $(file -L "$IN" | grep -m1 -o -E startsector.'[0-9]*'); do 
+    [ "$O" = "startsector" ] && continue
+    break
+done
+
+[ "$O" ] || FAIL first partition not founded
+[ "$O" -gt 0 ] || FAIL first partition not founded
+
+echo "[i] part 1 offset: $O">&2
+
+mdir=$(which mdir) || FAIL mdir not found plz install mtools
+mcopy=$(which mcopy) || FAIL mcopy not found plz install mtools
+
+PART1="$IN@@$((O*512))"
+
+mdir -i "$PART1" ::
+
+[ "$1" ] || exit
+
+mcopy -sbpmi "$PART1" :: "$1"
+
