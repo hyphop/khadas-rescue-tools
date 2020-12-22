@@ -1,0 +1,60 @@
+#!/bin/sh
+
+## hyphop ##
+
+#= just write uboot
+
+OUT="$1"
+
+
+DIE(){
+    echo "[e] DIE $@">&2
+    exit 1
+}
+
+echo "[i] OUT $OUT">&2
+
+case $OUT in
+    *vim3l*|*VIM3L*)
+    BOARD=VIM3L
+    ;;
+    *vim2*|*VIM2*)
+    BOARD=VIM2
+    ;;
+    *vim3*|*VIM3*)
+    BOARD=VIM3
+    ;;
+    *vim1*|*VIM1*)
+    BOARD=VIM1
+    ;;
+    *edge*|*Edge*|*EDGE*)
+    BOARD=Edge
+    ;;
+
+esac
+
+[ "$BOARD" ] || DIE "BOARD undefined"
+
+[ "$UBOOR_REL" ] || \
+    UBOOT_REL=0.5
+
+TMP="/tmp/uboot_write"
+
+mkdir -p "$TMP"
+
+BOOT=$BOARD.u-boot.sd.bin
+LINK=https://github.com/krescue/khadas-uboot/releases/download/$UBOOT_REL/$BOOT
+
+[ "$UBOOT" ] || \
+    UBOOT=$TMP/$BOOT
+
+[ -s $UBOOT.md5sum ] || {
+    echo "[i] download $LINK to $UBOOT" >&2
+    curl -jfkL "$LINK" -o "$UBOOT" && md5sum "$UBOOT" > "$UBOOT".md5sum
+}
+
+[ -e "$UBOOT" ] || DIE "uboot file not find"
+
+dd if="$UBOOT" of="$OUT" conv=fsync,notrunc bs=442 count=1
+dd if="$UBOOT" of="$OUT" conv=fsync,notrunc bs=512 skip=1 seek=1
+
