@@ -1,0 +1,21 @@
+#!/bin/bash
+
+## hyphop ##
+
+#= 
+
+[ "$BOARD" ] || exit 
+
+echo "PACK: "$IMAGE_" to $IMAGE_XZE">&2
+
+#../../scripts/xze "$M/$IMAGE_XZE" -9 \
+
+../../scripts/xze "$M/$IMAGE_" -9 \
+    --meta LABEL=$LABEL \
+    BOARD=$BOARD \
+    LINK=$WWW \
+    DESC="$DESC" || FAIL xze 
+
+ls -l1 $M/$IMAGE_XZE
+
+#    DURATION=$DURATION \

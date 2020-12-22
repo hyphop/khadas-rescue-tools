@@ -1,0 +1,149 @@
+#!/bin/bash
+
+## hyphop ##
+
+#=
+
+[ "$BOARD" ] || exit
+
+FAIL(){
+    echo "[e] $@">&2
+    exit 1
+}
+
+DIR="$(dirname $0)"
+BN=$(basename $0)
+
+cd "$DIR"
+DP="$(basename $(realpath .))"
+
+
+M="../../img/$DP"
+
+[ -d "$M" ] || \
+mkdir -p "$M"
+
+echo "OUTPUT to $M"
+
+
+IMAGE_XZ="$(basename $LINK)"
+IMAGE="${IMAGE_XZ%.*}"
+
+echo "[i] download $LINK"
+
+[ -e "$M/$IMAGE" ] || {
+curl -jkL -C- -o"$M/$IMAGE_XZ" "$LINK"
+
+xz=$(which pixz || which xz)
+
+[ "$xz" ] || FAIL xz or pixz not found plz install it
+
+echo "UNPACK: $xz -dc < "$IMAGE_XZ" > $IMAGE">&2
+
+$xz -dc < "$M/$IMAGE_XZ" > "$M/$IMAGE" || {
+    rm $IMAGE
+    FAIL broken xz
+}
+
+}
+
+IMAGE_XZE=$IMAGE_.xz
+
+ln -sf $IMAGE "$M/$IMAGE_"
+
+#[ -e "$M/$IMAGE_".repacked ] || {
+[ "OK" ] && {
+
+F="$M/$IMAGE_.fat.dir"
+
+rm -rf "$F"
+
+../../scripts/copy4fat "$M/$IMAGE_" "$F" 1> "$M/$IMAGE_.fat.info" || FAIL copy from 1st part
+
+
+# clean up 
+rm -f "$F"/aml*
+rm -f "$F"/boot*
+rm -f "$F"/emmc*
+rm -f "$F"/s905*
+rm -f "$F"/*u-boot*
+rm -rf "$F"/dtbs/all*
+rm -f "$F"/install-aml-emmc.sh
+rm -f "$F"/uInitrd
+rm -f "$F"/*.gz
+
+[ -e "$F"/extlinux/extlinux.conf ] || {
+
+E="$F"/uEnv.ini
+APPEND=$(grep ^APPEND "$E")
+APPEND=${APPEND#*=}
+LABEL=$(grep ^LABEL "$E")
+LABEL=${LABEL#*=}
+LINUX=$(grep ^LINUX "$E")
+LINUX=${LINUX#*=}
+INITRD=$(grep ^INITRD "$E")
+INITRD=${INITRD#*=}
+
+[ "$FDT" ] || {
+FDT=$(grep ^FDT "$E")
+FDT=${FDT#*=}
+}
+
+mkdir -p "$F/"extlinux
+
+echo "LABEL $LABEL
+KERNEL $LINUX
+FDT $FDT
+APPEND initrd=/initramfs-linux.img $APPEND
+#APPEND initrd=$INITRD $APPEND
+" | tee "$F"/extlinux/extlinux.conf
+
+}
+
+../../scripts/zero_free "$M/$IMAGE_" "$M/$IMAGE_.ext4" || FAIL zeroed
+truncate -s0 $M/$IMAGE_
+
+B=40960
+BS=512
+BB=$((100*1024*1024/BS)) ## 100
+#truncate -sM
+
+FAT_NAME=BOOT_MNJRO
+FAT_ID=BCDDD18C
+
+rm -f "$M/$IMAGE_".tmp
+rm -f "$M/$IMAGE_".fat
+
+truncate -s$((B*512)) "$M/$IMAGE_".tmp
+truncate -s$((BB*512)) "$M/$IMAGE_".fat
+mkfs.vfat -n "$FAT_NAME" -i "$FAT_ID" "$M/$IMAGE_".fat
+
+mcopy -sbpmi "$M/$IMAGE_".fat "$M/$IMAGE_".fat.dir/* LABEL splash.bmp ::
+
+cat "$M/$IMAGE_".fat >> "$M/$IMAGE_".tmp
+rm "$M/$IMAGE_".fat
+cat "$M/$IMAGE_".ext4 >> "$M/$IMAGE_".tmp
+rm "$M/$IMAGE_".ext4
+
+PARTS="
+label: dos
+label-id: 0x8895d461
+device: p
+unit: sectors
+#
+p1 : start=       $B, size=    $BB  , type=c
+p2 : start=       $B                , type=83
+#
+"
+echo "$PARTS"
+echo "$PARTS" | sfdisk "$M/$IMAGE_.tmp"
+
+../../scripts/uboot_write "$M/$IMAGE_.tmp"
+
+rm "$IMAGE"
+rm "$M/$IMAGE_"
+mv "$M/$IMAGE_.tmp" "$M/$IMAGE_"
+
+date > "$M/$IMAGE_".repacked
+
+}
