@@ -41,7 +41,7 @@ xz=$(which pixz || which xz)
 echo "UNPACK: $xz -dc < "$IMAGE_XZ" > $IMAGE">&2
 
 $xz -dc < "$M/$IMAGE_XZ" > "$M/$IMAGE" || {
-    rm $IMAGE
+    rm "$M/$IMAGE"
     FAIL broken xz
 }
 
@@ -140,8 +140,8 @@ echo "$PARTS" | sfdisk "$M/$IMAGE_.tmp"
 
 ../../scripts/uboot_write "$M/$IMAGE_.tmp"
 
-rm "$IMAGE"
-rm "$M/$IMAGE_"
+rm -f "$M/$IMAGE"
+rm -f "$M/$IMAGE_"
 mv "$M/$IMAGE_.tmp" "$M/$IMAGE_"
 
 date > "$M/$IMAGE_".repacked

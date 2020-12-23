@@ -8,13 +8,18 @@
 
 echo "PACK: "$IMAGE_" to $IMAGE_XZE">&2
 
+## -9 not possible for ram usage
+
+export COPTS="-7"
+
 #../../scripts/xze "$M/$IMAGE_XZE" -9 \
 
-../../scripts/xze "$M/$IMAGE_" -9 \
-    --meta LABEL=$LABEL \
-    BOARD=$BOARD \
-    LINK=$WWW \
-    DESC="$DESC" || FAIL xze 
+../../scripts/xze "$M/$IMAGE_" \
+    --meta LABEL="$LABEL" \
+    BOARD="$BOARD" \
+    LINK="$WWW" \
+    DURATION="$DURATION" \
+    DESC="$DESC" || FAIL xze
 
 ls -l1 $M/$IMAGE_XZE
 

@@ -12,7 +12,7 @@ LINK=https://osdn.net/projects/manjaro-arm/storage/vim2/mate/20.12/Manjaro-ARM-m
 IMAGE_=$BOARD.Manjaro-ARM-mate-20.12.raw.img
 VARIANT="mate desktop version 20.02"
 DESC="$VARIANT. Manjaro is FREE OPERATING SYSTEM FOR EVERYONE"
-#DURATION=120
+DURATION=120
 
 . make.include
 . make.compress

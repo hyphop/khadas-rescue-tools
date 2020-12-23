@@ -12,7 +12,7 @@ LINK=https://osdn.net/projects/manjaro-arm/storage/edgev/xfce/20.06/Manjaro-ARM-
 IMAGE_=$BOARD.Manjaro-ARM-xfce-20.06.raw.img
 VARIANT="xfce desktop version 20.06"
 DESC="$VARIANT. Manjaro is FREE OPERATING SYSTEM FOR EVERYONE"
-#DURATION=120
+DURATION=120
 
 . make.include
 . make.compress

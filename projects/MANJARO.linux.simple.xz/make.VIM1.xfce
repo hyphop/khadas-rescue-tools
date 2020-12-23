@@ -13,7 +13,7 @@ LINK=https://osdn.net/projects/manjaro-arm/storage/vim1/xfce/20.10/Manjaro-ARM-x
 IMAGE_=$BOARD.Manjaro-ARM-xfce-20.10.raw.img
 VARIANT="xfce desktop version 20.10"
 DESC="$VARIANT. Manjaro is FREE OPERATING SYSTEM FOR EVERYONE"
-#DURATION=120
+DURATION=120
 
 . make.include
 . make.compress
