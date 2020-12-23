@@ -98,8 +98,9 @@ $xz --help | grep -q threads= || {
 
 IN=
 #OPTS="-F xz --arm --lzma2"
-OPTS="-F xz -9e"
-OPTS="-F xz"
+#OPTS="-F xz -9e"
+[ "$COPTS" ] || \
+COPTS="-F xz"
 
 BS=4096 # block size
 
@@ -147,7 +148,7 @@ for a in $@; do
 	;;
 	-f)
 	FORCE=1
-	OPTS="$OPTS $a"
+	COPTS="$COPTS $a"
 	continue
 	;;
 	-T*)
@@ -171,7 +172,7 @@ for a in $@; do
 	    [ "$IN" ] || IN="$a"
 	    continue
 	}
-	OPTS="$OPTS $a"
+	COPTS="$COPTS $a"
 	;;
     esac
 done
@@ -457,7 +458,7 @@ S14=$((S1/T))
 
 B="${B}M"
 
-ARGS="$xz -v -T$T --block-size $B -k -c $OPTS "$IN""
+ARGS="$xz -v -T$T --block-size $B -k -c $COPTS "$IN""
 
 echo "[i] xze compress $IN ($S1 bytes) > $OUT">&2
 echo "# $ARGS ">&2
