@@ -40,6 +40,7 @@ echo "[i] check last version"
 
 #LINK="$BUILDER/$IN"
 LINK="https://mega.nz/file/AmpBgbyR#eR1fISfGG9sbr-C7yhkp1bq5RpJ3eGo697cuqIdnHUo"
+LINK="https://mega.nz/file/Yy5SALCT#n11iU9P9kvL8dXNyi-qt5fX3gU-jPmPtDJjxQZpac4c"
 
 [ -d "$DL" ] || mkdir -p "$DL"
 
