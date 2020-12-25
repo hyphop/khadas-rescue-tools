@@ -549,7 +549,7 @@ DO() {
     DD "$1" "$2" seek=$(($3/BS))
 }
 
-CMP_XZ="xz -v -T4 --block-size 90M -k -c -F xz -9"
+CMP_XZ="xz -v -T4 --block-size 90M -k -c -F xz -7"
 
 CMP() {
     case $CT in
