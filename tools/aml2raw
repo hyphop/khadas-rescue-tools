@@ -471,7 +471,7 @@ done < $ACFG
 chk_d
 
 [ "$DTB" ] && {
-INPUT="$dtc -q $DTB"
+INPUT="$dtc -Idtb -q $DTB"
 $INPUT 1>/dev/null || DIE "dtb broken $DTB"
 }
 
