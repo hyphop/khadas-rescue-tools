@@ -233,6 +233,7 @@ o="$USR/bin/$b"
 
 [ "$xze" ] || \
 xze=$(which $b)
+
 [ $? = 0 ] && return
 
 MSG "[i] download $b"
@@ -243,6 +244,38 @@ curl -jkL -C- -o "$o" \
     chmod 0777 "$o"
 
 }
+
+chk_xz(){
+b=xz
+o="$USR/bin/$b"
+
+[ "$xz" ] || \
+xz=$(which $b)
+#[ $? = 0 ] && return
+
+CHK_="5.3.1"
+$xz -h 2>&1 | grep -q threads || xz=
+#$xz -V 2>&1 | grep -q $CHK_ || xz=
+
+[ -e "$o" ] && {
+[ -x "$o" ] || \
+    chmod 0777 "$o"
+}
+
+[ -x "$o" ] && return
+
+c="$o.gz"
+MSG "[i] download $b => $c"
+curl -jkL -C- -o "$c" \
+    https://github.com/hyphop/khadas-rescue-tools/releases/download/dl/$b.gz
+
+[ -e "$o" ] || {
+    gzip -dc $c > $o || DIE "unpack $c"
+    chmod 0777 "$o"
+}
+
+}
+
 SETUP(){
     CMD="sudo apt-get install $REQUIRED"
     MSG "[i] setup need root privs for next command"
@@ -553,7 +586,11 @@ DO() {
     DD "$1" "$2" seek=$(($3/BS))
 }
 
-CMP_XZ="xz -v -T4 --block-size 90M -k -c -F xz -7"
+chk_xz
+chk_xz
+
+CMP_XZ="$xz -v -T4 --block-size 90M -k -c -F xz -7"
+MSG "[XZ] $xz"
 
 CMP() {
     case $CT in
@@ -851,7 +888,7 @@ case $CO in
     *.xz)
     chk_z
     chk_z
-    $xze $CO -9 --meta \
+    xz=$xz $xze $CO -9 --meta \
     BOARD="$BOARD" \
     LABEL="$LABEL" \
     BUILDER="$BUILDER" \
