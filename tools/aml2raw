@@ -58,8 +58,8 @@ EXAMPLES:
 	# .raw.img.xz build from burn dir project - VIM3L_Pie_V201113.amlimage.unpackdir
 	./aml2raw VIM3L_Pie_V201113.amlimage.unpackdir VIM3L_Andorid.Pie_V201113.raw.img.xz
 
-	# .raw.img.xz build from burn dir project + custom meta
-	LABEL="Android_Pie" \
+	# .raw.img.xz build from burn dir project + custom meta + and custom config name
+	LABEL="Android" \
 	DESC="Android Pie last version from 201113 ..." \
 	BUILDER="Terry" \
 	LINK="khadas.com" \
