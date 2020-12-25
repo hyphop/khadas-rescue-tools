@@ -417,7 +417,7 @@ UNPACKED=
 
 while [ ! -d "$IN" ]; do
 
-case $(file "$IN") in
+case $(file -L "$IN") in
     *7-zip*)
 
     O=${IN%.*}.amlimage
@@ -774,7 +774,7 @@ while read l ; do
 	PART_TYPE=_BLANKED_
 
 	[ -s "$P" ] && \
-	PART_TYPE=$(file "$P")
+	PART_TYPE=$(file -L "$P")
 
 	MSG "> $PART_TYPE"
 	SPARSE=
