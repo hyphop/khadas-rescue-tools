@@ -477,7 +477,7 @@ $INPUT 1>/dev/null || DIE "dtb broken $DTB"
 
 #INPUT="
 #BOARD_=$($dtc -q $DTB | grep -m1 -i amlogic-dt-id )
-BOARD_=$($dtc -q $DTB | grep -m1 -i "compatible" )
+BOARD_=$($dtc -Idtb -q $DTB | grep -m1 -i "compatible" )
 
 MSG "[d] board $BOARD_"
 
