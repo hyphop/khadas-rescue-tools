@@ -26,6 +26,7 @@ VARS:
 	WORK=[path]     - work dir download unpack  :: DEFAULT ./aml2raw.work
 	TMP2=[path]     - temp dd dir               :: DEFAULT /tmp/aml2raw/$PID
 	USR=[path]      - usb bin dir               :: DEFAULT ~/aml2raw
+	ACFG=[filename] - android image config      :: DEFAULT image.cfg
 
 	REWRITE=        - enable output file rewrite        :: DEFAULT no
 	NOCLEANUP=      - no cleanup flag for TMP2          :: DEFAULT no
@@ -62,7 +63,7 @@ EXAMPLES:
 	DESC="Android Pie last version from 201113 ..." \
 	BUILDER="Terry" \
 	LINK="khadas.com" \
-	./aml2raw VIM3L_Pie_V201113.amlimage.unpackdir VIM3L_Andorid.Pie_V201113.raw.img.xz
+	ACFG="image.cfg" ./aml2raw VIM3L_Pie_V201113.amlimage.unpackdir VIM3L_Andorid.Pie_V201113.raw.img.xz
 
 	# raw image output
 	CT=raw aml2raw ../img/Android_Pie.VIM1/dl/VIM1_Pie_V200317.7z   # convert to raw image
@@ -112,7 +113,8 @@ CLEAN(){
 
 }
 
-ACFG=image.cfg
+[ "$ACFG" ] || \
+    ACFG=image.cfg
 
 # BOOT RES
  BOOT_START=0
