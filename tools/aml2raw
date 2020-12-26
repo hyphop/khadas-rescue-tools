@@ -332,7 +332,7 @@ gen_name(){
 
 
 [ "$WORK" ] || \
-    WORK=${0##*/}.work
+    WORK=$(realpath ~/${0##*/}.work)
 
 [ "$USR" ] || \
     USR=$(realpath ~/${0##*/})
