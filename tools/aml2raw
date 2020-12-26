@@ -52,6 +52,11 @@ EXAMPLES:
 
 ## ANDROID developers
 
+	# download install script
+	cd ~
+	wget https://github.com/hyphop/khadas-rescue-tools/blob/master/tools/aml2raw
+	chmod 0777 aml2raw
+
 	# just check build process from burn dir project
 	aml2raw VIM3L_Pie_V201113.amlimage.unpackdir
 
