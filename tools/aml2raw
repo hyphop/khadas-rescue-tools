@@ -68,7 +68,7 @@ EXAMPLES:
 	DESC="Android Pie last version from 201113 ..." \
 	BUILDER="Terry" \
 	LINK="khadas.com" \
-	ACFG="image.cfg" ./aml2raw VIM3L_Pie_V201113.amlimage.unpackdir VIM3L_Andorid.Pie_V201113.raw.img.xz
+	ACFG="aml_upgrade_package_avb.conf" ./aml2raw android_image_dir VIM3L_Andorid.Pie_V201113.raw.img.xz
 
 	# raw image output
 	CT=raw aml2raw ../img/Android_Pie.VIM1/dl/VIM1_Pie_V200317.7z   # convert to raw image
