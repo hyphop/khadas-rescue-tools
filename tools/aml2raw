@@ -463,6 +463,7 @@ MSG "[i] IN: $IN"
 
 # linux detect
 tail -1 $ACFG | grep rootfs && LABEL=${LABEL:-Linux}
+grep "sub_type=\"recovery\"" $ACFG && LABEL=${LABEL:-Android}
 
     chk_s
     chk_s
@@ -772,6 +773,16 @@ while read l ; do
 	PD=/dev/zero
 
 	PART_TYPE=_BLANKED_
+
+	[ -s "$P" ] || {
+	    # get partition file from config
+	    P_=$(grep "sub_type=\"$pname\"" $ACFG | grep -m1 -v \^\#)
+	    P_=${P_#*\"}
+	    P_=${P_%%\"*}
+	    [ -e "$P_" ] && {
+		P="$P_"
+	    }
+	}
 
 	[ -s "$P" ] && \
 	PART_TYPE=$(file -L "$P")
