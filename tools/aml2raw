@@ -801,7 +801,9 @@ while read l ; do
 	    PD=$TMP2/$P.raw
 	    CMD $simg2img "$P" "$PD"
 	    SPARSE=1
-	    ls -l1 "$P" "$PD" >&2
+	    [ -L "$P" ] && \
+	    MSG "[i] $P -> $(readlink "$P")"
+	    ls -L -l1 "$P" "$PD" >&2
 	    ;;
 #	    *buildvariant=*)
 #	    LABEL=Android-TV
@@ -834,7 +836,7 @@ while read l ; do
 	MSG "=$pname"
 	CMP $RO $CO
 
-	[ -s $P ] && ls -l1 $P >&2
+	[ -s $P ] && ls -L -l1 $P >&2
 	
 	[ "$pname" = "data" ] && break
 
