@@ -14,6 +14,7 @@ DIE(){
 
 echo "[i] OUT $OUT">&2
 
+[ "$BOARD" ] || \
 case $OUT in
     *vim3l*|*VIM3L*)
     BOARD=VIM3L
@@ -30,13 +31,14 @@ case $OUT in
     *edge*|*Edge*|*EDGE*)
     BOARD=Edge
     ;;
-
 esac
 
 [ "$BOARD" ] || DIE "BOARD undefined"
 
-[ "$UBOOR_REL" ] || \
+[ "$UBOOT_REL" ] || \
     UBOOT_REL=0.5
+
+[ "$UBOOT_REL" ] || DIE "uboot rel undefined"
 
 TMP="/tmp/uboot_write"
 
