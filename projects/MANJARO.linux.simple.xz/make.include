@@ -104,8 +104,13 @@ APPEND initrd=/initramfs-linux.img $APPEND
 truncate -s0 $M/$IMAGE_
 
 B=40960
+#B=$((16*1024*1024/512))
+#B=62500
+#B=81920
+
 BS=512
-BB=$((100*1024*1024/BS)) ## 100
+BB=$((200*1024*1024/BS)) ## 200
+
 #truncate -sM
 
 FAT_NAME=BOOT_MNJRO
@@ -116,20 +121,31 @@ rm -f "$M/$IMAGE_".fat
 
 truncate -s$((B*512)) "$M/$IMAGE_".tmp
 truncate -s$((BB*512)) "$M/$IMAGE_".fat
-mkfs.vfat -n "$FAT_NAME" -i "$FAT_ID" "$M/$IMAGE_".fat
 
-mcopy -sbpmi "$M/$IMAGE_".fat "$M/$IMAGE_".fat.dir/* LABEL splash.bmp ::
+mkfs.vfat  -n "$FAT_NAME" -i "$FAT_ID" "$M/$IMAGE_".fat
+
+mcopy -smi "$M/$IMAGE_".fat \
+    "$M/$IMAGE_".fat.dir/* LABEL splash.bmp ::
+
+sync
+
+fsck.vfat "$M/$IMAGE_".fat || {
+    echo "[e] fat created with errors"
+    exit 1
+}
 
 cat "$M/$IMAGE_".fat >> "$M/$IMAGE_".tmp
 rm "$M/$IMAGE_".fat
+#rm -rf "$M/$IMAGE_".fat.dir
+
 cat "$M/$IMAGE_".ext4 >> "$M/$IMAGE_".tmp
 rm "$M/$IMAGE_".ext4
 
 PARTS="
-label: dos
-label-id: 0x8895d461
+#label: dos
+#label-id: 0x8895d461
 device: p
-unit: sectors
+#unit: sectors
 #
 p1 : start=       $B, size=    $BB  , type=c
 p2 : start=       $B                , type=83
@@ -138,7 +154,15 @@ p2 : start=       $B                , type=83
 echo "$PARTS"
 echo "$PARTS" | sfdisk "$M/$IMAGE_.tmp"
 
+case $BOARD in
+    VIM3L)
+    export UBOOT_REL=0.6
+    ;;
+esac
+
 ../../scripts/uboot_write "$M/$IMAGE_.tmp"
+
+sync
 
 rm -f "$M/$IMAGE"
 rm -f "$M/$IMAGE_"
