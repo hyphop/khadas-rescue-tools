@@ -57,6 +57,8 @@ LINK=https://github.com/krescue/khadas-uboot/releases/download/$UBOOT_REL/$BOOT
 
 [ -e "$UBOOT" ] || DIE "uboot file not find"
 
+echo "[i] write uboot $UBOOT to $OUT"
+
 dd if="$UBOOT" of="$OUT" conv=fsync,notrunc bs=442 count=1
 dd if="$UBOOT" of="$OUT" conv=fsync,notrunc bs=512 skip=1 seek=1
 
