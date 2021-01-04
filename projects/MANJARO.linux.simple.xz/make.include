@@ -100,7 +100,14 @@ APPEND initrd=/initramfs-linux.img $APPEND
 
 }
 
+
 ../../scripts/zero_free "$M/$IMAGE_" "$M/$IMAGE_.ext4" || FAIL zeroed
+
+e2ls "$M/$IMAGE_.ext4":"/var/lib/pacman/local/boot-*"
+e2rm -vr "$M/$IMAGE_.ext4":"/var/lib/pacman/local/boot-*"
+
+#exit 0
+
 truncate -s0 $M/$IMAGE_
 
 B=40960
