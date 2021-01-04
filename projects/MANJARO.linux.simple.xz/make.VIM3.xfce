@@ -1,0 +1,19 @@
+#!/bin/bash
+
+## hyphop ##
+
+#= MANJARO simple xz image generation example
+
+LABEL=Manjaro
+BOARD=VIM3
+
+WWW="manjaro.org"
+LINK=https://osdn.net/projects/manjaro-arm/storage/vim3/xfce/20.12/Manjaro-ARM-xfce-vim3-20.12.img.xz
+IMAGE_=$BOARD.Manjaro-ARM-xfce-20.12.raw.img
+VARIANT="xfce desktop version 20.12"
+DESC="$VARIANT. Manjaro is FREE OPERATING SYSTEM FOR EVERYONE"
+FDT=/dtbs/amlogic/meson-sm1-khadas-vim3l.dtb
+DURATION=120
+
+. make.include
+. make.compress
