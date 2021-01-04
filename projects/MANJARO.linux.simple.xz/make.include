@@ -118,7 +118,7 @@ B=40960
 BS=512
 BB=$((200*1024*1024/BS)) ## 200
 
-#truncate -sM
+truncate -sM
 
 FAT_NAME=BOOT_MNJRO
 FAT_ID=BCDDD18C
