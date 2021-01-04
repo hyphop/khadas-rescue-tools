@@ -22,6 +22,12 @@ NOTE: all kernel initramfs + rootfs content stay without any changes
 
 ```
 
+## Manjaro upgrade
+
+```
+sudo pacman -Syyu
+```
+
 ## OUTPUT
 
 ```
