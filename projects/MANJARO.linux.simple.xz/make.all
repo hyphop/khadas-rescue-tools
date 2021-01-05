@@ -1,0 +1,12 @@
+#!/bin/bash
+
+## hyphop ##
+
+#= make all
+
+for v in make.Edge* make.VIM*; do
+
+    echo "[i] make $v"
+    ./$v
+
+done
