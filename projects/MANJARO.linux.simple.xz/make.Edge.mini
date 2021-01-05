@@ -1,0 +1,19 @@
+#!/bin/bash
+
+## hyphop ##
+
+#= MANJARO simple xz image generation example
+
+LABEL=Manjaro
+BOARD=Edge
+
+WWW="manjaro.org"
+VER=20.01
+LINK=https://mirror.fkardame.com/Linux/Images/Khadas/Edge-V/Manjaro-ARM-minimal-edgev-21.01.img.xz
+IMAGE_=$BOARD.Manjaro-ARM-mini-$VER.raw.img
+VARIANT="minimal version $VER"
+DESC="$VARIANT. Manjaro is FREE OPERATING SYSTEM FOR EVERYONE"
+DURATION=120
+
+. make.include
+. make.compress
