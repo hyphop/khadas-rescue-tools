@@ -105,6 +105,8 @@ APPEND initrd=/initramfs-linux.img $APPEND
 
 e2ls "$M/$IMAGE_.ext4":"/var/lib/pacman/local/boot-*"
 e2rm -vr "$M/$IMAGE_.ext4":"/var/lib/pacman/local/boot-*"
+e2rm -vr "$M/$IMAGE_.ext4":"/var/lib/pacman/local/uboot-v*"
+e2rm -vr "$M/$IMAGE_.ext4":"/var/lib/pacman/local/uboot-e*"
 
 #exit 0
 
@@ -118,7 +120,7 @@ B=40960
 BS=512
 BB=$((200*1024*1024/BS)) ## 200
 
-truncate -sM
+#truncate -sM
 
 FAT_NAME=BOOT_MNJRO
 FAT_ID=BCDDD18C
