@@ -21,6 +21,8 @@ export COPTS="-7"
     DURATION="$DURATION" \
     DESC="$DESC" || FAIL xze
 
+rm "$M/$IMAGE_"
+
 ls -l1 $M/$IMAGE_XZE
 
 #    DURATION=$DURATION \
