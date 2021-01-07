@@ -172,11 +172,6 @@ RM(){
     done
 }
 
-chk_d(){
-[ "$dtc" ] || \
-dtc="$(which dtc)"
-[ $? = 0 ] || DIE "dtc not found ! sudo apt-get install device-tree-compiler"
-}
 
 chk_a(){
 [ "$bsdtar" ] || \
@@ -261,6 +256,36 @@ xz=$(which $b)
 CHK_="5.3.1"
 $xz -h 2>&1 | grep -q threads || xz=
 #$xz -V 2>&1 | grep -q $CHK_ || xz=
+
+[ -e "$o" ] && {
+[ -x "$o" ] || \
+    chmod 0777 "$o"
+}
+
+[ -x "$o" ] && return
+
+c="$o.gz"
+MSG "[i] download $b => $c"
+curl -jkL -C- -o "$c" \
+    https://github.com/hyphop/khadas-rescue-tools/releases/download/dl/$b.gz
+
+[ -e "$o" ] || {
+    gzip -dc $c > $o || DIE "unpack $c"
+    chmod 0777 "$o"
+}
+
+}
+
+chk_dtc(){
+b=dtc
+o="$USR/bin/$b"
+
+[ "$dtc" ] || \
+dtc=$(which $b)
+#[ $? = 0 ] && return
+
+CHK_="1.5.0"
+$dtc -v 2>&1 | grep -q $CHK_ || dtc=
 
 [ -e "$o" ] && {
 [ -x "$o" ] || \
@@ -507,7 +532,10 @@ done < $ACFG
 #[ "$DTS" ] || \
 #    DTS=_aml_dtb.PARTITION.dts
 
-chk_d
+chk_dtc
+chk_dtc
+
+$dtc -v || DIE "dtc not valid"
 
 [ "$DTB" ] && {
 INPUT="$dtc -Idtb -q $DTB"
