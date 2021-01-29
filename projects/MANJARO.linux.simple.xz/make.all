@@ -5,7 +5,11 @@
 #= make all
 
 for v in make.Edge* make.VIM*; do
-
+    case $v in
+	*broken*|*disabled*)
+	continue
+	;;
+    esac
     echo "[i] make $v"
     ./$v
 
