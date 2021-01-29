@@ -1,0 +1,8 @@
+LABEL=LIBREELEC
+LINK0=https://test.libreelec.tv/
+NAME=VIMx.Libreelec.GX.test
+IMG=LibreELEC-AMLGX.arm-9.80-nightly-20200219-4b013fe.tar
+IMG=LibreELEC-AMLGX.arm-9.80-nightly-20200316-9542570.tar
+LINK=https://test.libreelec.tv/$IMG
+LINK=https://dl.khadas.com/test/LE/$IMG
+BOARDS="VIM1 VIM2"

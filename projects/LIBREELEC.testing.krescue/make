@@ -1,0 +1,207 @@
+#!/bin/bash
+
+## hyphop ##
+
+#= LIBREELEC LINK kresq project generator
+
+DIR="$(dirname $0)"
+BN=$(basename $0)
+
+cd "$DIR"
+DP="$(realpath .)"
+
+#N=${DP%/*}
+N=${DP}
+N=${N##*/}
+M=${N%.krescue}
+
+M="../../img/$M"
+MP="$(realpath $M)"
+
+CMP_LEVEL="-22 -T2"
+
+case $PATH in
+    */opt/bin:*);;
+    *)PATH="$(realpath ../../opt/bin):$PATH";;
+esac
+
+echo $PATH
+
+#which xz
+#which zstd
+#which mksquashfs
+#exit 0
+
+DATE=$(date)
+
+CONF=$BN.conf
+COND=$BN.conf
+COND=${COND#./}
+VARIANT=
+[ "$1" ] && {
+[  -f "$1" ] || VARIANT=".$1"
+}
+[ -f "$1" ] && VARIANT="$1"
+[ "${VARIANT##*/}" = "${CONF##*/}" ] && VARIANT=
+[ "$VARIANT" ] || {
+    [ -L $CONF ] && VARIANT=$(readlink $CONF)
+}
+VARIANT=${VARIANT#$COND}
+echo "[i] VARIANT: $VARIANT">&2
+CONF=$CONF$VARIANT
+[ -f $CONF ] || {
+    echo "[e] config $CONF missed">&2
+    exit 1
+}
+
+M=$M$VARIANT
+
+echo "[i] CONFIG $CONF">&2
+. $CONF # config include
+
+echo "[i] started $N -> $M">&2
+
+#exit 0
+
+mkdir -p "$M"
+
+cd $M
+
+DL="dl"
+CNF_=krescue.image.conf
+CNF=.$CNF_
+R=README.txt
+META=".meta"
+BOOT="BOOT"
+ROOT=.
+ROOT=ROOT
+ROOTFS=$ROOT/rootfs.img
+
+CMD(){
+    echo "# $@">&2
+    $@
+}
+
+FAIL(){
+    echo "[e] $@">&2
+    exit 1
+}
+
+#[ "$mcopy" ] || \
+#mcopy="$(which mcopy)"
+#[ $? = 0 ] || FAIL mcopy not found ! plz install mtools
+
+[ -f $R ] || {
+    echo "[i] create README: $R">&2
+    echo "# SOURCES
+NAME:      $IMG
+SOURCE:    $LINK0
+
+IMAGE_URL: $LINK
+
+## BUILD IMAGE
+
+./make
+
+
+" > $R
+}
+
+[ -f make ] || {
+    ln -s ../../image/make_image make
+}
+
+MATCH=
+for VIM in $BOARDS; do
+MATCH="BOARD=$VIM $MATCH"
+done
+
+echo "[i] copy kresq config from template $CNF_.tpl ($NAME $DATE)"
+. $DP/$CNF_.tpl > $CNF || FAIL template not found
+
+[ -d $META ] || mkdir -p $META
+[ -d $DL ] || mkdir -p $DL
+
+../../scripts/download "$LINK" "$IMG" $DL || FAIL "download sd image check 
+$LINK0
+$IMG
+!!! may be need update link  !!!
+or just put $IMG and *.md5sum to 
+$DL => $(realpath $DL)
+"
+
+IMG_="$DL/$IMG"
+
+rsync -av --inplace $DP/$BOOT .
+
+. $BOOT/boot.cfg
+
+B_=$BOOT/$UBOOT_DTB_DIR
+[ -d "$B_" ] || \
+    mkdir -p "$B_"
+
+## KERNET SYSTEM
+tar -C$BOOT \
+    --wildcards \
+    --strip-components=2 \
+    -xf $IMG_ \
+    '*/target/*'
+
+[ "$KERNEL_UNPACK" ] && {
+dd bs=64 skip=1 if=$BOOT/$UBOOT_KERNEL | lzop -dc > $BOOT/$UBOOT_KERNEL.img
+rm $BOOT/$UBOOT_KERNEL
+}
+
+## INFO
+tar -C$BOOT \
+    --wildcards \
+    --strip-components=1 \
+    -xf $IMG_ \
+    \*/RE* \
+    \*/CHANGELOG \
+    \*/licenses
+
+## DTB
+
+tar -C$BOOT/$UBOOT_DTB_DIR \
+    --wildcards \
+    --strip-components=4 \
+    -xf $IMG_ \
+    '*/*/*/*/*khadas*'
+
+echo "[i] prepare bootloaders">&2
+
+BASE=https://github.com/hyphop/khadas-uboot-spi/releases/download/mainline-test/
+
+for VIM in $BOARDS; do
+    D=$BOOT.$VIM
+    [ -d $D ] || mkdir -p $D
+    UBOOT=u-boot.$VIM.sd.bin
+    ../../scripts/download $BASE$UBOOT $UBOOT $D || FAIL download uboot
+done
+
+
+#CMD mkdir -p $BOOT/$UBOOT_DTB_DIR
+#cp $BOOT/$UBOOT_DTB_DIR/*khadas* $BOOT
+
+for VIM in $BOARDS; do
+    E=$BOOT.$VIM/extlinux
+    [ -d $E ] || \
+    CMD mkdir -p $E
+
+    eval FDT=\$UBOOT_DTB_$VIM
+    echo "[i] fdt: $FDT">&2
+    . $BOOT/extlinux/extlinux.conf.tpl > $E/extlinux.conf
+
+done
+
+echo $LABEL > $BOOT/LABEL
+echo $LABEL > $BOOT/$LABEL.label
+
+CMD rsync --delete -a --inplace $DP/STORAGE .
+
+echo "[i] project is ready: $MP">&2
+
+echo "[i] make image">&2
+CMD ../../image/make_image
+
