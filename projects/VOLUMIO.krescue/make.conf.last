@@ -3,6 +3,7 @@ TPL=krescue.image.conf.tpl
 
 NAME=VIMx.Volumio.last
 
+
 VER=2.748
 DAT=2020-04-13
 
@@ -13,6 +14,9 @@ VER=2.774
 DAT=2020-05-06
 
 #VER=v2.766
+
+VER=2.857
+DAT=2020-12-11
 
 #http://updates.volumio.org/kvim3/volumio/2.774/volumio-2.774-2020-05-06-kvim3.img.zip
 
