@@ -291,6 +291,7 @@ grep -q "mtools_skip_check=1" ~/.mtoolsrc || \
 
 [ -d $VBOOT.org ] || {
 echo "[i] copy boot partition">&2
+
 echo "#$mcopy -sbpmi $IMG2@@$((512*S1)) :: $VBOOT.org"
 $mcopy -sbpmi $IMG2@@$((512*S1)) :: $VBOOT.org || FAIL extract boot partition to $VBOOT.org
 #rm $VBOOT/uboot/*.bin
@@ -377,6 +378,7 @@ CMD $SYNC $VBOOT.org/uInitrd	$VBOOT
 CMD $SYNC $VBOOT.org/dtb	$VBOOT
 
 # fix fdt audio
+
 CMD $DP/scripts/dtb_fix		$VBOOT/dtb/*.dtb
 
 # copy boot files configs
