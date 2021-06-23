@@ -181,8 +181,13 @@ tar -C$BOOT/$UBOOT_DTB_DIR \
 echo "[i] prepare bootloaders">&2
 
 [ -d .boot ] || {
-    tar -xf $DP/blobs/.boot.$TYPE.tar.gz
+
+for TYPE2 in $TYPE; do
+    tar -xf $DP/blobs/.boot.$TYPE2.tar.gz
+done
+
     cat $DP/BOOT2/env.vim2.*.txt | mkenvimage -s 65536 -o - - > .boot/VIM2/env
+
 }
 
 echo $LABEL > $BOOT/LABEL
