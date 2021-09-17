@@ -538,6 +538,13 @@ chk_dtc
 $dtc -v || DIE "dtc not valid"
 
 [ "$DTB" ] && {
+
+file $DTB | grep gzip && {
+    gzip --quiet -dc $DTB > $DTB.raw
+    DTB2=$DTB
+    DTB=$DTB.raw
+}
+
 INPUT="$dtc -Idtb -q $DTB"
 $INPUT 1>/dev/null || DIE "dtb broken $DTB"
 }
@@ -550,7 +557,13 @@ BOARD_=$($dtc -Idtb -q $DTB | grep -m1 -i "compatible" )
 
 MSG "[d] board $BOARD_"
 
+ptail="tail -n+2"
+
 case $BOARD_ in
+    *vim4*)
+    BOARD=VIM4
+    ptail="cat"
+    ;;
     *vim3l*|*VIM3L*)
     BOARD=VIM3L
     ;;
@@ -586,10 +599,10 @@ MSG "[i] $P"
 # extract parition info !!! NOTE not super solution
 
 $INPUT | \
-grep -m1 partitions -A200 | \
-    grep -B200 -A2 0xffffffff | \
-    grep -e pname -e mask -e size -e phandle | tail -n+2 > $P
-# cat $P
+grep -m1 partitions -A300 | \
+    grep -B300 -A2 0xffffffff | \
+    grep -e pname -e mask -e size -e phandle | $ptail > $P
+
 # sort phandles
 grep phandle $P | sort > $P.parts
 # reorder parts
@@ -598,6 +611,9 @@ while read l ; do
 done < $P.parts > $P.sort
 # done
 mv $P.sort $P
+
+cat $P
+#exit 1
 
 BS=512
 
@@ -729,15 +745,24 @@ MSG "write boot end is $(printf %06x $1) = $1"
 END=$1
 
 DZ $UBOOT    $RO $END
+if [ "$DTB2" ]; then
+DO $DTB2      $RO $DTB_START
+DO $DTB2      $RO $DT2_START
+else
 DO $DTB      $RO $DTB_START
 DO $DTB      $RO $DT2_START
+fi
 
 CMP $RO $CO
 BOOT_WRITED=1
 
 }
 
+CACHE_SIZE=0
+
 CONVERT(){
+
+MSG "1st scan"
 
 # first scan
 while read l ; do
@@ -757,6 +782,11 @@ while read l ; do
     esac
 done < $P
 
+MSG "2nd scan"
+
+pname=
+size=
+
 # second scan
 while read l ; do
 
@@ -764,6 +794,8 @@ while read l ; do
 	*pname*)
 	a=${l#*\"}
 	pname=${a%\"*}
+
+	#[ "$pname" = "logo" ] && exit 1
 	;;
 	*size*)
 
@@ -777,9 +809,16 @@ while read l ; do
 	    write_boot $PART_OFFSET
 	    ;;
 	    *)
-	    MSG "CACHE SIZE $CACHE_SIZE"
-	    PART_OFFSET=$((UND_START+$CACHE_SIZE+size+BC+BC))
-	    write_boot $PART_OFFSET
+		case $BOARD in
+		VIM4)
+		PART_OFFSET=0x08400000
+		;;
+		*)
+		MSG "CACHE SIZE $CACHE_SIZE"
+		PART_OFFSET=$((UND_START+$CACHE_SIZE+size+BC+BC))
+		;;
+		esac
+		write_boot $PART_OFFSET
 	    ;;
 	esac
 
@@ -801,7 +840,7 @@ while read l ; do
 	    ;;
 	esac
 
-	printf "[i] %10s %10x %10x %10x\n" $pname $b $size $o >&2
+	printf "[i] %10s %10x(%10d)  %10x(%10d) %10x\n" $pname $b $((b/512))  $((size/512)) $size $o >&2
 	
 	PD=/dev/zero
 
@@ -993,3 +1032,40 @@ exit 0
 [i] 18          product 0xd2e00000 0x08000000 0xdae00000 -  3537895424   134217728 - 6909952  262144 7172096
 [i] 19             data 0xdb600000 0x00000000 0xdb600000 -  3680501760           0 - 7188480       0 7188480
 
+## VIM4 android
+
+kvim4# part list mmc 1
+
+Partition Map for MMC device 1  --   Partition Type: AML
+
+Part   Start        Sect x Size Type  name
+ 00 0      8192     512 U-Boot bootloader
+ 01 73728  131072   512 U-Boot reserved
+ 02 221184 0        512 U-Boot cache
+ 03 237568 16384    512 U-Boot env
+ 04 270336 4096     512 U-Boot frp
+ 05 290816 16384    512 U-Boot factory
+ 06 323584 49152    512 U-Boot vendor_boot_a
+ 07 389120 49152    512 U-Boot vendor_boot_b
+ 08 454656 65536    512 U-Boot tee
+ 09 536576 16384    512 U-Boot logo
+ 10 569344 4096     512 U-Boot misc
+ 11 589824 4096     512 U-Boot dtbo_a
+ 12 610304 4096     512 U-Boot dtbo_b
+ 13 630784 16384    512 U-Boot cri_data
+ 14 663552 32768    512 U-Boot param
+ 15 712704 32768    512 U-Boot odm_ext_a
+ 16 761856 32768    512 U-Boot odm_ext_b
+ 17 811008 65536    512 U-Boot oem_a
+ 18 892928 65536    512 U-Boot oem_b
+ 19 974848 131072   512 U-Boot boot_a
+ 20 1122304 131072  512 U-Boot boot_b
+ 21 1269760 32768   512 U-Boot rsv
+ 22 1318912 32768   512 U-Boot metadata
+ 23 1368064 4096    512 U-Boot vbmeta_a
+ 24 1388544 4096    512 U-Boot vbmeta_b
+ 25 1409024 4096    512 U-Boot vbmeta_system_a
+ 26 1429504 4096    512 U-Boot vbmeta_system_b
+ 27 1449984 3686400 512 U-Boot super
+28 5152768 55918592 512 U-Boot userdata
+** Partition 29 not found on device 1 **
