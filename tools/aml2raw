@@ -560,6 +560,10 @@ MSG "[d] board $BOARD_"
 ptail="tail -n+2"
 
 case $BOARD_ in
+    *t7*)
+    BOARD=VIM4
+    ptail="cat"
+    ;;
     *vim4*)
     BOARD=VIM4
     ptail="cat"
@@ -805,7 +809,14 @@ while read l ; do
 	[ "$PART_OFFSET" = 0 ] && {
 	case $LABEL in
 	    *nux*)
+
 	    PART_OFFSET=$((UND_START+size+BC))
+	    case $BOARD in
+	    VIM4)
+	    PART_OFFSET=0x08400000
+	    ;;
+	    esac
+
 	    write_boot $PART_OFFSET
 	    ;;
 	    *)
@@ -994,6 +1005,21 @@ exit
 
 
 exit 0
+
+<<END
+
+## VIM4
+
+root@Krescue:~# aml_partitions 
+# parts: 5
+[h] NN         partname 0xhex_offs 0xhex_size 0xhex_end_ -      offset        size -  512off  512_sz 512_end
+----------------------------------------------------------------------------------------------------
+[i] 00       bootloader 0x00000000 0x00400000 0x00400000 -           0     4194304 -       0    8192    8192
+[i] 01         reserved 0x02400000 0x04000000 0x06400000 -    37748736    67108864 -   73728  131072  204800
+[i] 02            cache 0x06c00000 0x00000000 0x06c00000 -   113246208           0 -  221184       0  221184
+[i] 03              env 0x07400000 0x00800000 0x07c00000 -   121634816     8388608 -  237568   16384  253952
+[i] 04           rootfs 0x08400000 0x00000000 0x08400000 -   138412032           0 -  270336       0  270336
+
 
 ## Ubuntu FENIX
 
