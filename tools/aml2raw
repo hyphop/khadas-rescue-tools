@@ -11,7 +11,7 @@ REQUIRED="device-tree-compiler android-sdk-libsparse-utils libarchive-tools zstd
 USAGE() { echo "aml2raw convert amlogic android image 2 raw image
 
 USAGE:
-	[VARS] aml2raw [DIR|image.[img|7z]] [OUTPUT|-] [--setup|--help|--examples]
+	[VARS] aml2raw [DIR|image.[img|7z|xz]] [OUTPUT|-] [--setup|--help|--examples]
 
 REQUIRE:
 	dtc simg2img [bsdtar] [zstd] [xz]
@@ -84,6 +84,10 @@ EXAMPLES:
 
 	# online convert example
 	aml2raw https://dl.khadas.com/Firmware/VIM3/Android/VIM3_Pie_V201112.7z VIM3-Android-Pie_V201112.raw.img.xz
+
+	CT=xz aml2raw http://dl.khadas.com/products/vim4/firmware/android/vim4-android-11-64bit-v220826.img.xz
+
+	aml2raw http://dl.khadas.com/.test/vim1s-android-11-v220901.img.xz vim1s-android-11-v220901.raw.img.xz
 
 	# raw image output to file + compression detected from output name extension (img)
 	aml2raw VIM3_Pie_V201112.7z VIM3_Pie_V201112.img
@@ -341,7 +345,7 @@ gen_name(){
     *)
     INF=$(basename "$1")
 
-    for s in amlimage dir 7z img; do
+    for s in amlimage dir 7z img xz; do
     INF=${INF%%.$s}
     done
 
@@ -459,6 +463,21 @@ case $(file -L "$IN") in
     MSG "[i] 7z unpack $IN to $O"
     chk_a
     $bsdtar -O -xf "$IN" '*.img' | dd conv=sparse status=progress of="$O"  || DIE "unpack $IN"
+    date > "$UN"
+    }
+    IN=$O
+    ;;
+    *XZ*)
+
+    O=${IN%.*}.amlimage
+    O="$WORK/${O##*/}"
+    PACKED="$IN"
+    UNPACKED="$O"
+    UN="$O".unpacked
+    [ -e "$UN" ] || {
+    MSG "[i] xz unpack $IN to $O"
+    chk_xz
+    xz -dc "$IN" > "$O"
     date > "$UN"
     }
     IN=$O
