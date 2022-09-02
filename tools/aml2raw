@@ -993,10 +993,10 @@ wait $CMP_PID
 }
 
 [ "$DESC" ] || \
-    DESC="$LABEL $INF for Khadas $BOARD board"
+    DESC="$LABEL ${INF##*/} for Khadas $BOARD board"
 
 MSG "[i] BOARD $BOARD => $LABEL+$BUILDER
-	 INF: $INF // LINK: $LINK
+	 INF: ${INF##*/} // LINK: $LINK
 	 DESC: $DESC
 =========================================================
 "
