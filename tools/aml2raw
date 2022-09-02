@@ -577,8 +577,11 @@ case $BOARD_ in
     *vim3*|*VIM3*)
     BOARD=VIM3
     ;;
+    *vim1s*|*VIM1S*)
+    BOARD=VIM1S
+    ;;
     *vim*|*VIM*)
-    BOARD=VIM1
+    BOARD=${BOARD-VIM1}
     ;;
     *)
     DIE "unknown board $BOARD_"
@@ -812,7 +815,7 @@ while read l ; do
 
 	    PART_OFFSET=$((UND_START+size+BC))
 	    case $BOARD in
-	    VIM4)
+	    VIM4|VIM1S)
 	    PART_OFFSET=0x08400000
 	    ;;
 	    esac
@@ -821,7 +824,7 @@ while read l ; do
 	    ;;
 	    *)
 		case $BOARD in
-		VIM4)
+		VIM4|VIM1S)
 		PART_OFFSET=0x08400000
 		;;
 		*)
@@ -843,7 +846,7 @@ while read l ; do
 	    cache)
 	    continue
 	    ;;
-	    data)
+	    data|userdata)
 	    # clean data 64M
 	    size=$((1024*1024*64))
 	    o=$((PART_OFFSET+size))
