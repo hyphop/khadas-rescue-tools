@@ -565,7 +565,17 @@ file $DTB | grep gzip && {
 }
 
 INPUT="$dtc -Idtb -q $DTB"
-$INPUT 1>/dev/null || DIE "dtb broken $DTB"
+$INPUT 1>/dev/null || {
+
+    # try multy dtb AML
+    dd if=$DTB skip=$((0x00000800/512)) of=$DTB.raw
+
+    DTB=$DTB.raw
+    INPUT="$dtc -Idtb -q $DTB"
+
+    $INPUT 1>/dev/null || DIE "dtb broken $DTB"
+}
+
 }
 
 ####
@@ -593,7 +603,7 @@ case $BOARD_ in
     *vim2*|*VIM2*)
     BOARD=VIM2
     ;;
-    *vim3*|*VIM3*)
+    *vim3*|*VIM3*|*g12b*)
     BOARD=VIM3
     ;;
     *vim1s*|*VIM1S*)
