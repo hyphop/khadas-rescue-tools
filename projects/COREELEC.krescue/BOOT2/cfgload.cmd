@@ -4,6 +4,7 @@ setenv remotewakeup "0xeb14ff00"
 setenv decode_type "0"
 setenv remotewakeupmask "0xffffffff"
 setenv wol "1"
+# comment for debug next line
 setenv coreelec "quiet"
 setenv gpiopower "503"
 
@@ -22,7 +23,11 @@ fi
 
 if fatload ${device} ${devnr}:${partnr} ${loadaddr} config.ini; then env import -t ${loadaddr} ${filesize}; fi
 
+# UART main console
+setenv consoleopt "console=tty0 console=ttyS0,115200 no_console_suspend"
+# HDMI main console
 setenv consoleopt "console=ttyS0,115200 console=tty0 no_console_suspend"
+
 setenv displayopt "hdmimode=1080p60hz logo=osd0,loaded,${fb_addr}"
 
 if test "${cec_func_config}" != ""; then setenv cec "hdmitx=cec${cec_func_config}"; fi
@@ -36,6 +41,9 @@ if test "${modeline}" != ""; then setenv cmode "modeline=${modeline}"; fi
 setenv initargs "${rootopt} ${consoleopt} ${max_freq_a53} ${max_freq_a73} enable_wol=${wol} ${cec} ${irsetup} ${gpiopower} ${usbopts} ${usbpower} ${cmode} ${use_rgb_to_yuv}"
 setenv bootargs "${bootargs} ${initargs} ${displayopt} ${coreelec}"
 
+#echo "BOOTARGS: "
+#printenv bootargs
+
 fatload ${device} ${devnr}:${partnr} ${loadaddr} kernel.img
 fatload ${device} ${devnr}:${partnr} ${dtb_mem_addr} dtb.img
 
@@ -44,6 +52,7 @@ fdt resize 65536
 #fdt set /adc_keypad key_val <120>
 fdt rm /partitions;
 
+bootm ${loadaddr}
 bootm start
 bootm loados
 bootm prep
