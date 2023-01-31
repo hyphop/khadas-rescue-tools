@@ -217,7 +217,7 @@ CMD cp $BOOT/Khadas_VIM3_cfgload $BOOT/cfgload
 mkimage="$(which mkimage)"
 [ $? = 0 ] || FAIL mkimage not found ! plz install android-tools-mkbootimg
 
-    [ -f $BOOT/cfgload ] || \
+#    [ -f $BOOT/cfgload ] || \
     $mkimage -C none -A arm -T script -d $DP/BOOT2/cfgload.cmd \
 	$BOOT/cfgload
 
@@ -261,9 +261,10 @@ CMD cp $BOOT/device_trees/gxm_kvim2.dtb			OVERLAY.VIM2/dtb.img
 
 
 mkdir -p $BOOT/dtb
-#cp $BOOT/device_trees/*khadas*.dtb $BOOT/dtb
 cp $BOOT/device_trees/*vim*.dtb $BOOT/dtb
 rm -rf $BOOT/device_trees
+mv $BOOT/dtb $BOOT/device_trees
+
 }
 
 [ "$FIX_GREEN" ] && {
