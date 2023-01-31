@@ -6,7 +6,7 @@
 
 test "$MB" = "1" && exit # from loop
 
-echo start boot.ini multiboot
+echo "> start boot.ini multiboot hostname: $hostname hwver: $hwver<"
 
 SCRIPTS="s905_autoscript boot.scr.uimg boot.scr cfgload"
 MB=1
@@ -23,6 +23,9 @@ test "$boardname" = "kvim"     && Cdtb=device_trees/gxl_p212_2g_kvim.dtb
 test "$hostname"  = "arm_gxbb" && Cdtb=device_trees/gxm_kvim2.dtb
 test "$hostname"  = "KVIM3"    && Cdtb=device_trees/g12b_a311d_khadas_vim3.dtb
 test "$hostname"  = "KVIM3L"   && Cdtb=device_trees/sm1_s905d3_khadas_vim3l.dtb
+
+#test "$hwver"  = "VIM3.V14"    && Cdtb=device_trees/g12b_a311d_khadas_vim3.dtb
+
 echo "!!! $Cdtb"
 
 usb reset
