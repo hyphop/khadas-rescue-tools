@@ -529,6 +529,20 @@ while read l ; do
 	UBOOT=$f
 	MSG "[i] UBOOT : $f"
 	;;
+	*sub_type=\"bootloader\"*)
+	f=${l#*\"}
+	f=${f%%\"*}
+	UBOOT=$f
+	case $UBOOT in
+	    *DDR*|*USB*)
+	    CMD dd if=$UBOOT seek=1 of=$UBOOT.fix
+	    UBOOT=$UBOOT.fix
+	    echo "[i] fix uboot $UBOOT"
+	    ;;
+	esac
+
+	MSG "[i] UBOOT : $f"
+	;;
 	*main_type=\"dtb\"*)
 	f=${l#*\"}
 	f=${f%%\"*}
@@ -567,7 +581,8 @@ file $DTB | grep gzip && {
 INPUT="$dtc -Idtb -q $DTB"
 $INPUT 1>/dev/null || {
 
-    # try multy dtb AML
+    echo "# try multy dtb AML"
+    
     dd if=$DTB skip=$((0x00000800/512)) of=$DTB.raw
 
     DTB=$DTB.raw
