@@ -533,11 +533,14 @@ while read l ; do
 	f=${l#*\"}
 	f=${f%%\"*}
 	UBOOT=$f
-	case $UBOOT in
+
+	dd if=$UBOOT count=3 bs=1 2>/dev/null | grep "@ML" && UTEST="-DDR-"
+
+	case "$UBOOT$UTEST" in
 	    *DDR*|*USB*)
 	    CMD dd if=$UBOOT seek=1 of=$UBOOT.fix
 	    UBOOT=$UBOOT.fix
-	    echo "[i] fix uboot $UBOOT"
+	    echo "[i] fix uboot $UBOOT + $UTEST"
 	    ;;
 	esac
 
