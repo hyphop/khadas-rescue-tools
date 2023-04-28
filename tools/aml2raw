@@ -280,6 +280,7 @@ curl -jkL -C- -o "$c" \
 
 }
 
+DTC_VER=
 chk_dtc(){
 b=dtc
 o="$USR/bin/$b"
@@ -289,14 +290,13 @@ dtc=$(which $b)
 #[ $? = 0 ] && return
 
 CHK_="1.5.0"
-$dtc -v 2>&1 | grep -q $CHK_ || dtc=
+DTC_VER=$($dtc -v 2>&1)
+echo $DTC_VER | grep -q $CHK_ || dtc=
 
 [ -e "$o" ] && {
-[ -x "$o" ] || \
-    chmod 0777 "$o"
-}
-
+[ -x "$o" ] || chmod 0777 "$o"
 [ -x "$o" ] && return
+}
 
 c="$o.gz"
 MSG "[i] download $b => $c"
@@ -309,6 +309,7 @@ curl -jkL -C- -o "$c" \
 }
 
 }
+
 
 SETUP(){
     CMD="sudo apt-get install $REQUIRED"
@@ -571,6 +572,7 @@ done < $ACFG
 chk_dtc
 chk_dtc
 
+[ "$dtc" ] || DIE "dtc $DTC_VER"
 $dtc -v || DIE "dtc not valid"
 
 [ "$DTB" ] && {
